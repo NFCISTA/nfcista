@@ -11,7 +11,7 @@ const profile = {
   ownerName: "ASIF",
   jobTitle: "Owner",
   category: "Digital Business Cards",
-  tagline: "Transforming spaces into timeless experiences.",
+  tagline: "Smart NFC business cards that make sharing your contact and business details simple.",
   description:
     "Smart NFC business cards that make sharing your contact and business details simple.",
 
@@ -42,8 +42,8 @@ const profile = {
   googleRating: "4.9",
   googleRatingCount: 84,
 
-  // URL of this digital card — update after deploying to Vercel
-  profileUrl: "https://card.novainteriors.com",
+  // URL of this digital card
+  profileUrl: "https://nfcista.vercel.app/",
 };
 
 export default profile;

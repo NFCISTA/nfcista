@@ -9,12 +9,13 @@ const hanken = Hanken_Grotesk({
 });
 
 export const metadata = {
-  title: "Nova Interiors — Digital Business Card",
+  title: "NFCISTA - Digital Business Card",
   description:
-    "Transforming spaces into timeless experiences. Luxury residential and commercial interior design.",
+    "Smart NFC business cards that make sharing your contact and business details simple.",
   openGraph: {
-    title: "Nova Interiors",
-    description: "Transforming spaces into timeless experiences.",
+    title: "NFCISTA - Digital Business Card",
+    description:
+      "Smart NFC business cards that make sharing your contact and business details simple.",
     type: "website",
   },
 };
