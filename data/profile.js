@@ -32,8 +32,8 @@ const profile = {
   googleMaps: "https://www.google.com/maps/search/Mumbra,+Thane,+Maharashtra",
 
   email: "hellonfcista@gmail.com",
-  // Website — replace with the real URL once NFCISTA has a domain.
-  website: "https://PLACEHOLDER_WEBSITE_URL",
+  // Website
+  website: "https://nfcista.vercel.app/",
 
   // Physical address displayed in the "Find Us" row
   address: "Mumbra, Thane, Maharashtra",
