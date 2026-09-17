@@ -10,7 +10,7 @@ const hanken = Hanken_Grotesk({
 
 export const metadata = {
   metadataBase: new URL("https://nfcista.vercel.app"),
-  title: "NFCISTA - Smart Digital Business Cards",
+  title: "NFCISTA - Smart NFC Business Cards",
   description:
     "NFCISTA creates smart NFC digital business cards that make sharing your contact and business details simple.",
   keywords: [
@@ -27,7 +27,7 @@ export const metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "NFCISTA - Smart Digital Business Cards",
+    title: "NFCISTA - Smart NFC Business Cards",
     description:
       "NFCISTA creates smart NFC digital business cards that make sharing your contact and business details simple.",
     url: "https://nfcista.vercel.app/",
@@ -37,7 +37,7 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "NFCISTA - Smart Digital Business Cards",
+    title: "NFCISTA - Smart NFC Business Cards",
     description:
       "NFCISTA creates smart NFC digital business cards that make sharing your contact and business details simple.",
   },

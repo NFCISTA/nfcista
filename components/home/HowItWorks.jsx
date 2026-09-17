@@ -1,0 +1,72 @@
+export default function HowItWorks() {
+  const steps = [
+    {
+      number: "01",
+      title: "Get Your NFC Card",
+      description: "Choose your card and provide your details.",
+      icon: "credit_card",
+    },
+    {
+      number: "02",
+      title: "We Create Your Digital Profile",
+      description: "Your information is connected to your unique digital profile.",
+      icon: "account_box",
+    },
+    {
+      number: "03",
+      title: "Tap & Share",
+      description: "Your customer/client taps the NFC card with their phone.",
+      icon: "contactless",
+    },
+    {
+      number: "04",
+      title: "Connect Instantly",
+      description: "They can view your profile, contact you, visit your social links and save your contact.",
+      icon: "how_to_reg",
+    },
+  ];
+
+  return (
+    <section id="how-it-works" className="py-20 bg-[#F8FAFC]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <span className="text-label-sm font-bold text-primary uppercase tracking-wider">
+            Simple Process
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-on-surface mt-2 tracking-tight">
+            How It Works
+          </h2>
+          <p className="text-body-lg text-on-surface-variant mt-3">
+            Going digital with NFCISTA is seamless from card creation to everyday networking.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {steps.map((step) => (
+            <div
+              key={step.number}
+              className="bg-white border border-outline-variant/30 rounded-2xl p-6 shadow-card hover:border-primary/40 transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-3xl font-black tracking-tight text-primary/30">
+                    {step.number}
+                  </span>
+                  <div className="w-10 h-10 rounded-xl bg-surface-container-low text-primary flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[20px]">{step.icon}</span>
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold text-on-surface mb-2">
+                  {step.title}
+                </h3>
+                <p className="text-body-md text-on-surface-variant leading-relaxed">
+                  {step.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

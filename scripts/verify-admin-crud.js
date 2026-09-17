@@ -78,11 +78,16 @@ async function verifyAdminSecurity() {
     console.log("      - Full Name:", cust.full_name);
     console.log("      - Slug:", cust.profile_slug);
 
-    const hasPrivate = cust.phone !== undefined || cust.whatsapp !== undefined || cust.email !== undefined || cust.address !== undefined;
-    if (!hasPrivate) {
-      console.log("   ✅ PASS: Private contact fields (phone, whatsapp, email, address) are NOT returned.");
+    const hasInternalFields = cust.id !== undefined || cust.created_at !== undefined || cust.updated_at !== undefined;
+    if (!hasInternalFields) {
+      console.log("   ✅ PASS: Internal DB fields (id, created_at, updated_at) are NOT returned.");
     } else {
-      console.error("   ❌ FAIL: Private fields leaked in public RPC response!");
+      console.error("   ❌ FAIL: Internal database fields leaked in public RPC response!");
+    }
+
+    const hasContact = cust.phone && cust.whatsapp && cust.email;
+    if (hasContact) {
+      console.log("   ✅ PASS: Public contact fields (phone, whatsapp, email) returned for contact buttons & Save Contact.");
     }
   }
 

@@ -1,23 +1,33 @@
-import ProfileHeader from "@/components/ProfileHeader";
-import BusinessInfo from "@/components/BusinessInfo";
-import ActionButtons from "@/components/ActionButtons";
-import ShareButton from "@/components/ShareButton";
+import Navbar from "@/components/home/Navbar";
+import Hero from "@/components/home/Hero";
+import NfcExplanation from "@/components/home/NfcExplanation";
+import HowItWorks from "@/components/home/HowItWorks";
+import Features from "@/components/home/Features";
+import WhyNfcista from "@/components/home/WhyNfcista";
+import CardShowcase from "@/components/home/CardShowcase";
+import DemoSection from "@/components/home/DemoSection";
+import WhoItsFor from "@/components/home/WhoItsFor";
+import FAQ from "@/components/home/FAQ";
+import ContactCTA from "@/components/home/ContactCTA";
+import Footer from "@/components/home/Footer";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#F8FAFC] flex items-start justify-center py-6 px-4">
-      <div className="w-full max-w-[420px] flex flex-col gap-4">
-        <ProfileHeader />
-        <BusinessInfo />
-        <ActionButtons />
-        <ShareButton />
-        <footer className="w-full pb-2 text-center flex items-center justify-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-          <span className="text-[12px] text-tertiary font-medium">
-            Digital Business Card
-          </span>
-        </footer>
-      </div>
-    </main>
+    <div className="min-h-screen flex flex-col bg-[#F8FAFC] selection:bg-primary selection:text-white">
+      <Navbar />
+      <main className="flex-1">
+        <Hero />
+        <NfcExplanation />
+        <HowItWorks />
+        <Features />
+        <WhyNfcista />
+        <CardShowcase />
+        <DemoSection />
+        <WhoItsFor />
+        <FAQ />
+        <ContactCTA />
+      </main>
+      <Footer />
+    </div>
   );
 }
