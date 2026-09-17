@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getCustomerBySlug } from "@/lib/customers";
+import SaveContactButton from "@/components/SaveContactButton";
 
 // Generate page metadata dynamically based on customer profile
 export async function generateMetadata({ params }) {
@@ -147,6 +148,20 @@ export default async function CustomerPublicProfilePage({ params }) {
             </p>
           )}
         </div>
+
+        {/* Save Contact — primary CTA */}
+        <SaveContactButton
+          contact={{
+            fullName:    customer.full_name,
+            jobTitle:    customer.job_title,
+            companyName: customer.company_name,
+            phone:       customer.phone,
+            whatsapp:    customer.whatsapp,
+            email:       customer.email,
+            website:     customer.website,
+            address:     customer.address,
+          }}
+        />
 
         {/* Action Channels */}
         <div className="flex flex-col gap-3">
