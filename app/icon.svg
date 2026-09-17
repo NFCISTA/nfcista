@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="nfcista-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#004AC6" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="url(#nfcista-bg)" />
+  <g fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round">
+    <path d="M 9.5 12.8 A 4.5 4.5 0 0 1 9.5 19.2" />
+    <path d="M 12.3 9.9 A 8.5 8.5 0 0 1 12.3 22.1" />
+    <path d="M 15.2 7.1 A 12.5 12.5 0 0 1 15.2 24.9" />
+    <path d="M 18.0 4.3 A 16.5 16.5 0 0 1 18.0 27.7" />
+  </g>
+</svg>
