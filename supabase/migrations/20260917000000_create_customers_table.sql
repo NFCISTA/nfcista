@@ -3,7 +3,7 @@
 -- NFCISTA Digital Business Cards
 -- ==============================================================================
 
--- 1. Create the customers table
+-- 1. Create the customers table (stores full customer profile)
 CREATE TABLE IF NOT EXISTS public.customers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     full_name TEXT NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS public.customers (
     CONSTRAINT customers_profile_slug_format CHECK (profile_slug ~ '^[a-z0-9-_]+$')
 );
 
--- 2. Create index on profile_slug for fast lookup
+-- 2. Indexes for fast query performance
 CREATE INDEX IF NOT EXISTS idx_customers_profile_slug ON public.customers (profile_slug);
 CREATE INDEX IF NOT EXISTS idx_customers_is_active ON public.customers (is_active);
 
@@ -58,9 +58,8 @@ ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.customers FROM anon;
 REVOKE ALL ON public.customers FROM authenticated;
 
--- Grant SELECT only to authenticated users (admin foundation; restricted until auth is built)
--- Notice: NO policy permits 'anon' to run `SELECT * FROM customers`.
--- This strictly prevents any anonymous user from dumping or scraping customer records.
+-- Explicitly deny all direct SELECT queries on the customers table to anonymous users.
+-- This ensures that anonymous users can NEVER dump, scrape, or list the customer table.
 CREATE POLICY "Deny all direct anon access to customers"
     ON public.customers
     FOR SELECT
@@ -68,28 +67,29 @@ CREATE POLICY "Deny all direct anon access to customers"
     USING (false);
 
 -- ==============================================================================
--- 5. SECURE SINGLE-PROFILE LOOKUP (RPC)
+-- 5. SECURE PUBLIC PROFILE LOOKUP (RPC)
 -- ==============================================================================
--- Public visitors must ONLY be able to fetch a single active profile by its slug.
--- They CANNOT list, filter, or enumerate the customers table.
+-- Public visitors must ONLY be able to fetch public-safe profile fields for a single active slug.
+-- SENSITIVE / PRIVATE FIELDS ARE STRICTLY EXCLUDED:
+--   - phone (EXCLUDED)
+--   - whatsapp (EXCLUDED)
+--   - email (EXCLUDED)
+--   - address (EXCLUDED)
+--   - id, created_at, updated_at (EXCLUDED)
+--
+-- ONLY public branding / presentation fields are returned:
 CREATE OR REPLACE FUNCTION public.get_customer_by_slug(slug_input text)
 RETURNS TABLE (
-    id UUID,
     full_name TEXT,
     job_title TEXT,
     company_name TEXT,
     category TEXT,
     description TEXT,
-    phone TEXT,
-    whatsapp TEXT,
     instagram TEXT,
-    email TEXT,
     website TEXT,
-    address TEXT,
     google_review_url TEXT,
     profile_slug TEXT,
-    is_active BOOLEAN,
-    created_at TIMESTAMPTZ
+    is_active BOOLEAN
 )
 LANGUAGE sql
 STABLE
@@ -97,33 +97,27 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
     SELECT
-        c.id,
         c.full_name,
         c.job_title,
         c.company_name,
         c.category,
         c.description,
-        c.phone,
-        c.whatsapp,
         c.instagram,
-        c.email,
         c.website,
-        c.address,
         c.google_review_url,
         c.profile_slug,
-        c.is_active,
-        c.created_at
+        c.is_active
     FROM public.customers c
     WHERE c.profile_slug = slug_input
       AND c.is_active = true
     LIMIT 1;
 $$;
 
--- Grant execution of the single-slug lookup function to public visitors (anon) and authenticated users
+-- Grant execution of the public lookup function to anon and authenticated roles
 GRANT EXECUTE ON FUNCTION public.get_customer_by_slug(text) TO anon, authenticated;
 
 -- ==============================================================================
--- 6. DUMMY TEST RECORD (Purely fake sample data)
+-- 6. DUMMY TEST RECORD (Purely fake sample data for verification)
 -- ==============================================================================
 INSERT INTO public.customers (
     full_name,

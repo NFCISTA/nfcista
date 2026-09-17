@@ -51,6 +51,20 @@ async function verifyDatabase() {
       console.log("      - Full Name:", customer.full_name);
       console.log("      - Company:", customer.company_name);
       console.log("      - Slug:", customer.profile_slug);
+      console.log("      - Instagram:", customer.instagram);
+      console.log("      - Website:", customer.website);
+
+      // Verify private fields are NOT present
+      const hasPhone = customer.phone !== undefined;
+      const hasWhatsapp = customer.whatsapp !== undefined;
+      const hasEmail = customer.email !== undefined;
+      const hasAddress = customer.address !== undefined;
+
+      if (!hasPhone && !hasWhatsapp && !hasEmail && !hasAddress) {
+        console.log("   ✅ PASS: Private fields (phone, whatsapp, email, address) are NOT returned.");
+      } else {
+        console.log("   ⚠️  WARNING: Private fields leaked in RPC response!");
+      }
     } else {
       console.log("   ℹ️  No record found for 'demo-customer'.");
     }
