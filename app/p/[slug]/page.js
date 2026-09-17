@@ -148,8 +148,124 @@ export default async function CustomerPublicProfilePage({ params }) {
           )}
         </div>
 
-        {/* Action Channels (Instagram, Website, Review) */}
+        {/* Action Channels */}
         <div className="flex flex-col gap-3">
+
+          {/* Call Card */}
+          {customer.phone && (
+            <a
+              href={`tel:${customer.phone.replace(/\s/g, "")}`}
+              className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.98] group"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-surface-container-low text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                  <span className="material-symbols-outlined text-[20px]">
+                    call
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-label-md font-semibold text-on-surface">
+                    Call
+                  </span>
+                  <span className="text-body-sm text-on-surface-variant">
+                    {customer.phone}
+                  </span>
+                </div>
+              </div>
+              <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-primary group-hover:translate-x-0.5 transition-transform">
+                arrow_outward
+              </span>
+            </a>
+          )}
+
+          {/* WhatsApp Card */}
+          {customer.whatsapp && (
+            <a
+              href={`https://wa.me/${customer.whatsapp.replace(/\D/g, "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.98] group"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-surface-container-low text-[#25D366] flex items-center justify-center group-hover:bg-[#25D366] group-hover:text-white transition-colors">
+                  <span className="material-symbols-outlined text-[20px]">
+                    chat
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-label-md font-semibold text-on-surface">
+                    WhatsApp
+                  </span>
+                  <span className="text-body-sm text-on-surface-variant">
+                    Chat on WhatsApp
+                  </span>
+                </div>
+              </div>
+              <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-[#25D366] group-hover:translate-x-0.5 transition-transform">
+                arrow_outward
+              </span>
+            </a>
+          )}
+
+          {/* Email Card */}
+          {customer.email && (
+            <a
+              href={`mailto:${customer.email}`}
+              className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.98] group"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-surface-container-low text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                  <span className="material-symbols-outlined text-[20px]">
+                    mail
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-label-md font-semibold text-on-surface">
+                    Email
+                  </span>
+                  <span className="text-body-sm text-on-surface-variant truncate max-w-[200px]">
+                    {customer.email}
+                  </span>
+                </div>
+              </div>
+              <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-primary group-hover:translate-x-0.5 transition-transform">
+                arrow_outward
+              </span>
+            </a>
+          )}
+
+          {/* Address / Maps Card */}
+          {customer.address && (
+            <a
+              href={`https://maps.google.com/?q=${encodeURIComponent(customer.address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.98] group"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-surface-container-low text-red-500 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-colors">
+                  <span
+                    className="material-symbols-outlined text-[20px]"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    location_on
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-label-md font-semibold text-on-surface">
+                    Address
+                  </span>
+                  <span className="text-body-sm text-on-surface-variant line-clamp-1 max-w-[200px]">
+                    {customer.address}
+                  </span>
+                </div>
+              </div>
+              <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-red-500 group-hover:translate-x-0.5 transition-transform">
+                arrow_outward
+              </span>
+            </a>
+          )}
+
           {/* Instagram Card */}
           {customer.instagram && (
             <a
