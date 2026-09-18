@@ -422,12 +422,24 @@ export default function AdminCustomersDashboard() {
 
                     {/* Company & Job Title */}
                     <td className="py-3.5 px-4">
-                      <div className="font-medium text-on-surface truncate max-w-[160px]">
-                        {customer.company_name || "—"}
-                      </div>
-                      <div className="text-[12px] text-on-surface-variant truncate max-w-[160px]">
-                        {customer.job_title || "—"}
-                      </div>
+                      {customer.company_name ? (
+                        <>
+                          <div className="font-medium text-on-surface truncate max-w-[160px]">
+                            {customer.company_name}
+                          </div>
+                          {customer.job_title && (
+                            <div className="text-[12px] text-on-surface-variant truncate max-w-[160px]">
+                              {customer.job_title}
+                            </div>
+                          )}
+                        </>
+                      ) : customer.job_title ? (
+                        <div className="text-body-sm text-on-surface truncate max-w-[160px]">
+                          {customer.job_title}
+                        </div>
+                      ) : (
+                        <span className="text-on-surface-variant/40 text-[12px]">—</span>
+                      )}
                     </td>
 
                     {/* Profile Slug & Link */}
@@ -562,48 +574,31 @@ export default function AdminCustomersDashboard() {
                 </div>
               )}
 
-              {/* Identity Details */}
+              {/* 1. Basic Information */}
               <div className="space-y-4">
-                <div className="text-label-sm font-bold uppercase tracking-wider text-primary">
-                  1. Business &amp; Personal Identity
+                <div className="flex items-center gap-2 text-label-sm font-bold uppercase tracking-wider text-primary">
+                  <span>Basic Information</span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-                      Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.full_name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, full_name: e.target.value })
-                      }
-                      placeholder="Sarah Mitchell"
-                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    {formErrors.full_name && (
-                      <p className="text-[12px] text-error mt-1">
-                        {formErrors.full_name}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-                      Company / Brand Name
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.company_name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, company_name: e.target.value })
-                      }
-                      placeholder="Nova Studio"
-                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.full_name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, full_name: e.target.value })
+                    }
+                    placeholder="Sarah Mitchell"
+                    className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  {formErrors.full_name && (
+                    <p className="text-[12px] text-error mt-1 font-medium">
+                      {formErrors.full_name}
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -624,15 +619,15 @@ export default function AdminCustomersDashboard() {
 
                   <div>
                     <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-                      Category
+                      Company Name
                     </label>
                     <input
                       type="text"
-                      value={formData.category}
+                      value={formData.company_name}
                       onChange={(e) =>
-                        setFormData({ ...formData, category: e.target.value })
+                        setFormData({ ...formData, company_name: e.target.value })
                       }
-                      placeholder="Interior Design & Architecture"
+                      placeholder="Nova Studio"
                       className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
@@ -640,7 +635,22 @@ export default function AdminCustomersDashboard() {
 
                 <div>
                   <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-                    Bio / Description
+                    Category
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.category}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
+                    placeholder="Interior Design & Architecture"
+                    className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                    Description
                   </label>
                   <textarea
                     rows={3}
@@ -654,25 +664,158 @@ export default function AdminCustomersDashboard() {
                 </div>
               </div>
 
-              {/* Profile Slug & Card URL */}
-              <div className="space-y-3 pt-2 border-t border-outline-variant/20">
-                <div className="flex items-center justify-between">
-                  <span className="text-label-sm font-bold uppercase tracking-wider text-primary">
-                    2. Profile Slug &amp; Public URL *
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleGenerateSlug}
-                    className="text-[12px] font-semibold text-primary hover:underline inline-flex items-center gap-1"
-                  >
-                    <span className="material-symbols-outlined text-[14px]">
-                      auto_awesome
-                    </span>
-                    <span>Generate from Name/Company</span>
-                  </button>
+              {/* 2. Contact Information */}
+              <div className="space-y-4 pt-3 border-t border-outline-variant/20">
+                <div className="flex items-center gap-2 text-label-sm font-bold uppercase tracking-wider text-primary">
+                  <span>Contact Information</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                      Phone
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.phone}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
+                      placeholder="+1 (555) 012-3456"
+                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                      WhatsApp
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.whatsapp}
+                      onChange={(e) =>
+                        setFormData({ ...formData, whatsapp: e.target.value })
+                      }
+                      placeholder="15550001234"
+                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      placeholder="hello@example.com"
+                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                      Website
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.website}
+                      onChange={(e) =>
+                        setFormData({ ...formData, website: e.target.value })
+                      }
+                      placeholder="https://example.com"
+                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Social & Business */}
+              <div className="space-y-4 pt-3 border-t border-outline-variant/20">
+                <div className="flex items-center gap-2 text-label-sm font-bold uppercase tracking-wider text-primary">
+                  <span>Social &amp; Business</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                      Instagram
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.instagram}
+                      onChange={(e) =>
+                        setFormData({ ...formData, instagram: e.target.value })
+                      }
+                      placeholder="username (without @)"
+                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                      Google Review URL
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.google_review_url}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          google_review_url: e.target.value,
+                        })
+                      }
+                      placeholder="https://g.page/r/..."
+                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
                 </div>
 
                 <div>
+                  <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                    Address
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.address}
+                    onChange={(e) =>
+                      setFormData({ ...formData, address: e.target.value })
+                    }
+                    placeholder="Suite 100, 123 Innovation Way, City"
+                    className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
+              {/* 4. Profile Settings */}
+              <div className="space-y-4 pt-3 border-t border-outline-variant/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-label-sm font-bold uppercase tracking-wider text-primary">
+                    Profile Settings
+                  </span>
+                  {!editingId && (
+                    <button
+                      type="button"
+                      onClick={handleGenerateSlug}
+                      className="text-[12px] font-semibold text-primary hover:underline inline-flex items-center gap-1"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">
+                        auto_awesome
+                      </span>
+                      <span>Generate from Name/Company</span>
+                    </button>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                    Profile Slug *
+                  </label>
                   <div className="flex items-center rounded-xl border border-outline-variant/40 bg-surface-container-lowest overflow-hidden focus-within:ring-2 focus-within:ring-primary">
                     <span className="px-3.5 py-2.5 bg-surface-container-low text-tertiary text-body-sm font-mono border-r border-outline-variant/30 select-none">
                       /p/
@@ -691,162 +834,49 @@ export default function AdminCustomersDashboard() {
                       className="w-full h-11 px-3.5 bg-transparent text-on-surface text-body-md font-mono focus:outline-none"
                     />
                   </div>
-                  <p className="text-[11px] text-tertiary mt-1">
-                    Lowercase letters, numbers, hyphens, and underscores only. This will form the unique link for their NFC card.
-                  </p>
+                  {editingId ? (
+                    <p className="text-[11px] text-amber-800 bg-amber-50/80 border border-amber-200/60 rounded-lg px-2.5 py-1.5 mt-1.5 flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[15px] shrink-0">
+                        lock
+                      </span>
+                      <span>
+                        NFC Profile Slug remains stable. Only change if deliberately re-encoding physical NFC cards.
+                      </span>
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-tertiary mt-1">
+                      Lowercase letters, numbers, hyphens, and underscores only. Forms the unique link for their NFC card.
+                    </p>
+                  )}
                   {formErrors.profile_slug && (
                     <p className="text-[12px] text-error mt-1 font-medium">
                       {formErrors.profile_slug}
                     </p>
                   )}
                 </div>
-              </div>
 
-              {/* Contact Information (Private / Admin view only) */}
-              <div className="space-y-4 pt-2 border-t border-outline-variant/20">
-                <div className="flex items-center gap-2 text-label-sm font-bold uppercase tracking-wider text-primary">
-                  <span>3. Contact Channels</span>
-                  <span className="text-[11px] text-tertiary normal-case font-normal">
-                    (Visible in Admin; excluded from public search endpoints)
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Active Toggle */}
+                <div className="flex items-center justify-between pt-1">
                   <div>
-                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-                      Phone Number
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.phone}
-                      onChange={(e) =>
-                        setFormData({ ...formData, phone: e.target.value })
-                      }
-                      placeholder="+1 (555) 012-3456"
-                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                    <span className="text-label-md font-bold text-on-surface">
+                      Active
+                    </span>
+                    <p className="text-body-sm text-on-surface-variant">
+                      When inactive, the public URL (/p/[slug]) will display an inactive card notice.
+                    </p>
                   </div>
-
-                  <div>
-                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-                      WhatsApp (digits only with country code)
-                    </label>
+                  <label className="relative inline-flex items-center cursor-pointer">
                     <input
-                      type="text"
-                      value={formData.whatsapp}
+                      type="checkbox"
+                      checked={formData.is_active}
                       onChange={(e) =>
-                        setFormData({ ...formData, whatsapp: e.target.value })
+                        setFormData({ ...formData, is_active: e.target.checked })
                       }
-                      placeholder="919000000000"
-                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="sr-only peer"
                     />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
-                      placeholder="hello@example.com"
-                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-                      Instagram Handle
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.instagram}
-                      onChange={(e) =>
-                        setFormData({ ...formData, instagram: e.target.value })
-                      }
-                      placeholder="username (without @)"
-                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-                      Website URL
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.website}
-                      onChange={(e) =>
-                        setFormData({ ...formData, website: e.target.value })
-                      }
-                      placeholder="https://example.com"
-                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-                      Google Review URL
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.google_review_url}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          google_review_url: e.target.value,
-                        })
-                      }
-                      placeholder="https://g.page/r/..."
-                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-                    Physical Address / Office Location
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
                   </label>
-                  <input
-                    type="text"
-                    value={formData.address}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
-                    }
-                    placeholder="Suite 100, 123 Innovation Way, City"
-                    className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
                 </div>
-              </div>
-
-              {/* Status Toggle */}
-              <div className="pt-2 border-t border-outline-variant/20 flex items-center justify-between">
-                <div>
-                  <span className="text-label-md font-bold text-on-surface">
-                    Active Status
-                  </span>
-                  <p className="text-body-sm text-on-surface-variant">
-                    When inactive, the public URL (/p/[slug]) will display an inactive card notice.
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_active}
-                    onChange={(e) =>
-                      setFormData({ ...formData, is_active: e.target.checked })
-                    }
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
-                </label>
               </div>
 
               {/* Modal Footer Actions */}
