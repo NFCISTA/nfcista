@@ -113,10 +113,18 @@ export default async function CustomerPublicProfilePage({ params }) {
           {/* Avatar with Ring & Verified Badge */}
           <div className="relative mb-4">
             <div className="w-28 h-28 rounded-full p-[3px] bg-gradient-to-b from-primary/20 to-surface-container shadow-card">
-              <div className="w-full h-full rounded-full bg-gradient-to-br from-primary-container to-primary flex items-center justify-center">
-                <span className="text-on-primary text-3xl font-bold tracking-tight select-none">
-                  {initials}
-                </span>
+              <div className="w-full h-full rounded-full bg-gradient-to-br from-primary-container to-primary flex items-center justify-center overflow-hidden">
+                {customer.photo_url?.trim() ? (
+                  <img
+                    src={customer.photo_url.trim()}
+                    alt={customer.full_name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-on-primary text-3xl font-bold tracking-tight select-none">
+                    {initials}
+                  </span>
+                )}
               </div>
             </div>
             <div className="absolute bottom-0 right-1 bg-primary text-on-primary w-7 h-7 rounded-full flex items-center justify-center shadow-card ring-2 ring-white">

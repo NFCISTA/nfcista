@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import {
   getAdminCustomers,
@@ -10,6 +10,9 @@ import {
   toggleCustomerActive,
   deleteCustomer,
   validateProfileSlug,
+  validatePhotoFile,
+  uploadCustomerPhoto,
+  deleteCustomerPhoto,
 } from "@/lib/customers";
 
 // Default empty form template
@@ -26,6 +29,7 @@ const initialFormData = {
   website: "",
   address: "",
   google_review_url: "",
+  photo_url: "",
   profile_slug: "",
   is_active: true,
 };
@@ -46,6 +50,12 @@ export default function AdminCustomersDashboard() {
   const [formData, setFormData] = useState(initialFormData);
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Photo management state
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [isPhotoRemoved, setIsPhotoRemoved] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Delete modal state
   const [deletingCustomer, setDeletingCustomer] = useState(null);
@@ -105,6 +115,10 @@ export default function AdminCustomersDashboard() {
   function handleOpenCreate() {
     setEditingId(null);
     setFormData(initialFormData);
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setIsPhotoRemoved(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setFormErrors({});
     setIsFormModalOpen(true);
   }
@@ -112,6 +126,10 @@ export default function AdminCustomersDashboard() {
   // Open Edit Modal (fetches full customer details on demand)
   async function handleOpenEdit(customer) {
     setEditingId(customer.id);
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setIsPhotoRemoved(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setFormErrors({});
     setIsSubmitting(true);
     setIsFormModalOpen(true);
@@ -131,15 +149,47 @@ export default function AdminCustomersDashboard() {
         website: fullRecord.website || "",
         address: fullRecord.address || "",
         google_review_url: fullRecord.google_review_url || "",
+        photo_url: fullRecord.photo_url || "",
         profile_slug: fullRecord.profile_slug || "",
         is_active: fullRecord.is_active !== undefined ? fullRecord.is_active : true,
       });
+      setPhotoPreview(fullRecord.photo_url || null);
     } catch (err) {
       console.error("Failed to load customer details:", err);
       setFormErrors({ general: "Failed to load full customer details." });
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  // Photo handlers
+  function handlePhotoChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validation = validatePhotoFile(file);
+    if (!validation.valid) {
+      setFormErrors((prev) => ({ ...prev, photo: validation.message }));
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    setFormErrors((prev) => {
+      const copy = { ...prev };
+      delete copy.photo;
+      return copy;
+    });
+
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+    setIsPhotoRemoved(false);
+  }
+
+  function handleRemovePhoto() {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setIsPhotoRemoved(true);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   // Auto-slug generator from Name or Company
@@ -177,6 +227,9 @@ export default function AdminCustomersDashboard() {
     if (!deletingCustomer) return;
     setIsDeleting(true);
     try {
+      if (deletingCustomer.photo_url) {
+        await deleteCustomerPhoto(deletingCustomer.photo_url);
+      }
       await deleteCustomer(deletingCustomer.id);
       setCustomers((prev) => prev.filter((c) => c.id !== deletingCustomer.id));
       setSuccessMsg(`Deleted "${deletingCustomer.full_name}".`);
@@ -214,14 +267,41 @@ export default function AdminCustomersDashboard() {
 
     setIsSubmitting(true);
     try {
+      let finalPhotoUrl = formData.photo_url || null;
+
+      // Handle photo removal
+      if (isPhotoRemoved) {
+        if (formData.photo_url) {
+          await deleteCustomerPhoto(formData.photo_url);
+        }
+        finalPhotoUrl = null;
+      }
+
+      // Handle photo upload
+      if (photoFile) {
+        const uploadResult = await uploadCustomerPhoto(
+          photoFile,
+          formData.profile_slug || "customer"
+        );
+        if (formData.photo_url && formData.photo_url !== uploadResult.publicUrl) {
+          await deleteCustomerPhoto(formData.photo_url);
+        }
+        finalPhotoUrl = uploadResult.publicUrl;
+      }
+
+      const payload = {
+        ...formData,
+        photo_url: finalPhotoUrl,
+      };
+
       if (editingId) {
-        const updated = await updateCustomer(editingId, formData);
+        const updated = await updateCustomer(editingId, payload);
         setCustomers((prev) =>
           prev.map((c) => (c.id === editingId ? { ...c, ...updated } : c))
         );
         setSuccessMsg(`Updated customer "${formData.full_name}".`);
       } else {
-        const created = await createCustomer(formData);
+        const created = await createCustomer(payload);
         setCustomers((prev) => [created, ...prev]);
         setSuccessMsg(`Created new customer "${formData.full_name}".`);
       }
@@ -413,10 +493,32 @@ export default function AdminCustomersDashboard() {
                     key={customer.id}
                     className="hover:bg-surface-container-low/30 transition-colors"
                   >
-                    {/* Full Name */}
+                    {/* Full Name & Avatar */}
                     <td className="py-3.5 px-4 sm:px-6">
-                      <div className="font-semibold text-on-surface">
-                        {customer.full_name}
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-surface-container-low border border-outline-variant/30 flex items-center justify-center overflow-hidden shrink-0">
+                          {customer.photo_url ? (
+                            <img
+                              src={customer.photo_url}
+                              alt={customer.full_name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-[11px] font-bold text-primary select-none">
+                              {customer.full_name
+                                ? customer.full_name
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")
+                                    .slice(0, 2)
+                                    .toUpperCase()
+                                : "NC"}
+                            </span>
+                          )}
+                        </div>
+                        <div className="font-semibold text-on-surface">
+                          {customer.full_name}
+                        </div>
                       </div>
                     </td>
 
@@ -578,6 +680,78 @@ export default function AdminCustomersDashboard() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-label-sm font-bold uppercase tracking-wider text-primary">
                   <span>Basic Information</span>
+                </div>
+
+                {/* Profile Photo (Optional) */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl bg-surface-container-low/40 border border-outline-variant/30">
+                  <div className="relative w-16 h-16 rounded-full border-2 border-primary/20 bg-surface-container-lowest shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+                    {photoPreview ? (
+                      <img
+                        src={photoPreview}
+                        alt="Profile preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="material-symbols-outlined text-[32px] text-outline">
+                        account_circle
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-label-sm font-semibold text-on-surface">
+                        Profile Photo
+                      </span>
+                      <span className="text-[11px] text-tertiary font-normal">
+                        (Optional)
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handlePhotoChange}
+                        className="hidden"
+                        id="admin-photo-upload"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/40 text-on-surface text-label-sm font-medium hover:bg-surface-container-low transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">
+                          {photoPreview ? "sync" : "upload"}
+                        </span>
+                        <span>{photoPreview ? "Change Photo" : "Upload Photo"}</span>
+                      </button>
+
+                      {photoPreview && (
+                        <button
+                          type="button"
+                          onClick={handleRemovePhoto}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-error hover:bg-error-container/30 border border-error/20 text-label-sm font-medium transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">
+                            delete
+                          </span>
+                          <span>Remove</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <p className="text-[11px] text-on-surface-variant">
+                      Allowed: JPG, PNG, WebP. Maximum size: 5 MB.
+                    </p>
+
+                    {formErrors.photo && (
+                      <p className="text-[12px] text-error font-medium">
+                        {formErrors.photo}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div>
