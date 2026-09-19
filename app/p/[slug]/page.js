@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCustomerBySlug } from "@/lib/customers";
+import { getCustomerBySlug, getSafeExternalUrl } from "@/lib/customers";
 import SaveContactButton from "@/components/SaveContactButton";
 import ProfileQRCode from "@/components/profile/ProfileQRCode";
 import ProfileShareButton from "@/components/profile/ProfileShareButton";
@@ -95,8 +95,10 @@ export default async function CustomerPublicProfilePage({ params }) {
   const hasEmail = Boolean(customer.email?.trim());
   const hasAddress = Boolean(customer.address?.trim());
   const hasInstagram = Boolean(customer.instagram?.trim());
-  const hasWebsite = Boolean(customer.website?.trim());
-  const hasGoogleReview = Boolean(customer.google_review_url?.trim());
+  const safeWebsite = getSafeExternalUrl(customer.website);
+  const safeGoogleReview = getSafeExternalUrl(customer.google_review_url);
+  const hasWebsite = Boolean(safeWebsite);
+  const hasGoogleReview = Boolean(safeGoogleReview);
   const hasDescription = Boolean(customer.description?.trim());
   const hasPhoto = Boolean(customer.photo_url?.trim());
 
@@ -251,7 +253,7 @@ export default async function CustomerPublicProfilePage({ params }) {
                   phone:       customer.phone?.trim(),
                   whatsapp:    customer.whatsapp?.trim(),
                   email:       customer.email?.trim(),
-                  website:     customer.website?.trim(),
+                  website:     safeWebsite || undefined,
                   address:     customer.address?.trim(),
                 }}
               />
@@ -410,7 +412,7 @@ export default async function CustomerPublicProfilePage({ params }) {
               {/* Website */}
               {hasWebsite && (
                 <a
-                  href={customer.website.trim()}
+                  href={safeWebsite}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-between p-4 bg-white border border-outline-variant/20 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.98] group"
@@ -422,7 +424,7 @@ export default async function CustomerPublicProfilePage({ params }) {
                     <div>
                       <span className="block text-label-md font-semibold text-on-surface">Website</span>
                       <span className="text-body-sm text-on-surface-variant truncate max-w-[220px] block">
-                        {customer.website.trim().replace(/^https?:\/\//, "")}
+                        {safeWebsite.replace(/^https?:\/\//i, "").replace(/\/$/, "")}
                       </span>
                     </div>
                   </div>
@@ -435,7 +437,7 @@ export default async function CustomerPublicProfilePage({ params }) {
               {/* Google Review */}
               {hasGoogleReview && (
                 <a
-                  href={customer.google_review_url.trim()}
+                  href={safeGoogleReview}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-between p-4 bg-white border border-outline-variant/20 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.98] group"
@@ -514,15 +516,30 @@ export default async function CustomerPublicProfilePage({ params }) {
         </section>
 
         {/* ── Footer ─────────────────────────────────────────────────────── */}
-        <footer className="w-full pt-2 pb-1 text-center flex items-center justify-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
-          <Link
-            href="/"
-            className="text-[12px] text-tertiary font-medium hover:text-primary transition-colors"
-          >
-            Powered by NFCISTA
-          </Link>
-          <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+        <footer className="w-full pt-2 pb-2 text-center flex flex-col items-center justify-center gap-1.5 text-[11px] text-tertiary">
+          <div className="flex items-center justify-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+            <Link
+              href="/"
+              className="text-[12px] font-medium hover:text-primary transition-colors"
+            >
+              Powered by NFCISTA
+            </Link>
+            <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+          </div>
+          <div className="flex items-center gap-2 text-[10px] text-tertiary/80">
+            <Link href="/privacy" className="hover:underline hover:text-primary transition-colors">
+              Privacy Notice
+            </Link>
+            <span>&bull;</span>
+            <Link href="/terms" className="hover:underline hover:text-primary transition-colors">
+              Terms
+            </Link>
+            <span>&bull;</span>
+            <Link href="/privacy/data-request" className="hover:underline hover:text-primary transition-colors">
+              Data Rights
+            </Link>
+          </div>
         </footer>
       </div>
     </main>

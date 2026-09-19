@@ -14,6 +14,7 @@ import {
   uploadCustomerPhoto,
   deleteCustomerPhoto,
   recordConsentForCustomer,
+  isValidHttpUrl,
 } from "@/lib/customers";
 
 // Default empty form template
@@ -270,6 +271,14 @@ export default function AdminCustomersDashboard() {
     if (!editingId && formData.is_active && !consentConfirmed) {
       errors.consent =
         "Please confirm that the customer has approved displaying their information on their NFC profile.";
+    }
+
+    // 4. URL scheme validations (Website & Google Review URL must be http:// or https://)
+    if (formData.website?.trim() && !isValidHttpUrl(formData.website)) {
+      errors.website = "Website URL must begin with http:// or https://";
+    }
+    if (formData.google_review_url?.trim() && !isValidHttpUrl(formData.google_review_url)) {
+      errors.google_review_url = "Google Review URL must begin with http:// or https://";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -916,12 +925,26 @@ export default function AdminCustomersDashboard() {
                     <input
                       type="text"
                       value={formData.website}
-                      onChange={(e) =>
-                        setFormData({ ...formData, website: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setFormData({ ...formData, website: e.target.value });
+                        if (formErrors.website) {
+                          setFormErrors((prev) => {
+                            const copy = { ...prev };
+                            delete copy.website;
+                            return copy;
+                          });
+                        }
+                      }}
                       placeholder="https://example.com"
-                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className={`w-full h-11 px-3.5 rounded-xl border bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                        formErrors.website ? "border-error" : "border-outline-variant/40"
+                      }`}
                     />
+                    {formErrors.website && (
+                      <p className="mt-1 text-[12px] text-error font-medium">
+                        {formErrors.website}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -955,15 +978,29 @@ export default function AdminCustomersDashboard() {
                     <input
                       type="text"
                       value={formData.google_review_url}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setFormData({
                           ...formData,
                           google_review_url: e.target.value,
-                        })
-                      }
+                        });
+                        if (formErrors.google_review_url) {
+                          setFormErrors((prev) => {
+                            const copy = { ...prev };
+                            delete copy.google_review_url;
+                            return copy;
+                          });
+                        }
+                      }}
                       placeholder="https://g.page/r/..."
-                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className={`w-full h-11 px-3.5 rounded-xl border bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                        formErrors.google_review_url ? "border-error" : "border-outline-variant/40"
+                      }`}
                     />
+                    {formErrors.google_review_url && (
+                      <p className="mt-1 text-[12px] text-error font-medium">
+                        {formErrors.google_review_url}
+                      </p>
+                    )}
                   </div>
                 </div>
 
