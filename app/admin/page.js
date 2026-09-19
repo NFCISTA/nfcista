@@ -13,6 +13,7 @@ import {
   validatePhotoFile,
   uploadCustomerPhoto,
   deleteCustomerPhoto,
+  recordConsentForCustomer,
 } from "@/lib/customers";
 
 // Default empty form template
@@ -50,6 +51,8 @@ export default function AdminCustomersDashboard() {
   const [formData, setFormData] = useState(initialFormData);
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // DPDP: admin publication-consent confirmation (separate from formData; never auto-checked)
+  const [consentConfirmed, setConsentConfirmed] = useState(false);
 
   // Photo management state
   const [photoFile, setPhotoFile] = useState(null);
@@ -120,6 +123,7 @@ export default function AdminCustomersDashboard() {
     setIsPhotoRemoved(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
     setFormErrors({});
+    setConsentConfirmed(false); // DPDP: always start unchecked
     setIsFormModalOpen(true);
   }
 
@@ -131,6 +135,7 @@ export default function AdminCustomersDashboard() {
     setIsPhotoRemoved(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
     setFormErrors({});
+    setConsentConfirmed(false); // DPDP: not required on edit, but always start unchecked
     setIsSubmitting(true);
     setIsFormModalOpen(true);
 
@@ -260,6 +265,13 @@ export default function AdminCustomersDashboard() {
       errors.profile_slug = slugValidation.message;
     }
 
+    // 3. Customer Approval required when creating a NEW ACTIVE customer
+    //    Not required when editing an existing customer or when creating an inactive customer.
+    if (!editingId && formData.is_active && !consentConfirmed) {
+      errors.consent =
+        "Please confirm that the customer has approved displaying their information on their NFC profile.";
+    }
+
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
@@ -304,6 +316,11 @@ export default function AdminCustomersDashboard() {
         const created = await createCustomer(payload);
         setCustomers((prev) => [created, ...prev]);
         setSuccessMsg(`Created new customer "${formData.full_name}".`);
+
+        // Customer Approval: record in public.customer_consents for new active customer
+        if (payload.is_active && consentConfirmed && created?.id) {
+          await recordConsentForCustomer(created.id);
+        }
       }
       setTimeout(() => setSuccessMsg(""), 3000);
       setIsFormModalOpen(false);
@@ -666,7 +683,7 @@ export default function AdminCustomersDashboard() {
             </div>
 
             {/* Modal Form Body */}
-            <form onSubmit={handleFormSubmit} className="overflow-y-auto p-6 space-y-5">
+            <form onSubmit={handleFormSubmit} className="flex-1 min-h-0 overflow-y-auto p-6 space-y-5">
               {formErrors.general && (
                 <div className="p-3.5 rounded-xl bg-error-container/40 border border-error/30 text-on-error-container text-body-sm flex items-center gap-2">
                   <span className="material-symbols-outlined text-[18px] text-error">
@@ -1051,7 +1068,61 @@ export default function AdminCustomersDashboard() {
                     <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
                   </label>
                 </div>
-              </div>
+              </div>{/* end Profile Settings */}
+
+              {/* ------------------------------------------------------------ */}
+              {/* 5. Customer Approval (Only for Add New Customer)             */}
+              {/* ------------------------------------------------------------ */}
+              {!editingId && (
+                <div className="pt-2 space-y-2">
+                  <div className="flex items-center gap-2 text-label-sm font-bold uppercase tracking-wider text-primary">
+                    <span className="material-symbols-outlined text-[18px]">verified_user</span>
+                    <span>Customer Approval</span>
+                  </div>
+
+                  <div
+                    className={`p-4 rounded-xl border transition-colors ${
+                      formErrors.consent
+                        ? "border-error/60 bg-error-container/20 text-on-error-container"
+                        : "border-primary/30 bg-primary/5 hover:bg-primary/10 text-on-surface"
+                    }`}
+                  >
+                    <label className="flex items-start gap-3 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={consentConfirmed}
+                        onChange={(e) => {
+                          setConsentConfirmed(e.target.checked);
+                          if (formErrors.consent) {
+                            setFormErrors((prev) => {
+                              const copy = { ...prev };
+                              delete copy.consent;
+                              return copy;
+                            });
+                          }
+                        }}
+                        disabled={isSubmitting}
+                        className="mt-0.5 h-4 w-4 rounded border-slate-400 text-primary accent-primary cursor-pointer shrink-0"
+                      />
+                      <span className="text-body-sm leading-relaxed">
+                        {formData.is_active && (
+                          <span className="font-semibold text-primary mr-1">
+                            [Required to Publish]:
+                          </span>
+                        )}
+                        I confirm that the customer has agreed that the information provided may be displayed on their NFCISTA digital profile when someone taps or scans their NFC card.
+                      </span>
+                    </label>
+
+                    {formErrors.consent && (
+                      <p className="mt-2.5 flex items-center gap-1.5 text-[12px] text-error font-semibold">
+                        <span className="material-symbols-outlined text-[16px]">error</span>
+                        <span>{formErrors.consent}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Modal Footer Actions */}
               <div className="pt-4 border-t border-outline-variant/20 flex items-center justify-end gap-3">
