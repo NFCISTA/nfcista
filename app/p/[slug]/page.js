@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { getCustomerBySlug, getSafeExternalUrl } from "@/lib/customers";
 import SaveContactButton from "@/components/SaveContactButton";
-import ProfileQRCode from "@/components/profile/ProfileQRCode";
-import ProfileShareButton from "@/components/profile/ProfileShareButton";
+import ProfileAvatar from "@/components/profile/ProfileAvatar";
+import ProfileShareModal from "@/components/profile/ProfileShareModal";
 
 export const dynamic = "force-dynamic";
 
 // ---------------------------------------------------------------------------
-// Metadata
+// Metadata & SEO
 // ---------------------------------------------------------------------------
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -24,38 +24,67 @@ export async function generateMetadata({ params }) {
   const description =
     customer.description ||
     `${customer.full_name} — ${customer.job_title || "Digital Business Card"}`;
+  const profileUrl = `https://nfcista.vercel.app/p/${slug}`;
+
+  // Safe OpenGraph image handling
+  const ogImages = customer.photo_url?.trim()
+    ? [
+        {
+          url: customer.photo_url.trim(),
+          alt: customer.full_name,
+        },
+      ]
+    : [
+        {
+          url: "/icon.svg",
+          width: 512,
+          height: 512,
+          alt: "NFCISTA",
+        },
+      ];
 
   return {
     title,
     description,
+    alternates: {
+      canonical: profileUrl,
+    },
     openGraph: {
       title,
       description,
+      url: profileUrl,
       type: "profile",
+      siteName: "NFCISTA",
+      images: ogImages,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ogImages,
     },
   };
 }
 
 // ---------------------------------------------------------------------------
-// Page
+// Page Component
 // ---------------------------------------------------------------------------
 export default async function CustomerPublicProfilePage({ params }) {
   const { slug } = await params;
   const customer = await getCustomerBySlug(slug);
 
-  // ── Inactive / Not Found ────────────────────────────────────────────────
+  // ── Profile Unavailable / Inactive ──────────────────────────────────────
   if (!customer) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-[#eff4ff] via-white to-[#e8f0fe] flex items-center justify-center p-4">
-        <div className="w-full max-w-[420px] bg-white border border-outline-variant/30 rounded-3xl p-8 text-center shadow-float">
-          {/* NFCISTA mini header */}
+      <main className="min-h-screen bg-[#f8f9ff] flex items-center justify-center p-4">
+        <div className="w-full max-w-[390px] bg-white border border-outline-variant/30 rounded-3xl p-8 text-center shadow-card">
           <div className="mb-6 flex items-center justify-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-primary" />
             <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-primary">
               NFCISTA
             </span>
           </div>
-          <div className="w-16 h-16 rounded-full bg-surface-container-low text-tertiary flex items-center justify-center mx-auto mb-5">
+          <div className="w-16 h-16 rounded-full bg-surface-container-low text-tertiary flex items-center justify-center mx-auto mb-4">
             <span className="material-symbols-outlined text-[32px]">person_off</span>
           </div>
           <h1 className="text-headline-md font-bold text-on-surface">
@@ -67,7 +96,7 @@ export default async function CustomerPublicProfilePage({ params }) {
           <div className="mt-7 pt-5 border-t border-outline-variant/20">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-primary text-on-primary text-label-md font-semibold hover:opacity-90 shadow-btn-primary transition-all active:scale-[0.97]"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-primary text-white text-label-md font-semibold hover:bg-[#003ea8] shadow-btn-primary transition-all active:scale-[0.97]"
             >
               <span>Visit NFCISTA</span>
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
@@ -78,7 +107,7 @@ export default async function CustomerPublicProfilePage({ params }) {
     );
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  // ── Helpers & Data Sanitization ──────────────────────────────────────────
   const initials = customer.full_name
     ? customer.full_name
         .split(" ")
@@ -88,296 +117,266 @@ export default async function CustomerPublicProfilePage({ params }) {
         .toUpperCase()
     : "NC";
 
-  const profileUrl = `https://nfcista.vercel.app/p/${customer.profile_slug}`;
-
-  const hasWhatsApp = Boolean(customer.whatsapp?.trim());
   const hasPhone = Boolean(customer.phone?.trim());
+  const hasWhatsApp = Boolean(customer.whatsapp?.trim());
   const hasEmail = Boolean(customer.email?.trim());
   const hasAddress = Boolean(customer.address?.trim());
-  const hasInstagram = Boolean(customer.instagram?.trim());
+  const hasDescription = Boolean(customer.description?.trim());
+
+  // URL security validation (only http/https accepted, rejects javascript:/data:)
   const safeWebsite = getSafeExternalUrl(customer.website);
   const safeGoogleReview = getSafeExternalUrl(customer.google_review_url);
   const hasWebsite = Boolean(safeWebsite);
   const hasGoogleReview = Boolean(safeGoogleReview);
-  const hasDescription = Boolean(customer.description?.trim());
-  const hasPhoto = Boolean(customer.photo_url?.trim());
 
-  const hasContactInfo =
-    hasPhone || hasWhatsApp || hasEmail || hasAddress || hasInstagram || hasWebsite || hasGoogleReview;
+  // Normalize Instagram handle: strip leading '@' characters
+  const rawInstagram = customer.instagram?.trim() || "";
+  const cleanInstagram = rawInstagram.replace(/^@+/, "");
+  const hasInstagram = Boolean(cleanInstagram);
 
-  const hasPrimaryActions = hasPhone || hasWhatsApp || hasEmail;
+  // Quick connect items
+  const quickActions = [];
+  if (hasPhone) {
+    quickActions.push({
+      id: "call",
+      label: "Call",
+      icon: "call",
+      href: `tel:${customer.phone.trim().replace(/\s/g, "")}`,
+      colorClass: "bg-blue-50 text-primary hover:bg-blue-100",
+      iconClass: "text-primary",
+      isExternal: false,
+    });
+  }
+  if (hasWhatsApp) {
+    quickActions.push({
+      id: "whatsapp",
+      label: "WhatsApp",
+      icon: "chat",
+      href: `https://wa.me/${customer.whatsapp.trim().replace(/\D/g, "")}`,
+      colorClass: "bg-emerald-50 text-[#128C7E] hover:bg-emerald-100",
+      iconClass: "text-[#128C7E]",
+      isExternal: true,
+    });
+  }
+  if (hasEmail) {
+    quickActions.push({
+      id: "email",
+      label: "Email",
+      icon: "mail",
+      href: `mailto:${customer.email.trim()}`,
+      colorClass: "bg-indigo-50 text-indigo-700 hover:bg-indigo-100",
+      iconClass: "text-indigo-700",
+      isExternal: false,
+    });
+  }
+  if (hasAddress) {
+    quickActions.push({
+      id: "directions",
+      label: "Directions",
+      icon: "near_me",
+      href: `https://maps.google.com/?q=${encodeURIComponent(customer.address.trim())}`,
+      colorClass: "bg-rose-50 text-rose-600 hover:bg-rose-100",
+      iconClass: "text-rose-600",
+      isExternal: true,
+    });
+  }
+
+  const hasQuickActions = quickActions.length > 0;
+  const hasSocialLinks = hasWebsite || hasInstagram || hasGoogleReview;
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#eff4ff] via-white to-[#e8f0fe] flex items-start justify-center py-6 px-4 pb-12">
-      <div className="w-full max-w-[440px] flex flex-col gap-4">
+    <main className="w-full max-w-full min-h-screen bg-[#f8f9ff] flex flex-col items-center justify-start py-4 px-3 sm:py-8 sm:px-4 pb-14 antialiased overflow-x-hidden">
+      <div className="w-full max-w-[420px] flex flex-col gap-3.5 mx-auto">
 
-        {/* ── NFCISTA Header ─────────────────────────────────────────────── */}
-        <header className="flex items-center justify-between py-2 px-1">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-btn-primary group-hover:opacity-90 transition-opacity">
+        {/* ── 1. Refined Header ──────────────────────────────────────────── */}
+        <header className="w-full flex items-center justify-between py-1.5 px-0.5">
+          <Link href="/" className="flex items-center gap-2 group min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-btn-primary group-hover:opacity-95 transition-opacity flex-shrink-0">
               <span
-                className="material-symbols-outlined text-on-primary text-[18px]"
+                className="material-symbols-outlined text-white text-[18px]"
                 style={{ fontVariationSettings: "'FILL' 1" }}
               >
                 nfc
               </span>
             </div>
-            <div>
-              <span className="text-label-lg font-bold text-on-surface tracking-wide">
+            <div className="min-w-0">
+              <span className="text-[14px] font-bold text-on-surface tracking-wide leading-tight block truncate">
                 NFCISTA
               </span>
-              <span className="block text-[9px] font-semibold tracking-[0.15em] uppercase text-tertiary leading-none mt-px">
-                Tap · Connect · Grow
+              <span className="block text-[9px] font-semibold tracking-[0.16em] uppercase text-tertiary leading-none mt-0.5 truncate">
+                Smart Business Card
               </span>
             </div>
           </Link>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-full border border-outline-variant/25 shadow-card">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-[10px] font-semibold text-tertiary">Tap to Connect</span>
+
+          {/* Tap status pill */}
+          <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 bg-white rounded-full border border-outline-variant/30 shadow-card flex-shrink-0 ml-1.5 sm:ml-2">
+            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+            <span className="text-[9px] sm:text-[10px] font-bold text-on-surface tracking-wide whitespace-nowrap">
+              Tap to Connect
+            </span>
           </div>
         </header>
 
-        {/* ── Hero Card ──────────────────────────────────────────────────── */}
-        <div className="relative bg-white border border-outline-variant/20 rounded-3xl shadow-float overflow-hidden">
-          {/* Gradient accent bar */}
-          <div className="h-1.5 w-full bg-gradient-to-r from-primary via-blue-400 to-primary/60" />
+        {/* ── 2. Hero / Identity Card ─────────────────────────────────────── */}
+        <div className="relative bg-white border border-outline-variant/25 rounded-3xl shadow-card overflow-hidden">
+          {/* Executive Cover Banner */}
+          <div className="h-24 sm:h-28 w-full bg-gradient-to-r from-[#0b1c30] via-[#003ea8] to-[#004ac6] relative overflow-hidden">
+            {/* Subtle aesthetic backdrop accents */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent_70%)]" />
+            <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/5 blur-xl" />
+          </div>
 
-          <div className="p-6 flex flex-col items-center text-center">
-            {/* Company pill */}
-            {customer.company_name?.trim() && (
-              <div className="mb-5 inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-surface-container-low rounded-full border border-outline-variant/20">
-                <span className="material-symbols-outlined text-[13px] text-primary">
-                  auto_awesome
-                </span>
-                <span className="text-[11px] font-bold text-on-surface tracking-widest uppercase">
-                  {customer.company_name.trim()}
-                </span>
+          <div className="px-5 pb-6 pt-0 flex flex-col items-center text-center">
+            {/* Overlapping Avatar */}
+            <div className="-mt-14 mb-3">
+              <ProfileAvatar
+                photoUrl={customer.photo_url}
+                fullName={customer.full_name}
+                initials={initials}
+              />
+            </div>
+
+            {/* Customer Name */}
+            <h1 className="text-[22px] sm:text-[24px] font-bold text-on-surface leading-tight tracking-tight mt-1">
+              {customer.full_name}
+            </h1>
+
+            {/* Job Title & Company (Cleanly integrated without badge duplicate) */}
+            {(customer.job_title?.trim() || customer.company_name?.trim()) && (
+              <div className="mt-1 space-y-0.5">
+                {customer.job_title?.trim() && (
+                  <p className="text-[14px] font-semibold text-primary">
+                    {customer.job_title.trim()}
+                  </p>
+                )}
+                {customer.company_name?.trim() && (
+                  <p className="text-[13px] font-medium text-on-surface-variant">
+                    {customer.company_name.trim()}
+                  </p>
+                )}
               </div>
             )}
 
-            {/* Avatar */}
-            <div className="relative mb-5">
-              <div className="w-28 h-28 rounded-full p-[3px] bg-gradient-to-b from-primary/30 via-primary/10 to-surface-container shadow-float">
-                <div className="w-full h-full rounded-full bg-gradient-to-br from-primary-container to-primary flex items-center justify-center overflow-hidden ring-2 ring-white">
-                  {hasPhoto ? (
-                    <img
-                      src={customer.photo_url.trim()}
-                      alt={customer.full_name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-on-primary text-3xl font-bold tracking-tight select-none">
-                      {initials}
-                    </span>
-                  )}
-                </div>
-              </div>
-              {/* Online indicator */}
-              <div className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-green-500 ring-2 ring-white" />
-              {/* Verified badge */}
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-primary text-on-primary text-[9px] font-bold px-2 py-0.5 rounded-full shadow-btn-primary whitespace-nowrap tracking-wide">
-                <span
-                  className="material-symbols-outlined text-[11px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  verified
-                </span>
-                VERIFIED
-              </div>
-            </div>
-
-            {/* Identity */}
-            <div className="mt-2 space-y-1">
-              <h1 className="text-headline-lg font-bold text-on-surface leading-tight">
-                {customer.full_name}
-              </h1>
-              {customer.job_title?.trim() && (
-                <p className="text-label-lg font-semibold text-primary">
-                  {customer.job_title.trim()}
-                </p>
-              )}
-              {customer.company_name?.trim() && (
-                <p className="text-body-sm text-on-surface-variant font-medium">
-                  {customer.company_name.trim()}
-                </p>
-              )}
-            </div>
-
-            {/* Category + Location row */}
+            {/* Category & Location Badges */}
             {(customer.category?.trim() || hasAddress) && (
-              <div className="mt-3 flex flex-wrap justify-center gap-2">
+              <div className="mt-3 flex flex-wrap justify-center gap-1.5 max-w-full">
                 {customer.category?.trim() && (
-                  <div className="inline-flex items-center gap-1 px-3 py-1 bg-surface-container-low border border-outline-variant/20 rounded-full">
-                    <span className="material-symbols-outlined text-[13px] text-primary">label</span>
-                    <span className="text-[11px] font-semibold text-on-surface">
-                      {customer.category.trim()}
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-surface-container-low border border-outline-variant/20 rounded-full text-[11px] font-semibold text-on-surface max-w-full">
+                    <span className="material-symbols-outlined text-[12px] text-primary flex-shrink-0">
+                      label
                     </span>
-                  </div>
+                    <span className="truncate">{customer.category.trim()}</span>
+                  </span>
                 )}
                 {hasAddress && (
-                  <div className="inline-flex items-center gap-1 px-3 py-1 bg-surface-container-low border border-outline-variant/20 rounded-full">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-surface-container-low border border-outline-variant/20 rounded-full text-[11px] font-semibold text-on-surface max-w-[200px]">
                     <span
-                      className="material-symbols-outlined text-[13px] text-red-500"
+                      className="material-symbols-outlined text-[12px] text-rose-500 flex-shrink-0"
                       style={{ fontVariationSettings: "'FILL' 1" }}
                     >
                       location_on
                     </span>
-                    <span className="text-[11px] font-semibold text-on-surface line-clamp-1 max-w-[140px]">
-                      {customer.address.trim()}
-                    </span>
-                  </div>
+                    <span className="truncate">{customer.address.trim()}</span>
+                  </span>
                 )}
               </div>
-            )}
-
-            {/* Description */}
-            {hasDescription && (
-              <p className="mt-4 text-body-md text-on-surface-variant leading-relaxed max-w-[340px]">
-                {customer.description.trim()}
-              </p>
             )}
           </div>
         </div>
 
-        {/* ── Primary Actions ─────────────────────────────────────────────── */}
-        {(hasPrimaryActions || customer.profile_slug) && (
-          <div className="flex gap-2">
-            {/* Save Contact — always shown if any contact info exists */}
-            <div className="flex-1">
-              <SaveContactButton
-                contact={{
-                  fullName:    customer.full_name,
-                  jobTitle:    customer.job_title?.trim(),
-                  companyName: customer.company_name?.trim(),
-                  phone:       customer.phone?.trim(),
-                  whatsapp:    customer.whatsapp?.trim(),
-                  email:       customer.email?.trim(),
-                  website:     safeWebsite || undefined,
-                  address:     customer.address?.trim(),
-                }}
-              />
+        {/* ── 3. Primary CTA: Save Contact ────────────────────────────────── */}
+        <div className="w-full">
+          <SaveContactButton
+            contact={{
+              fullName:    customer.full_name,
+              jobTitle:    customer.job_title?.trim(),
+              companyName: customer.company_name?.trim(),
+              phone:       customer.phone?.trim(),
+              whatsapp:    customer.whatsapp?.trim(),
+              email:       customer.email?.trim(),
+              website:     safeWebsite || undefined,
+              address:     customer.address?.trim(),
+            }}
+          />
+        </div>
+
+        {/* ── 4. Quick Connect Hub ────────────────────────────────────────── */}
+        {hasQuickActions && (
+          <section aria-label="Quick Connect Actions">
+            <p className="text-[11px] font-bold text-tertiary uppercase tracking-wider mb-2 px-1">
+              Quick Connect
+            </p>
+            <div
+              className={`grid gap-1.5 sm:gap-2 ${
+                quickActions.length === 1
+                  ? "grid-cols-1"
+                  : quickActions.length === 2
+                  ? "grid-cols-2"
+                  : quickActions.length === 3
+                  ? "grid-cols-3"
+                  : "grid-cols-2 sm:grid-cols-4"
+              }`}
+            >
+              {quickActions.map((action) => (
+                <a
+                  key={action.id}
+                  href={action.href}
+                  target={action.isExternal ? "_blank" : undefined}
+                  rel={action.isExternal ? "noopener noreferrer" : undefined}
+                  aria-label={action.label}
+                  className="flex flex-col items-center justify-center py-2.5 px-1 sm:py-3 sm:px-2 bg-white border border-outline-variant/20 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.97] group min-w-0"
+                >
+                  <div
+                    className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl ${action.colorClass} flex items-center justify-center mb-1.5 transition-transform group-hover:scale-105 flex-shrink-0`}
+                  >
+                    <span
+                      className={`material-symbols-outlined text-[19px] sm:text-[20px] ${action.iconClass}`}
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      {action.icon}
+                    </span>
+                  </div>
+                  <span className="text-[10.5px] sm:text-[11px] font-semibold text-on-surface text-center leading-tight truncate max-w-full">
+                    {action.label}
+                  </span>
+                </a>
+              ))}
             </div>
-
-            {/* WhatsApp quick action */}
-            {hasWhatsApp && (
-              <a
-                href={`https://wa.me/${customer.whatsapp.trim().replace(/\D/g, "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-[#25D366] text-white font-semibold text-label-md shadow-btn-primary hover:opacity-90 transition-all active:scale-[0.97]"
-                aria-label="Chat on WhatsApp"
-              >
-                <span className="material-symbols-outlined text-[20px]">chat</span>
-                <span className="hidden xs:inline">Chat</span>
-              </a>
-            )}
-
-            {/* Share */}
-            <ProfileShareButton name={customer.full_name} slug={customer.profile_slug} />
-          </div>
+          </section>
         )}
 
-        {/* ── Contact Information Cards ───────────────────────────────────── */}
-        {hasContactInfo && (
-          <section>
-            <p className="text-label-sm font-bold text-tertiary uppercase tracking-widest mb-2 px-1">
-              Contact
+        {/* ── 5. Business & Social Links ──────────────────────────────────── */}
+        {hasSocialLinks && (
+          <section aria-label="Business and Social Presence">
+            <p className="text-[11px] font-bold text-tertiary uppercase tracking-wider mb-2 px-1">
+              Links & Presence
             </p>
             <div className="flex flex-col gap-2">
-              {/* Call */}
-              {hasPhone && (
+              {/* Website */}
+              {hasWebsite && (
                 <a
-                  href={`tel:${customer.phone.trim().replace(/\s/g, "")}`}
-                  className="flex items-center justify-between p-4 bg-white border border-outline-variant/20 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.98] group"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-surface-container-low text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors flex-shrink-0">
-                      <span className="material-symbols-outlined text-[20px]">call</span>
-                    </div>
-                    <div>
-                      <span className="block text-label-md font-semibold text-on-surface">Call</span>
-                      <span className="text-body-sm text-on-surface-variant">{customer.phone.trim()}</span>
-                    </div>
-                  </div>
-                  <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-primary group-hover:translate-x-0.5 transition-transform">
-                    arrow_outward
-                  </span>
-                </a>
-              )}
-
-              {/* WhatsApp */}
-              {hasWhatsApp && (
-                <a
-                  href={`https://wa.me/${customer.whatsapp.trim().replace(/\D/g, "")}`}
+                  href={safeWebsite}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between p-4 bg-white border border-outline-variant/20 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.98] group"
+                  className="flex items-center justify-between p-3.5 bg-white border border-outline-variant/20 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.99] group"
                 >
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-surface-container-low text-[#25D366] flex items-center justify-center group-hover:bg-[#25D366] group-hover:text-white transition-colors flex-shrink-0">
-                      <span className="material-symbols-outlined text-[20px]">chat</span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-primary flex items-center justify-center flex-shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
+                      <span className="material-symbols-outlined text-[20px]">language</span>
                     </div>
-                    <div>
-                      <span className="block text-label-md font-semibold text-on-surface">WhatsApp</span>
-                      <span className="text-body-sm text-on-surface-variant">Chat on WhatsApp</span>
-                    </div>
-                  </div>
-                  <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-[#25D366] group-hover:translate-x-0.5 transition-transform">
-                    arrow_outward
-                  </span>
-                </a>
-              )}
-
-              {/* Email */}
-              {hasEmail && (
-                <a
-                  href={`mailto:${customer.email.trim()}`}
-                  className="flex items-center justify-between p-4 bg-white border border-outline-variant/20 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.98] group"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-surface-container-low text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors flex-shrink-0">
-                      <span className="material-symbols-outlined text-[20px]">mail</span>
-                    </div>
-                    <div>
-                      <span className="block text-label-md font-semibold text-on-surface">Email</span>
-                      <span className="text-body-sm text-on-surface-variant truncate max-w-[220px] block">
-                        {customer.email.trim()}
+                    <div className="min-w-0">
+                      <span className="block text-[13px] font-semibold text-on-surface leading-snug">
+                        Website
+                      </span>
+                      <span className="block text-[12px] text-on-surface-variant truncate">
+                        {safeWebsite.replace(/^https?:\/\//i, "").replace(/\/$/, "")}
                       </span>
                     </div>
                   </div>
-                  <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-primary group-hover:translate-x-0.5 transition-transform">
-                    arrow_outward
-                  </span>
-                </a>
-              )}
-
-              {/* Address / Maps */}
-              {hasAddress && (
-                <a
-                  href={`https://maps.google.com/?q=${encodeURIComponent(customer.address.trim())}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between p-4 bg-white border border-outline-variant/20 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.98] group"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-surface-container-low text-red-500 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-colors flex-shrink-0">
-                      <span
-                        className="material-symbols-outlined text-[20px]"
-                        style={{ fontVariationSettings: "'FILL' 1" }}
-                      >
-                        location_on
-                      </span>
-                    </div>
-                    <div>
-                      <span className="block text-label-md font-semibold text-on-surface">Address</span>
-                      <span className="text-body-sm text-on-surface-variant line-clamp-1 max-w-[220px]">
-                        {customer.address.trim()}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-red-500 group-hover:translate-x-0.5 transition-transform">
-                    arrow_outward
+                  <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-primary group-hover:translate-x-0.5 transition-transform flex-shrink-0 ml-2">
+                    open_in_new
                   </span>
                 </a>
               )}
@@ -385,51 +384,26 @@ export default async function CustomerPublicProfilePage({ params }) {
               {/* Instagram */}
               {hasInstagram && (
                 <a
-                  href={`https://instagram.com/${customer.instagram.trim()}`}
+                  href={`https://instagram.com/${cleanInstagram}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between p-4 bg-white border border-outline-variant/20 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.98] group"
+                  className="flex items-center justify-between p-3.5 bg-white border border-outline-variant/20 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.99] group"
                 >
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-[#f09433] group-hover:via-[#e6683c] group-hover:to-[#dc2743] transition-all flex-shrink-0">
-                      <span className="material-symbols-outlined text-[20px] text-[#e1306c] group-hover:text-white transition-colors">
-                        photo_camera
-                      </span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#e1306c] flex items-center justify-center flex-shrink-0 group-hover:bg-gradient-to-tr group-hover:from-[#f09433] group-hover:via-[#e6683c] group-hover:to-[#dc2743] group-hover:text-white transition-all">
+                      <span className="material-symbols-outlined text-[20px]">photo_camera</span>
                     </div>
-                    <div>
-                      <span className="block text-label-md font-semibold text-on-surface">Instagram</span>
-                      <span className="text-body-sm text-on-surface-variant">
-                        @{customer.instagram.trim()}
+                    <div className="min-w-0">
+                      <span className="block text-[13px] font-semibold text-on-surface leading-snug">
+                        Instagram
+                      </span>
+                      <span className="block text-[12px] text-on-surface-variant truncate">
+                        @{cleanInstagram}
                       </span>
                     </div>
                   </div>
-                  <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-[#e1306c] group-hover:translate-x-0.5 transition-transform">
+                  <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-[#e1306c] group-hover:translate-x-0.5 transition-transform flex-shrink-0 ml-2">
                     arrow_outward
-                  </span>
-                </a>
-              )}
-
-              {/* Website */}
-              {hasWebsite && (
-                <a
-                  href={safeWebsite}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between p-4 bg-white border border-outline-variant/20 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.98] group"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-surface-container-low text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors flex-shrink-0">
-                      <span className="material-symbols-outlined text-[20px]">language</span>
-                    </div>
-                    <div>
-                      <span className="block text-label-md font-semibold text-on-surface">Website</span>
-                      <span className="text-body-sm text-on-surface-variant truncate max-w-[220px] block">
-                        {safeWebsite.replace(/^https?:\/\//i, "").replace(/\/$/, "")}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-primary group-hover:translate-x-0.5 transition-transform">
-                    open_in_new
                   </span>
                 </a>
               )}
@@ -440,10 +414,10 @@ export default async function CustomerPublicProfilePage({ params }) {
                   href={safeGoogleReview}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between p-4 bg-white border border-outline-variant/20 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.98] group"
+                  className="flex items-center justify-between p-3.5 bg-white border border-outline-variant/20 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.99] group"
                 >
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-surface-container-low text-amber-500 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-colors flex-shrink-0">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-500 group-hover:text-white transition-colors">
                       <span
                         className="material-symbols-outlined text-[20px]"
                         style={{ fontVariationSettings: "'FILL' 1" }}
@@ -451,16 +425,16 @@ export default async function CustomerPublicProfilePage({ params }) {
                         star
                       </span>
                     </div>
-                    <div>
-                      <span className="block text-label-md font-semibold text-on-surface">
+                    <div className="min-w-0">
+                      <span className="block text-[13px] font-semibold text-on-surface leading-snug">
                         Google Review
                       </span>
-                      <span className="text-body-sm text-on-surface-variant">
-                        Leave a verified review
+                      <span className="block text-[12px] text-on-surface-variant truncate">
+                        Rate & leave a review
                       </span>
                     </div>
                   </div>
-                  <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-amber-500 group-hover:translate-x-0.5 transition-transform">
+                  <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-amber-600 group-hover:translate-x-0.5 transition-transform flex-shrink-0 ml-2">
                     arrow_outward
                   </span>
                 </a>
@@ -469,65 +443,37 @@ export default async function CustomerPublicProfilePage({ params }) {
           </section>
         )}
 
-        {/* ── About Section ──────────────────────────────────────────────── */}
+        {/* ── 6. About Section (Displayed ONCE only) ──────────────────────── */}
         {hasDescription && (
-          <section className="bg-white border border-outline-variant/20 rounded-3xl p-5 shadow-card">
-            <div className="flex items-center gap-2 mb-3">
-              <span
-                className="material-symbols-outlined text-[18px] text-primary"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                person
-              </span>
-              <span className="text-label-sm font-bold text-tertiary uppercase tracking-widest">
-                About
-              </span>
-            </div>
-            <p className="text-body-md text-on-surface leading-relaxed">
-              {customer.description.trim()}
+          <section aria-label="About">
+            <p className="text-[11px] font-bold text-tertiary uppercase tracking-wider mb-2 px-1">
+              About
             </p>
+            <div className="bg-white border border-outline-variant/20 rounded-2xl p-4 shadow-card">
+              <p className="text-[13.5px] text-on-surface leading-relaxed whitespace-pre-line">
+                {customer.description.trim()}
+              </p>
+            </div>
           </section>
         )}
 
-        {/* ── QR Code Section ─────────────────────────────────────────────── */}
-        <section className="bg-gradient-to-br from-[#0b1c30] to-[#004ac6] rounded-3xl p-6 text-center shadow-float">
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-            <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-blue-300">
-              NFC Tap · QR Scan
-            </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-          </div>
-          <p className="text-white font-bold text-label-lg mb-5">Scan to Connect</p>
-
-          <div className="flex justify-center mb-5">
-            <ProfileQRCode url={profileUrl} size={156} />
-          </div>
-
-          <p className="text-blue-200 text-body-sm">
-            Point your camera to instantly open this profile
-          </p>
-
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <span className="text-[10px] text-blue-300/70 font-medium tracking-wider break-all">
-              {profileUrl}
-            </span>
-          </div>
+        {/* ── 7. Share & QR Actions ───────────────────────────────────────── */}
+        <section aria-label="Share and Connect">
+          <ProfileShareModal name={customer.full_name} slug={customer.profile_slug} />
         </section>
 
-        {/* ── Footer ─────────────────────────────────────────────────────── */}
-        <footer className="w-full pt-2 pb-2 text-center flex flex-col items-center justify-center gap-1.5 text-[11px] text-tertiary">
-          <div className="flex items-center justify-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+        {/* ── 8. Refined Footer ───────────────────────────────────────────── */}
+        <footer className="w-full pt-4 pb-2 text-center flex flex-col items-center justify-center gap-1 text-[11px] text-tertiary">
+          <div className="flex items-center justify-center gap-1.5 font-medium">
+            <span>Powered by</span>
             <Link
               href="/"
-              className="text-[12px] font-medium hover:text-primary transition-colors"
+              className="font-bold text-on-surface hover:text-primary transition-colors"
             >
-              Powered by NFCISTA
+              NFCISTA
             </Link>
-            <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
           </div>
-          <div className="flex items-center gap-2 text-[10px] text-tertiary/80">
+          <div className="flex items-center gap-2 text-[10.5px] text-tertiary/75 mt-0.5">
             <Link href="/privacy" className="hover:underline hover:text-primary transition-colors">
               Privacy Notice
             </Link>
@@ -541,6 +487,7 @@ export default async function CustomerPublicProfilePage({ params }) {
             </Link>
           </div>
         </footer>
+
       </div>
     </main>
   );

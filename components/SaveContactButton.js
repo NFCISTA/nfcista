@@ -136,24 +136,24 @@ export default function SaveContactButton({ contact }) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="w-full flex flex-col gap-1.5">
       <button
         type="button"
         onClick={handleSaveContact}
         aria-label={`Save ${fullName || "contact"} to your phone contacts`}
-        className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 bg-primary text-on-primary rounded-2xl font-semibold text-label-lg shadow-btn-primary hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+        className="w-full min-h-[52px] flex items-center justify-center gap-2.5 py-4 px-6 bg-primary text-white rounded-2xl font-bold text-label-lg shadow-btn-primary hover:bg-[#003ea8] active:scale-[0.98] transition-all cursor-pointer select-none"
       >
         <span
-          className="material-symbols-outlined text-[20px]"
+          className="material-symbols-outlined text-[22px]"
           aria-hidden="true"
           style={{ fontVariationSettings: "'FILL' 1" }}
         >
-          contact_page
+          person_add
         </span>
-        Save Contact
+        <span>Save Contact</span>
       </button>
       {error && (
-        <p className="text-center text-body-sm text-error" role="alert">
+        <p className="text-center text-body-sm text-error mt-1" role="alert">
           {error}
         </p>
       )}
