@@ -4,6 +4,7 @@ import SaveContactButton from "@/components/SaveContactButton";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import ProfileShareModal from "@/components/profile/ProfileShareModal";
 import ProfileQuickActions from "@/components/profile/ProfileQuickActions";
+import ProfileIntro from "@/components/profile/ProfileIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -247,6 +248,7 @@ export default async function CustomerPublicProfilePage({ params }) {
   // ── Render ──────────────────────────────────────────────────────────
   return (
     <main className="min-h-screen bg-[#eef2ff] antialiased overflow-x-hidden">
+      <ProfileIntro name={customer.full_name} />
 
       {/*
         Profile card:
