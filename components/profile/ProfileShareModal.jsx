@@ -4,7 +4,12 @@ import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 
 /**
- * ProfileShareModal — provides native Web Share and an accessible QR Code modal.
+ * ProfileShareModal — compact inline share strip + fullscreen QR modal.
+ *
+ * Inline strip design (V2):
+ *   [mini QR] | Share My Card               [share icon]
+ *               Scan the QR code or share the link
+ *               [Show QR  button]
  *
  * @param {{ name: string, slug: string }} props
  */
@@ -16,23 +21,19 @@ export default function ProfileShareModal({ name, slug }) {
 
   const url = `https://nfcista.vercel.app/p/${slug}`;
 
-  // Handle ESC key to close modal
+  // ESC key to close modal
   useEffect(() => {
     if (!isOpen) return;
-    function handleKeyDown(e) {
+    function onKey(e) {
       if (e.key === "Escape") setIsOpen(false);
     }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [isOpen]);
 
-  // Lock body scroll when modal is open
+  // Body scroll lock when modal open
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = isOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
@@ -42,16 +43,19 @@ export default function ProfileShareModal({ name, slug }) {
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({
-          title: name ? `${name} — Digital Business Card` : "NFCISTA Digital Business Card",
-          text: name ? `Connect with ${name} on NFCISTA` : "Connect via NFCISTA digital business card",
+          title: name
+            ? `${name} — Digital Business Card`
+            : "NFCISTA Digital Business Card",
+          text: name
+            ? `Connect with ${name} on NFCISTA`
+            : "Connect via NFCISTA digital business card",
           url,
         });
         return;
       } catch {
-        // Fall through to clipboard if user dismissed or share failed
+        // Fall through to clipboard
       }
     }
-
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
@@ -73,42 +77,60 @@ export default function ProfileShareModal({ name, slug }) {
 
   return (
     <>
-      {/* ── Compact Share & QR Bar ──────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-2.5 w-full">
-        {/* Share Button */}
-        <button
-          type="button"
-          onClick={handleShare}
-          aria-label="Share digital business card"
-          className="flex items-center justify-center gap-1.5 sm:gap-2 py-3 px-2.5 sm:px-4 rounded-2xl bg-white border border-outline-variant/30 text-on-surface font-semibold text-label-md shadow-card hover:bg-surface-container-low transition-all active:scale-[0.98]"
-        >
-          <span
-            className="material-symbols-outlined text-[19px] text-primary"
-            aria-hidden="true"
-          >
-            {copied ? "check_circle" : "share"}
-          </span>
-          <span className="truncate">{copied ? "Link Copied!" : "Share Card"}</span>
-        </button>
-
-        {/* View QR Code Button */}
+      {/* ── Compact Inline Share Strip ─────────────────────────────────── */}
+      <div className="flex items-center gap-3 sm:gap-4 bg-gray-50 rounded-2xl p-3.5 border border-gray-100">
+        {/* Mini QR Preview */}
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          aria-label="Show profile QR code"
-          className="flex items-center justify-center gap-1.5 sm:gap-2 py-3 px-2.5 sm:px-4 rounded-2xl bg-white border border-outline-variant/30 text-on-surface font-semibold text-label-md shadow-card hover:bg-surface-container-low transition-all active:scale-[0.98]"
+          aria-label="Open full QR code"
+          className="flex-shrink-0 p-1.5 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow active:scale-95"
         >
-          <span
-            className="material-symbols-outlined text-[19px] text-primary"
-            aria-hidden="true"
+          <QRCodeSVG
+            value={url}
+            size={56}
+            bgColor="#ffffff"
+            fgColor="#0b1c30"
+            level="M"
+            includeMargin={false}
+          />
+        </button>
+
+        {/* Title + subtitle + Show QR button */}
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-bold text-gray-900 leading-tight">Share My Card</p>
+          <p className="text-[11px] text-gray-400 mt-0.5 leading-snug">
+            Scan the QR code or share the link
+          </p>
+          <button
+            type="button"
+            onClick={() => setIsOpen(true)}
+            className="mt-2 inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-white text-[11px] font-bold rounded-lg shadow-sm hover:bg-[#003ea8] transition-colors active:scale-95"
           >
-            qr_code_2
+            <span
+              className="material-symbols-outlined text-[13px]"
+              aria-hidden="true"
+            >
+              qr_code_2
+            </span>
+            Show QR
+          </button>
+        </div>
+
+        {/* Share icon button */}
+        <button
+          type="button"
+          onClick={handleShare}
+          aria-label="Share profile link"
+          className="flex-shrink-0 w-9 h-9 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all"
+        >
+          <span className="material-symbols-outlined text-[18px] text-primary">
+            {copied ? "check" : "share"}
           </span>
-          <span>Show QR</span>
         </button>
       </div>
 
-      {/* ── Accessible QR Modal ─────────────────────────────────────────── */}
+      {/* ── Fullscreen QR Modal ────────────────────────────────────────── */}
       {isOpen && (
         <div
           role="dialog"
@@ -118,38 +140,41 @@ export default function ProfileShareModal({ name, slug }) {
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="relative w-full max-w-[360px] bg-white rounded-3xl p-6 text-center shadow-float border border-outline-variant/20"
+            className="relative w-full max-w-[360px] bg-white rounded-3xl p-6 text-center shadow-2xl border border-gray-100"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Button */}
+            {/* Close button */}
             <button
               type="button"
               onClick={() => setIsOpen(false)}
               aria-label="Close QR code"
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-surface-container-low text-on-surface-variant flex items-center justify-center hover:bg-surface-container transition-colors"
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors"
             >
               <span className="material-symbols-outlined text-[18px]">close</span>
             </button>
 
-            {/* Modal Header */}
+            {/* Modal header */}
             <div className="mb-4">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container-low rounded-full mb-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 rounded-full mb-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                 <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-primary">
                   NFC Tap · QR Scan
                 </span>
               </div>
-              <h2 id="qr-modal-title" className="text-headline-md font-bold text-on-surface">
+              <h2
+                id="qr-modal-title"
+                className="text-[20px] font-bold text-gray-900"
+              >
                 Scan to Connect
               </h2>
-              <p className="text-body-sm text-on-surface-variant mt-0.5">
+              <p className="text-[13px] text-gray-500 mt-0.5">
                 {name ? `Connect with ${name}` : "Point your phone camera to open"}
               </p>
             </div>
 
-            {/* QR Code Canvas */}
+            {/* QR Code */}
             <div className="flex justify-center my-5">
-              <div className="p-3 bg-white border border-outline-variant/25 rounded-2xl shadow-card inline-flex">
+              <div className="p-3 bg-white border border-gray-200 rounded-2xl shadow-sm inline-flex">
                 <QRCodeSVG
                   value={url}
                   size={180}
@@ -161,17 +186,17 @@ export default function ProfileShareModal({ name, slug }) {
               </div>
             </div>
 
-            {/* Profile URL Copy Bar */}
-            <div className="mt-3 pt-3 border-t border-outline-variant/20 flex flex-col items-center gap-2">
+            {/* Copy URL bar */}
+            <div className="mt-3 pt-3 border-t border-gray-100">
               <button
                 type="button"
                 onClick={handleCopyInModal}
-                className="w-full flex items-center justify-between px-3 py-2 bg-surface-container-low hover:bg-surface-container rounded-xl text-left transition-colors"
+                className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
               >
-                <span className="text-[11px] text-tertiary truncate max-w-[240px] font-mono">
+                <span className="text-[11px] text-gray-400 truncate max-w-[240px] font-mono">
                   {url}
                 </span>
-                <span className="text-[11px] font-semibold text-primary flex items-center gap-1">
+                <span className="text-[11px] font-bold text-primary flex items-center gap-1 flex-shrink-0 ml-2">
                   <span className="material-symbols-outlined text-[14px]">
                     {copied ? "check" : "content_copy"}
                   </span>

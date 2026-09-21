@@ -3,6 +3,7 @@ import { getCustomerBySlug, getSafeExternalUrl } from "@/lib/customers";
 import SaveContactButton from "@/components/SaveContactButton";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import ProfileShareModal from "@/components/profile/ProfileShareModal";
+import ProfileQuickActions from "@/components/profile/ProfileQuickActions";
 
 export const dynamic = "force-dynamic";
 
@@ -26,29 +27,14 @@ export async function generateMetadata({ params }) {
     `${customer.full_name} — ${customer.job_title || "Digital Business Card"}`;
   const profileUrl = `https://nfcista.vercel.app/p/${slug}`;
 
-  // Safe OpenGraph image handling
   const ogImages = customer.photo_url?.trim()
-    ? [
-        {
-          url: customer.photo_url.trim(),
-          alt: customer.full_name,
-        },
-      ]
-    : [
-        {
-          url: "/icon.svg",
-          width: 512,
-          height: 512,
-          alt: "NFCISTA",
-        },
-      ];
+    ? [{ url: customer.photo_url.trim(), alt: customer.full_name }]
+    : [{ url: "/icon.svg", width: 512, height: 512, alt: "NFCISTA" }];
 
   return {
     title,
     description,
-    alternates: {
-      canonical: profileUrl,
-    },
+    alternates: { canonical: profileUrl },
     openGraph: {
       title,
       description,
@@ -67,36 +53,43 @@ export async function generateMetadata({ params }) {
 }
 
 // ---------------------------------------------------------------------------
-// Page Component
+// Page Component — V2 Premium Design
 // ---------------------------------------------------------------------------
 export default async function CustomerPublicProfilePage({ params }) {
   const { slug } = await params;
   const customer = await getCustomerBySlug(slug);
 
-  // ── Profile Unavailable / Inactive ──────────────────────────────────────
+  // ── Profile Unavailable ─────────────────────────────────────────────────
   if (!customer) {
     return (
-      <main className="min-h-screen bg-[#f8f9ff] flex items-center justify-center p-4">
-        <div className="w-full max-w-[390px] bg-white border border-outline-variant/30 rounded-3xl p-8 text-center shadow-card">
-          <div className="mb-6 flex items-center justify-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-primary" />
-            <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-primary">
+      <main className="min-h-screen bg-[#f0f4ff] flex items-center justify-center p-4">
+        <div className="w-full max-w-[390px] bg-white rounded-3xl p-8 text-center shadow-xl">
+          <div className="mb-5 flex items-center justify-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
+              <span
+                className="material-symbols-outlined text-white text-[16px]"
+                style={{ fontVariationSettings: "'FILL' 1" }}
+              >
+                nfc
+              </span>
+            </div>
+            <span className="text-[14px] font-bold tracking-wide text-gray-900">
               NFCISTA
             </span>
           </div>
-          <div className="w-16 h-16 rounded-full bg-surface-container-low text-tertiary flex items-center justify-center mx-auto mb-4">
-            <span className="material-symbols-outlined text-[32px]">person_off</span>
+          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <span className="material-symbols-outlined text-[32px] text-gray-400">
+              person_off
+            </span>
           </div>
-          <h1 className="text-headline-md font-bold text-on-surface">
-            Profile Unavailable
-          </h1>
-          <p className="text-body-md text-on-surface-variant mt-2 leading-relaxed">
+          <h1 className="text-[20px] font-bold text-gray-900">Profile Unavailable</h1>
+          <p className="text-[13px] text-gray-500 mt-2 leading-relaxed">
             This digital business card is currently inactive or does not exist.
           </p>
-          <div className="mt-7 pt-5 border-t border-outline-variant/20">
+          <div className="mt-6 pt-5 border-t border-gray-100">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-primary text-white text-label-md font-semibold hover:bg-[#003ea8] shadow-btn-primary transition-all active:scale-[0.97]"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-primary text-white text-[13px] font-semibold hover:bg-[#003ea8] transition-colors active:scale-[0.97]"
             >
               <span>Visit NFCISTA</span>
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
@@ -107,7 +100,7 @@ export default async function CustomerPublicProfilePage({ params }) {
     );
   }
 
-  // ── Helpers & Data Sanitization ──────────────────────────────────────────
+  // ── Data Processing ─────────────────────────────────────────────────────
   const initials = customer.full_name
     ? customer.full_name
         .split(" ")
@@ -117,120 +110,203 @@ export default async function CustomerPublicProfilePage({ params }) {
         .toUpperCase()
     : "NC";
 
-  const hasPhone = Boolean(customer.phone?.trim());
-  const hasWhatsApp = Boolean(customer.whatsapp?.trim());
-  const hasEmail = Boolean(customer.email?.trim());
-  const hasAddress = Boolean(customer.address?.trim());
+  const hasPhone      = Boolean(customer.phone?.trim());
+  const hasWhatsApp   = Boolean(customer.whatsapp?.trim());
+  const hasEmail      = Boolean(customer.email?.trim());
+  const hasAddress    = Boolean(customer.address?.trim());
   const hasDescription = Boolean(customer.description?.trim());
 
-  // URL security validation (only http/https accepted, rejects javascript:/data:)
-  const safeWebsite = getSafeExternalUrl(customer.website);
+  // External URL security validation (only http/https pass)
+  const safeWebsite     = getSafeExternalUrl(customer.website);
   const safeGoogleReview = getSafeExternalUrl(customer.google_review_url);
-  const hasWebsite = Boolean(safeWebsite);
+  const hasWebsite      = Boolean(safeWebsite);
   const hasGoogleReview = Boolean(safeGoogleReview);
 
-  // Normalize Instagram handle: strip leading '@' characters
-  const rawInstagram = customer.instagram?.trim() || "";
+  // Normalize Instagram handle — strip leading @ characters
+  const rawInstagram   = customer.instagram?.trim() || "";
   const cleanInstagram = rawInstagram.replace(/^@+/, "");
-  const hasInstagram = Boolean(cleanInstagram);
+  const hasInstagram   = Boolean(cleanInstagram);
 
-  // Quick connect items
-  const quickActions = [];
-  if (hasPhone) {
-    quickActions.push({
-      id: "call",
-      label: "Call",
-      icon: "call",
-      href: `tel:${customer.phone.trim().replace(/\s/g, "")}`,
-      colorClass: "bg-blue-50 text-primary hover:bg-blue-100",
-      iconClass: "text-primary",
-      isExternal: false,
-    });
-  }
+  const profileUrl = `https://nfcista.vercel.app/p/${slug}`;
+
+  // ── Top Action Row items (WhatsApp, Call, Email) ─────────────────────
+  // "Share" is always appended client-side by ProfileQuickActions
+  const topActions = [];
   if (hasWhatsApp) {
-    quickActions.push({
+    topActions.push({
       id: "whatsapp",
       label: "WhatsApp",
       icon: "chat",
       href: `https://wa.me/${customer.whatsapp.trim().replace(/\D/g, "")}`,
-      colorClass: "bg-emerald-50 text-[#128C7E] hover:bg-emerald-100",
-      iconClass: "text-[#128C7E]",
+      bg: "bg-[#25D366]",
       isExternal: true,
     });
   }
+  if (hasPhone) {
+    topActions.push({
+      id: "call",
+      label: "Call",
+      icon: "call",
+      href: `tel:${customer.phone.trim().replace(/\s/g, "")}`,
+      bg: "bg-primary",
+      isExternal: false,
+    });
+  }
   if (hasEmail) {
-    quickActions.push({
+    topActions.push({
       id: "email",
       label: "Email",
       icon: "mail",
       href: `mailto:${customer.email.trim()}`,
-      colorClass: "bg-indigo-50 text-indigo-700 hover:bg-indigo-100",
-      iconClass: "text-indigo-700",
+      bg: "bg-indigo-600",
       isExternal: false,
     });
   }
-  if (hasAddress) {
-    quickActions.push({
-      id: "directions",
-      label: "Directions",
-      icon: "near_me",
-      href: `https://maps.google.com/?q=${encodeURIComponent(customer.address.trim())}`,
-      colorClass: "bg-rose-50 text-rose-600 hover:bg-rose-100",
-      iconClass: "text-rose-600",
-      isExternal: true,
+
+  // ── Quick Connect 2×2 Grid (social / web presence) ──────────────────
+  const quickConnectItems = [];
+  if (hasInstagram) {
+    quickConnectItems.push({
+      id: "qc-ig",
+      label: "Instagram",
+      icon: "photo_camera",
+      href: `https://instagram.com/${cleanInstagram}`,
+      iconBg: "bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#dc2743]",
+      iconColor: "text-white",
     });
   }
+  if (hasWebsite) {
+    quickConnectItems.push({
+      id: "qc-web",
+      label: "Website",
+      icon: "language",
+      href: safeWebsite,
+      iconBg: "bg-blue-500",
+      iconColor: "text-white",
+    });
+  }
+  if (hasGoogleReview) {
+    quickConnectItems.push({
+      id: "qc-gr",
+      label: "Google Review",
+      icon: "star",
+      href: safeGoogleReview,
+      iconBg: "bg-amber-50 border border-amber-100",
+      iconColor: "text-amber-500",
+    });
+  }
+  if (hasWhatsApp) {
+    quickConnectItems.push({
+      id: "qc-wa",
+      label: "WhatsApp",
+      icon: "chat",
+      href: `https://wa.me/${customer.whatsapp.trim().replace(/\D/g, "")}`,
+      iconBg: "bg-[#25D366]",
+      iconColor: "text-white",
+    });
+  }
+  const hasQuickConnect = quickConnectItems.length > 0;
 
-  const hasQuickActions = quickActions.length > 0;
-  const hasSocialLinks = hasWebsite || hasInstagram || hasGoogleReview;
+  // ── Links & Presence list ───────────────────────────────────────────
+  const presenceLinks = [];
+  if (hasInstagram) {
+    presenceLinks.push({
+      id: "pl-ig",
+      label: "Instagram",
+      secondary: `@${cleanInstagram}`,
+      href: `https://instagram.com/${cleanInstagram}`,
+      icon: "photo_camera",
+      iconBg: "bg-pink-50",
+      iconColor: "text-[#e1306c]",
+    });
+  }
+  if (hasWebsite) {
+    presenceLinks.push({
+      id: "pl-web",
+      label: "Website",
+      secondary: safeWebsite.replace(/^https?:\/\//i, "").replace(/\/$/, ""),
+      href: safeWebsite,
+      icon: "language",
+      iconBg: "bg-blue-50",
+      iconColor: "text-blue-600",
+    });
+  }
+  if (hasGoogleReview) {
+    presenceLinks.push({
+      id: "pl-gr",
+      label: "Google Review",
+      secondary: "Leave a review",
+      href: safeGoogleReview,
+      icon: "star",
+      iconBg: "bg-amber-50",
+      iconColor: "text-amber-500",
+    });
+  }
+  const hasPresenceLinks = presenceLinks.length > 0;
 
-  // ── Render ───────────────────────────────────────────────────────────────
+  // ── Render ──────────────────────────────────────────────────────────
   return (
-    <main className="w-full max-w-full min-h-screen bg-[#f8f9ff] flex flex-col items-center justify-start py-4 px-3 sm:py-8 sm:px-4 pb-14 antialiased overflow-x-hidden">
-      <div className="w-full max-w-[420px] flex flex-col gap-3.5 mx-auto">
+    <main className="min-h-screen bg-[#eef2ff] antialiased overflow-x-hidden">
 
-        {/* ── 1. Refined Header ──────────────────────────────────────────── */}
-        <header className="w-full flex items-center justify-between py-1.5 px-0.5">
-          <Link href="/" className="flex items-center gap-2 group min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-btn-primary group-hover:opacity-95 transition-opacity flex-shrink-0">
-              <span
-                className="material-symbols-outlined text-white text-[18px]"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                nfc
-              </span>
+      {/*
+        Profile card:
+        - Mobile: single column, max-w-430, full-height white card
+        - Desktop (lg): two-column grid inside a rounded card
+      */}
+      <div
+        className="w-full max-w-[430px] mx-auto bg-white shadow-xl min-h-screen
+                   lg:max-w-[1080px] lg:min-h-0 lg:my-10 lg:rounded-3xl
+                   lg:overflow-hidden lg:shadow-2xl lg:grid lg:grid-cols-[390px_1fr]"
+      >
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* LEFT COLUMN — Hero + Identity + Save Contact                   */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="flex flex-col bg-white lg:border-r lg:border-gray-100">
+
+          {/* ── Premium Hero Banner ─────────────────────────────────── */}
+          <div
+            className="relative overflow-hidden h-44 sm:h-48 lg:h-56
+                       bg-gradient-to-b from-[#071426] via-[#0b2255] to-[#0e54b8]"
+          >
+            {/* Photographic atmosphere layers */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_180%_130%_at_85%_-5%,rgba(255,190,80,0.09),transparent_52%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(20,70,200,0.5),transparent_60%)]" />
+            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#071426]/75 to-transparent" />
+
+            {/* Top bar: NFCISTA brand + desktop tagline & Tap to Connect indicator */}
+            <div className="relative z-10 flex items-center justify-between px-3.5 sm:px-4 pt-3.5 sm:pt-4">
+              <Link href="/" className="flex items-center gap-1.5 sm:gap-2 group flex-shrink-0">
+                <div className="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-lg bg-white/15 backdrop-blur-sm border border-white/25 flex items-center justify-center flex-shrink-0">
+                  <span
+                    className="material-symbols-outlined text-white text-[15px] sm:text-[16px]"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    nfc
+                  </span>
+                </div>
+                <span className="text-white text-[12.5px] sm:text-[13px] font-bold tracking-wide drop-shadow-sm">
+                  NFCISTA
+                </span>
+              </Link>
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                <p className="hidden lg:block text-white/60 text-[11px] italic font-light tracking-wide mr-2">
+                  Small Tap · Big Connections
+                </p>
+                <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 bg-white/15 backdrop-blur-sm rounded-full border border-white/20 text-white flex-shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+                  <span className="text-[9px] sm:text-[10px] font-medium tracking-wide whitespace-nowrap">
+                    Tap to Connect
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="min-w-0">
-              <span className="text-[14px] font-bold text-on-surface tracking-wide leading-tight block truncate">
-                NFCISTA
-              </span>
-              <span className="block text-[9px] font-semibold tracking-[0.16em] uppercase text-tertiary leading-none mt-0.5 truncate">
-                Smart Business Card
-              </span>
-            </div>
-          </Link>
-
-          {/* Tap status pill */}
-          <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 bg-white rounded-full border border-outline-variant/30 shadow-card flex-shrink-0 ml-1.5 sm:ml-2">
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
-            <span className="text-[9px] sm:text-[10px] font-bold text-on-surface tracking-wide whitespace-nowrap">
-              Tap to Connect
-            </span>
-          </div>
-        </header>
-
-        {/* ── 2. Hero / Identity Card ─────────────────────────────────────── */}
-        <div className="relative bg-white border border-outline-variant/25 rounded-3xl shadow-card overflow-hidden">
-          {/* Executive Cover Banner */}
-          <div className="h-24 sm:h-28 w-full bg-gradient-to-r from-[#0b1c30] via-[#003ea8] to-[#004ac6] relative overflow-hidden">
-            {/* Subtle aesthetic backdrop accents */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent_70%)]" />
-            <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/5 blur-xl" />
           </div>
 
-          <div className="px-5 pb-6 pt-0 flex flex-col items-center text-center">
-            {/* Overlapping Avatar */}
-            <div className="-mt-14 mb-3">
+          {/* ── Avatar + Identity ───────────────────────────────────── */}
+          <div className="flex flex-col items-center text-center px-5 pb-5">
+            {/* Avatar overlaps the hero via negative margin */}
+            <div className="-mt-14 mb-3 relative z-10">
               <ProfileAvatar
                 photoUrl={customer.photo_url}
                 fullName={customer.full_name}
@@ -238,256 +314,301 @@ export default async function CustomerPublicProfilePage({ params }) {
               />
             </div>
 
-            {/* Customer Name */}
-            <h1 className="text-[22px] sm:text-[24px] font-bold text-on-surface leading-tight tracking-tight mt-1">
+            {/* Name */}
+            <h1 className="text-[24px] sm:text-[26px] font-bold text-gray-900 tracking-tight leading-tight">
               {customer.full_name}
             </h1>
 
-            {/* Job Title & Company (Cleanly integrated without badge duplicate) */}
+            {/* Job Title & Company */}
             {(customer.job_title?.trim() || customer.company_name?.trim()) && (
               <div className="mt-1 space-y-0.5">
                 {customer.job_title?.trim() && (
-                  <p className="text-[14px] font-semibold text-primary">
+                  <p className="text-[13px] font-medium text-gray-600 leading-snug">
                     {customer.job_title.trim()}
                   </p>
                 )}
                 {customer.company_name?.trim() && (
-                  <p className="text-[13px] font-medium text-on-surface-variant">
+                  <p className="text-[12.5px] font-semibold text-gray-800 leading-snug">
                     {customer.company_name.trim()}
                   </p>
                 )}
               </div>
             )}
 
-            {/* Category & Location Badges */}
+            {/* Category + Location badges */}
             {(customer.category?.trim() || hasAddress) && (
-              <div className="mt-3 flex flex-wrap justify-center gap-1.5 max-w-full">
+              <div className="mt-3 flex flex-wrap justify-center gap-2">
                 {customer.category?.trim() && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-surface-container-low border border-outline-variant/20 rounded-full text-[11px] font-semibold text-on-surface max-w-full">
-                    <span className="material-symbols-outlined text-[12px] text-primary flex-shrink-0">
+                  <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+                    <span className="material-symbols-outlined text-[12px] text-primary">
                       label
                     </span>
-                    <span className="truncate">{customer.category.trim()}</span>
+                    <span className="truncate max-w-[110px]">
+                      {customer.category.trim()}
+                    </span>
                   </span>
                 )}
                 {hasAddress && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-surface-container-low border border-outline-variant/20 rounded-full text-[11px] font-semibold text-on-surface max-w-[200px]">
+                  <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
                     <span
-                      className="material-symbols-outlined text-[12px] text-rose-500 flex-shrink-0"
+                      className="material-symbols-outlined text-[12px] text-rose-400"
                       style={{ fontVariationSettings: "'FILL' 1" }}
                     >
                       location_on
                     </span>
-                    <span className="truncate">{customer.address.trim()}</span>
+                    <span className="truncate max-w-[120px]">
+                      {customer.address.trim()}
+                    </span>
                   </span>
                 )}
               </div>
             )}
           </div>
-        </div>
 
-        {/* ── 3. Primary CTA: Save Contact ────────────────────────────────── */}
-        <div className="w-full">
-          <SaveContactButton
-            contact={{
-              fullName:    customer.full_name,
-              jobTitle:    customer.job_title?.trim(),
-              companyName: customer.company_name?.trim(),
-              phone:       customer.phone?.trim(),
-              whatsapp:    customer.whatsapp?.trim(),
-              email:       customer.email?.trim(),
-              website:     safeWebsite || undefined,
-              address:     customer.address?.trim(),
-            }}
-          />
-        </div>
+          {/* ── Save Contact CTA ─────────────────────────────────────── */}
+          <div className="px-5 pb-6">
+            <SaveContactButton
+              contact={{
+                fullName:    customer.full_name,
+                jobTitle:    customer.job_title?.trim(),
+                companyName: customer.company_name?.trim(),
+                phone:       customer.phone?.trim(),
+                whatsapp:    customer.whatsapp?.trim(),
+                email:       customer.email?.trim(),
+                website:     safeWebsite || undefined,
+                address:     customer.address?.trim(),
+              }}
+            />
+          </div>
 
-        {/* ── 4. Quick Connect Hub ────────────────────────────────────────── */}
-        {hasQuickActions && (
-          <section aria-label="Quick Connect Actions">
-            <p className="text-[11px] font-bold text-tertiary uppercase tracking-wider mb-2 px-1">
-              Quick Connect
-            </p>
-            <div
-              className={`grid gap-1.5 sm:gap-2 ${
-                quickActions.length === 1
-                  ? "grid-cols-1"
-                  : quickActions.length === 2
-                  ? "grid-cols-2"
-                  : quickActions.length === 3
-                  ? "grid-cols-3"
-                  : "grid-cols-2 sm:grid-cols-4"
-              }`}
-            >
-              {quickActions.map((action) => (
-                <a
-                  key={action.id}
-                  href={action.href}
-                  target={action.isExternal ? "_blank" : undefined}
-                  rel={action.isExternal ? "noopener noreferrer" : undefined}
-                  aria-label={action.label}
-                  className="flex flex-col items-center justify-center py-2.5 px-1 sm:py-3 sm:px-2 bg-white border border-outline-variant/20 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.97] group min-w-0"
+          {/* Spacer — pushes desktop footer to bottom of left col */}
+          <div className="hidden lg:block flex-1" />
+
+          {/* ── Desktop-only footer inside left column ───────────────── */}
+          <footer className="hidden lg:flex flex-col items-center py-5 px-5 border-t border-gray-100">
+            <div className="flex items-center gap-2 mb-0.5">
+              <div className="w-6 h-6 rounded-lg bg-primary flex items-center justify-center">
+                <span
+                  className="material-symbols-outlined text-white text-[13px]"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
                 >
-                  <div
-                    className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl ${action.colorClass} flex items-center justify-center mb-1.5 transition-transform group-hover:scale-105 flex-shrink-0`}
+                  nfc
+                </span>
+              </div>
+              <span className="text-[13px] font-bold text-gray-800">NFCISTA</span>
+            </div>
+            <p className="text-[10px] text-gray-400 font-medium tracking-[0.2em] uppercase">
+              Tap · Connect · Grow
+            </p>
+            <div className="mt-2.5 flex items-center justify-center gap-2 text-[10px] text-gray-400 flex-wrap">
+              <Link href="/privacy" className="hover:text-primary transition-colors">
+                Privacy Notice
+              </Link>
+              <span aria-hidden="true">·</span>
+              <Link href="/terms" className="hover:text-primary transition-colors">
+                Terms
+              </Link>
+              <span aria-hidden="true">·</span>
+              <Link href="/privacy/data-request" className="hover:text-primary transition-colors">
+                Data Rights
+              </Link>
+            </div>
+            <p className="mt-2 text-[9.5px] text-gray-300">
+              © 2025 NFCISTA. All rights reserved.
+            </p>
+          </footer>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* RIGHT COLUMN (mobile: continuation / desktop: sidebar)         */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="divide-y divide-gray-100">
+
+          {/* ── Top Action Row: WhatsApp · Call · Email · Share ──────── */}
+          <section className="px-3.5 sm:px-5 py-4 sm:py-5" aria-label="Quick contact actions">
+            <ProfileQuickActions
+              actions={topActions}
+              profileUrl={profileUrl}
+              profileName={customer.full_name}
+            />
+          </section>
+
+          {/* ── Quick Connect 2×2 Grid ───────────────────────────────── */}
+          {hasQuickConnect && (
+            <section className="px-3.5 sm:px-5 py-4 sm:py-5" aria-label="Quick Connect">
+              <div className="mb-3">
+                <h2 className="text-[15px] font-bold text-gray-900">Quick Connect</h2>
+                <p className="text-[11.5px] text-gray-400 mt-0.5">
+                  Tap to connect instantly
+                </p>
+              </div>
+              <div
+                className={`grid gap-2.5 sm:gap-3 ${
+                  quickConnectItems.length === 1 ? "grid-cols-1" : "grid-cols-2"
+                }`}
+              >
+                {quickConnectItems.map((item) => (
+                  <a
+                    key={item.id}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={item.label}
+                    className="flex flex-col items-center justify-center py-4 sm:py-6 px-2 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-[0.97] gap-2 min-w-0"
                   >
-                    <span
-                      className={`material-symbols-outlined text-[19px] sm:text-[20px] ${action.iconClass}`}
-                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    <div
+                      className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl ${item.iconBg} flex items-center justify-center flex-shrink-0`}
                     >
-                      {action.icon}
-                    </span>
-                  </div>
-                  <span className="text-[10.5px] sm:text-[11px] font-semibold text-on-surface text-center leading-tight truncate max-w-full">
-                    {action.label}
-                  </span>
-                </a>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ── 5. Business & Social Links ──────────────────────────────────── */}
-        {hasSocialLinks && (
-          <section aria-label="Business and Social Presence">
-            <p className="text-[11px] font-bold text-tertiary uppercase tracking-wider mb-2 px-1">
-              Links & Presence
-            </p>
-            <div className="flex flex-col gap-2">
-              {/* Website */}
-              {hasWebsite && (
-                <a
-                  href={safeWebsite}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between p-3.5 bg-white border border-outline-variant/20 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.99] group"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-primary flex items-center justify-center flex-shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
-                      <span className="material-symbols-outlined text-[20px]">language</span>
-                    </div>
-                    <div className="min-w-0">
-                      <span className="block text-[13px] font-semibold text-on-surface leading-snug">
-                        Website
-                      </span>
-                      <span className="block text-[12px] text-on-surface-variant truncate">
-                        {safeWebsite.replace(/^https?:\/\//i, "").replace(/\/$/, "")}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-primary group-hover:translate-x-0.5 transition-transform flex-shrink-0 ml-2">
-                    open_in_new
-                  </span>
-                </a>
-              )}
-
-              {/* Instagram */}
-              {hasInstagram && (
-                <a
-                  href={`https://instagram.com/${cleanInstagram}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between p-3.5 bg-white border border-outline-variant/20 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.99] group"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#e1306c] flex items-center justify-center flex-shrink-0 group-hover:bg-gradient-to-tr group-hover:from-[#f09433] group-hover:via-[#e6683c] group-hover:to-[#dc2743] group-hover:text-white transition-all">
-                      <span className="material-symbols-outlined text-[20px]">photo_camera</span>
-                    </div>
-                    <div className="min-w-0">
-                      <span className="block text-[13px] font-semibold text-on-surface leading-snug">
-                        Instagram
-                      </span>
-                      <span className="block text-[12px] text-on-surface-variant truncate">
-                        @{cleanInstagram}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-[#e1306c] group-hover:translate-x-0.5 transition-transform flex-shrink-0 ml-2">
-                    arrow_outward
-                  </span>
-                </a>
-              )}
-
-              {/* Google Review */}
-              {hasGoogleReview && (
-                <a
-                  href={safeGoogleReview}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between p-3.5 bg-white border border-outline-variant/20 rounded-2xl shadow-card hover:bg-surface-container-low transition-all active:scale-[0.99] group"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-500 group-hover:text-white transition-colors">
                       <span
-                        className="material-symbols-outlined text-[20px]"
+                        className={`material-symbols-outlined text-[22px] sm:text-[24px] ${item.iconColor}`}
                         style={{ fontVariationSettings: "'FILL' 1" }}
+                        aria-hidden="true"
                       >
-                        star
+                        {item.icon}
                       </span>
                     </div>
-                    <div className="min-w-0">
-                      <span className="block text-[13px] font-semibold text-on-surface leading-snug">
-                        Google Review
-                      </span>
-                      <span className="block text-[12px] text-on-surface-variant truncate">
-                        Rate & leave a review
-                      </span>
-                    </div>
-                  </div>
-                  <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-amber-600 group-hover:translate-x-0.5 transition-transform flex-shrink-0 ml-2">
-                    arrow_outward
-                  </span>
-                </a>
-              )}
-            </div>
-          </section>
-        )}
+                    <span className="text-[11.5px] sm:text-[12px] font-semibold text-gray-800 truncate max-w-full text-center">
+                      {item.label}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
 
-        {/* ── 6. About Section (Displayed ONCE only) ──────────────────────── */}
-        {hasDescription && (
-          <section aria-label="About">
-            <p className="text-[11px] font-bold text-tertiary uppercase tracking-wider mb-2 px-1">
-              About
-            </p>
-            <div className="bg-white border border-outline-variant/20 rounded-2xl p-4 shadow-card">
-              <p className="text-[13.5px] text-on-surface leading-relaxed whitespace-pre-line">
+          {/* ── Links & Presence list ───────────────────────────────── */}
+          {hasPresenceLinks && (
+            <section className="px-3.5 sm:px-5 py-4 sm:py-5" aria-label="Links and Presence">
+              <h2 className="text-[15px] font-bold text-gray-900 mb-2">
+                Links &amp; Presence
+              </h2>
+              <div className="space-y-0.5">
+                {presenceLinks.map((link) => (
+                  <a
+                    key={link.id}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-gray-50 transition-colors group"
+                  >
+                    <div
+                      className={`w-9 h-9 rounded-xl ${link.iconBg} flex items-center justify-center flex-shrink-0`}
+                    >
+                      <span
+                        className={`material-symbols-outlined text-[18px] ${link.iconColor}`}
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                        aria-hidden="true"
+                      >
+                        {link.icon}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-gray-900 leading-tight">
+                        {link.label}
+                      </p>
+                      <p className="text-[11px] text-gray-400 truncate mt-0.5">
+                        {link.secondary}
+                      </p>
+                    </div>
+                    <span className="material-symbols-outlined text-[20px] text-gray-300 group-hover:text-primary transition-colors flex-shrink-0">
+                      chevron_right
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* ── About ────────────────────────────────────────────────── */}
+          {hasDescription && (
+            <section className="px-3.5 sm:px-5 py-4 sm:py-5" aria-label="About">
+              <h2 className="text-[15px] font-bold text-gray-900 mb-2">About</h2>
+              <p className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-line">
                 {customer.description.trim()}
               </p>
-            </div>
+              {/* Inline location + category meta below description */}
+              {(hasAddress || customer.category?.trim()) && (
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
+                  {hasAddress && (
+                    <span className="inline-flex items-center gap-1 text-[11.5px] text-gray-400">
+                      <span
+                        className="material-symbols-outlined text-[14px]"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                        aria-hidden="true"
+                      >
+                        location_on
+                      </span>
+                      {customer.address.trim()}
+                    </span>
+                  )}
+                  {customer.category?.trim() && (
+                    <span className="inline-flex items-center gap-1 text-[11.5px] text-gray-400">
+                      <span
+                        className="material-symbols-outlined text-[14px]"
+                        aria-hidden="true"
+                      >
+                        label
+                      </span>
+                      {customer.category.trim()}
+                    </span>
+                  )}
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* ── Share My Card ────────────────────────────────────────── */}
+          <section className="px-3.5 sm:px-5 py-4 sm:py-5" aria-label="Share profile">
+            <ProfileShareModal
+              name={customer.full_name}
+              slug={customer.profile_slug}
+            />
           </section>
-        )}
 
-        {/* ── 7. Share & QR Actions ───────────────────────────────────────── */}
-        <section aria-label="Share and Connect">
-          <ProfileShareModal name={customer.full_name} slug={customer.profile_slug} />
-        </section>
+          {/* ── Mobile-only Footer ───────────────────────────────────── */}
+          <footer className="lg:hidden px-5 py-6 text-center">
+            <div className="flex items-center justify-center gap-2 mb-0.5">
+              <div className="w-6 h-6 rounded-lg bg-primary flex items-center justify-center">
+                <span
+                  className="material-symbols-outlined text-white text-[13px]"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                >
+                  nfc
+                </span>
+              </div>
+              <span className="text-[13px] font-bold text-gray-800">NFCISTA</span>
+            </div>
+            <p className="text-[10px] text-gray-400 font-medium tracking-[0.2em] uppercase mt-0.5">
+              Tap · Connect · Grow
+            </p>
+            <div className="mt-3 flex items-center justify-center gap-2.5 text-[10.5px] text-gray-400 flex-wrap">
+              <Link
+                href="/privacy"
+                className="hover:text-primary transition-colors"
+              >
+                Privacy Notice
+              </Link>
+              <span aria-hidden="true">·</span>
+              <Link
+                href="/terms"
+                className="hover:text-primary transition-colors"
+              >
+                Terms
+              </Link>
+              <span aria-hidden="true">·</span>
+              <Link
+                href="/privacy/data-request"
+                className="hover:text-primary transition-colors"
+              >
+                Data Rights
+              </Link>
+            </div>
+            <p className="mt-2 text-[10px] text-gray-300">
+              © 2025 NFCISTA. All rights reserved.
+            </p>
+          </footer>
 
-        {/* ── 8. Refined Footer ───────────────────────────────────────────── */}
-        <footer className="w-full pt-4 pb-2 text-center flex flex-col items-center justify-center gap-1 text-[11px] text-tertiary">
-          <div className="flex items-center justify-center gap-1.5 font-medium">
-            <span>Powered by</span>
-            <Link
-              href="/"
-              className="font-bold text-on-surface hover:text-primary transition-colors"
-            >
-              NFCISTA
-            </Link>
-          </div>
-          <div className="flex items-center gap-2 text-[10.5px] text-tertiary/75 mt-0.5">
-            <Link href="/privacy" className="hover:underline hover:text-primary transition-colors">
-              Privacy Notice
-            </Link>
-            <span>&bull;</span>
-            <Link href="/terms" className="hover:underline hover:text-primary transition-colors">
-              Terms
-            </Link>
-            <span>&bull;</span>
-            <Link href="/privacy/data-request" className="hover:underline hover:text-primary transition-colors">
-              Data Rights
-            </Link>
-          </div>
-        </footer>
-
+        </div>
       </div>
     </main>
   );
