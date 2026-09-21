@@ -266,18 +266,30 @@ export default async function CustomerPublicProfilePage({ params }) {
 
           {/* ── Premium Hero Banner ─────────────────────────────────── */}
           <div
-            className="relative overflow-hidden h-44 sm:h-48 lg:h-56
-                       bg-gradient-to-b from-[#071426] via-[#0b2255] to-[#0e54b8]"
+            className="relative overflow-hidden h-44 sm:h-48 lg:h-56 bg-[#071426]"
+            style={{
+              backgroundImage: "url('/images/hero-mountains.jpg')",
+              backgroundSize: "cover",
+              backgroundPosition: "center 35%",
+              backgroundRepeat: "no-repeat",
+            }}
           >
-            {/* Photographic atmosphere layers */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_180%_130%_at_85%_-5%,rgba(255,190,80,0.09),transparent_52%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(20,70,200,0.5),transparent_60%)]" />
-            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#071426]/75 to-transparent" />
+            {/* Mountain photography background tag */}
+            <img
+              src="/images/hero-mountains.jpg"
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 w-full h-full object-cover object-[center_35%] select-none pointer-events-none"
+            />
+
+            {/* Gradient overlays: balanced for crisp mountain visibility and high text contrast */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#051329]/80 via-[#071426]/20 to-[#071426]/90" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_70%_20%,rgba(255,190,100,0.15),transparent_60%)] pointer-events-none" />
 
             {/* Top bar: NFCISTA brand + desktop tagline & Tap to Connect indicator */}
             <div className="relative z-10 flex items-center justify-between px-3.5 sm:px-4 pt-3.5 sm:pt-4">
               <Link href="/" className="flex items-center gap-1.5 sm:gap-2 group flex-shrink-0">
-                <div className="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-lg bg-white/15 backdrop-blur-sm border border-white/25 flex items-center justify-center flex-shrink-0">
+                <div className="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center flex-shrink-0 shadow-sm group-hover:bg-white/30 transition-colors">
                   <span
                     className="material-symbols-outlined text-white text-[15px] sm:text-[16px]"
                     style={{ fontVariationSettings: "'FILL' 1" }}
@@ -285,17 +297,17 @@ export default async function CustomerPublicProfilePage({ params }) {
                     nfc
                   </span>
                 </div>
-                <span className="text-white text-[12.5px] sm:text-[13px] font-bold tracking-wide drop-shadow-sm">
+                <span className="text-white text-[12.5px] sm:text-[13px] font-bold tracking-wide drop-shadow-md">
                   NFCISTA
                 </span>
               </Link>
               <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-                <p className="hidden lg:block text-white/60 text-[11px] italic font-light tracking-wide mr-2">
+                <p className="hidden lg:block text-white/70 text-[11px] italic font-light tracking-wide mr-2 drop-shadow-sm">
                   Small Tap · Big Connections
                 </p>
-                <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 bg-white/15 backdrop-blur-sm rounded-full border border-white/20 text-white flex-shrink-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
-                  <span className="text-[9px] sm:text-[10px] font-medium tracking-wide whitespace-nowrap">
+                <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/30 text-white flex-shrink-0 shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                  <span className="text-[9px] sm:text-[10px] font-semibold tracking-wide whitespace-nowrap drop-shadow-sm">
                     Tap to Connect
                   </span>
                 </div>
