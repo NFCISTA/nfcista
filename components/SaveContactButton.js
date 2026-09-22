@@ -109,7 +109,7 @@ function downloadVcf(contact) {
 // Save Contact Modal
 // ---------------------------------------------------------------------------
 
-function SaveContactModal({ contact, onClose }) {
+function SaveContactModal({ contact, onClose, onDownloadSuccess }) {
   const { jobTitle, companyName, phone, whatsapp, email, website, address } = contact;
 
   const [contactName, setContactName] = useState(contact.fullName || "");
@@ -216,6 +216,7 @@ function SaveContactModal({ contact, onClose }) {
         downloadVcf(saveContact);
         setResultMethod("download");
         setStatus("done");
+        onDownloadSuccess?.(contactName.trim(), saveContact);
       }
     } catch (err) {
       setErrorMsg("Could not generate the contact file. Please try again.");
@@ -516,8 +517,10 @@ function SaveContactModal({ contact, onClose }) {
             <button
               type="button"
               onClick={() => {
-                downloadVcf({ ...contact, fullName: contactName.trim() });
+                const updated = { ...contact, fullName: contactName.trim() };
+                downloadVcf(updated);
                 setResultMethod("download");
+                onDownloadSuccess?.(contactName.trim(), updated);
               }}
               className="text-white/45 hover:text-white text-[11.5px] underline transition-colors"
             >
@@ -557,11 +560,119 @@ function SaveContactModal({ contact, onClose }) {
 }
 
 // ---------------------------------------------------------------------------
+// Toast Notification (shows after .vcf download fallback succeeds)
+// ---------------------------------------------------------------------------
+
+function ContactFileToast({ name, contact, onClose }) {
+  const prefersReducedMotion =
+    typeof window !== "undefined"
+      ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      : false;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 4500);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const displayName = (name || contact?.fullName || "contact").trim();
+
+  function handleOpen() {
+    if (contact) {
+      downloadVcf(contact);
+    }
+  }
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-50 pointer-events-auto max-w-sm sm:w-[360px]"
+    >
+      <div
+        className={[
+          "bg-[#0d1e38]/95 backdrop-blur-md border border-white/15",
+          "rounded-2xl p-3.5 sm:p-4 shadow-2xl",
+          "text-white flex items-start gap-3",
+          prefersReducedMotion ? "" : "animate-toast-in",
+        ].join(" ")}
+      >
+        {/* Checkmark icon */}
+        <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <span
+            className="material-symbols-outlined text-[18px]"
+            aria-hidden="true"
+            style={{ fontVariationSettings: "'FILL' 1" }}
+          >
+            check_circle
+          </span>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0 pr-1">
+          <p className="font-bold text-[13.5px] text-white leading-tight flex items-center gap-1.5">
+            Contact file saved
+          </p>
+          <p className="text-white/60 text-[11.5px] mt-1 leading-snug break-words">
+            <span className="font-semibold text-white/85">{displayName}.vcf</span> is ready to open and add to Contacts.
+          </p>
+
+          <div className="mt-2.5 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleOpen}
+              className="px-3 py-1 bg-primary hover:bg-[#003ea8] active:scale-95 text-white text-[11.5px] font-semibold rounded-lg shadow-sm transition-all cursor-pointer"
+            >
+              Open Contact File
+            </button>
+          </div>
+        </div>
+
+        {/* Close (×) button */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close notification"
+          className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white flex items-center justify-center transition-colors flex-shrink-0 cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-[14px]" aria-hidden="true">
+            close
+          </span>
+        </button>
+      </div>
+
+      <style>{`
+        @keyframes toast-in {
+          from {
+            opacity: 0;
+            transform: translateY(12px) scale(0.96);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        .animate-toast-in {
+          animation: toast-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .animate-toast-in {
+            animation: none !important;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main exported component
 // ---------------------------------------------------------------------------
 
 export default function SaveContactButton({ contact }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [toast, setToast] = useState(null); // { name: string, contact: object } | null
 
   const {
     fullName,
@@ -576,8 +687,16 @@ export default function SaveContactButton({ contact }) {
   const hasContactInfo = phone || whatsapp || email || website || address;
   if (!hasContactInfo) return null;
 
-  const openModal = useCallback(() => setModalOpen(true),  []);
+  const openModal = useCallback(() => setModalOpen(true), []);
   const closeModal = useCallback(() => setModalOpen(false), []);
+
+  const handleDownloadSuccess = useCallback((name, contactObj) => {
+    setToast({ name, contact: contactObj });
+  }, []);
+
+  const handleCloseToast = useCallback(() => {
+    setToast(null);
+  }, []);
 
   return (
     <>
@@ -598,7 +717,19 @@ export default function SaveContactButton({ contact }) {
       </button>
 
       {modalOpen && (
-        <SaveContactModal contact={contact} onClose={closeModal} />
+        <SaveContactModal
+          contact={contact}
+          onClose={closeModal}
+          onDownloadSuccess={handleDownloadSuccess}
+        />
+      )}
+
+      {toast && (
+        <ContactFileToast
+          name={toast.name}
+          contact={toast.contact}
+          onClose={handleCloseToast}
+        />
       )}
     </>
   );
