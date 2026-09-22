@@ -165,10 +165,14 @@ export default function ProfileIntro({ name }) {
             className="intro-background h-full w-full object-cover"
           />
 
-          <div className="absolute inset-0 bg-gradient-to-b from-[#041126]/70 via-[#071426]/55 to-[#020817]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#041126]/80 via-[#071426]/60 to-[#020817]" />
 
+          {/* Atmospheric depth: seamless soft dark gradient behind typography */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_65%_at_50%_48%,rgba(3,11,24,0.78)_0%,rgba(3,11,24,0.5)_50%,transparent_90%)] pointer-events-none" />
+
+          {/* Soft atmospheric blue glow behind name/tagline area */}
           <div
-            className="intro-glow absolute left-1/2 top-[42%] h-[280px] w-[280px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-400/20 blur-[90px]"
+            className="intro-glow absolute left-1/2 top-[46%] h-[340px] w-[340px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500/15 blur-[100px] pointer-events-none"
             aria-hidden="true"
           />
         </div>
@@ -194,24 +198,24 @@ export default function ProfileIntro({ name }) {
             </div>
 
             {/* Greeting */}
-            <p className="intro-hi text-[11px] font-medium uppercase tracking-[0.32em] text-white/55">
+            <p className="intro-hi text-[12px] font-semibold uppercase tracking-[0.26em] text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
               Hi, I&apos;m
             </p>
 
             {/* Customer name */}
-            <h1 className="intro-name mt-3 max-w-[90vw] text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">
+            <h1 className="intro-name mt-3 max-w-[90vw] text-4xl font-semibold tracking-[-0.03em] sm:text-5xl text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
               {name}
             </h1>
 
             {/* Divider */}
             <div className="intro-tagline mt-7 flex items-center gap-3">
-              <span className="h-px w-8 bg-white/20" />
+              <span className="h-px w-8 bg-white/35" />
 
-              <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-white/50">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/90 drop-shadow-[0_1px_8px_rgba(147,197,253,0.45)]">
                 Tap · Connect · Grow
               </p>
 
-              <span className="h-px w-8 bg-white/20" />
+              <span className="h-px w-8 bg-white/35" />
             </div>
           </div>
         </div>
