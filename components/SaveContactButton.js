@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
 // ---------------------------------------------------------------------------
-// vCard helpers  (unchanged from original)
+// vCard helpers
 // ---------------------------------------------------------------------------
 
 /**
@@ -88,7 +88,8 @@ function buildVCard({ fullName, jobTitle, companyName, phone, whatsapp, email, w
 }
 
 /**
- * Trigger the .vcf download — reliable cross-browser fallback.
+ * Compatibility fallback: Trigger .vcf file download.
+ * Used when direct OS/browser contact handoff is unsupported or fails.
  */
 function downloadVcf(contact) {
   const vCardString = buildVCard(contact);
@@ -113,10 +114,11 @@ function SaveContactModal({ contact, onClose }) {
 
   const [contactName, setContactName] = useState(contact.fullName || "");
   const [status, setStatus] = useState("idle"); // "idle" | "saving" | "done" | "error"
+  const [resultMethod, setResultMethod] = useState("download"); // "direct" | "download"
+  const [cancelledDirectShare, setCancelledDirectShare] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
   const inputRef = useRef(null);
-  const firstFocusRef = useRef(null);
   const prefersReducedMotion =
     typeof window !== "undefined"
       ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -144,32 +146,78 @@ function SaveContactModal({ contact, onClose }) {
     return () => { document.body.style.overflow = prev; };
   }, []);
 
-  async function handleSave() {
+  // ---------------------------------------------------------------------------
+  // vCard direct handoff & fallback logic
+  //
+  // PLATFORM CONSTRAINTS & BEHAVIOR:
+  // 1. Browsers cannot silently write to Contacts without user interaction and OS
+  //    permission. Normal websites have no direct database write access to contacts.
+  // 2. Direct opening is best-effort: On supported mobile browsers (such as iOS Safari
+  //    and Android Chrome), the Web Share API with a .vcf File (MIME: text/vcard)
+  //    hands the contact directly to the operating system's action / contact sheet,
+  //    allowing the user to tap "Add to Contacts" directly.
+  // 3. Fallback: If Web Share API is unavailable (e.g. desktop browsers, webviews,
+  //    or insecure contexts) or fails, the application automatically falls back to
+  //    the standard .vcf file download, ensuring universal compatibility.
+  // ---------------------------------------------------------------------------
+  async function handleSave(forceDownload = false) {
     if (!contactName.trim()) {
       inputRef.current?.focus();
       return;
     }
     setStatus("saving");
     setErrorMsg(null);
+    setCancelledDirectShare(false);
 
     const saveContact = { ...contact, fullName: contactName.trim() };
 
-    // Attempt Contact Picker API (Chrome for Android 80+, limited support)
-    if (typeof window !== "undefined" && "contacts" in navigator && "ContactsManager" in window) {
-      try {
-        // Contact Picker API is read-only (pick contacts, not add them) —
-        // so we still fall through to the .vcf download path.
-        // This branch is intentionally not used to silently add contacts.
-      } catch {
-        // swallow
-      }
-    }
-
-    // Best supported path: .vcf download
     try {
-      downloadVcf(saveContact);
-      setStatus("done");
-    } catch {
+      let handedOffDirectly = false;
+
+      // Attempt direct OS contact handoff via Web Share API with typed File
+      if (
+        !forceDownload &&
+        typeof navigator !== "undefined" &&
+        typeof File !== "undefined" &&
+        typeof navigator.canShare === "function"
+      ) {
+        try {
+          const vCardString = buildVCard(saveContact);
+          const fileName = safeFilename(saveContact.fullName);
+          const vcfFile = new File([vCardString], fileName, {
+            type: "text/vcard",
+          });
+
+          // Check if system can share the vCard file
+          if (navigator.canShare({ files: [vcfFile] })) {
+            await navigator.share({
+              files: [vcfFile],
+              title: saveContact.fullName || "Contact",
+            });
+            handedOffDirectly = true;
+          }
+        } catch (shareErr) {
+          // If the user intentionally dismissed the share/contact prompt:
+          if (shareErr && shareErr.name === "AbortError") {
+            setStatus("idle");
+            setCancelledDirectShare(true);
+            return;
+          }
+          // Other platform error: fall back to file download below
+          console.warn("Direct contact handoff unsupported or failed, falling back to download:", shareErr);
+        }
+      }
+
+      if (handedOffDirectly) {
+        setResultMethod("direct");
+        setStatus("done");
+      } else {
+        // Standard .vcf download fallback
+        downloadVcf(saveContact);
+        setResultMethod("download");
+        setStatus("done");
+      }
+    } catch (err) {
       setErrorMsg("Could not generate the contact file. Please try again.");
       setStatus("error");
     }
@@ -269,6 +317,20 @@ function SaveContactModal({ contact, onClose }) {
                 Only the saved contact name changes — the profile stays the same.
               </p>
             </div>
+
+            {/* Cancelled share notice if prompt was dismissed */}
+            {cancelledDirectShare && (
+              <div className="bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 mb-4 text-[11.5px] text-white/70 flex items-center justify-between">
+                <span>Device options were dismissed.</span>
+                <button
+                  type="button"
+                  onClick={() => handleSave(true)}
+                  className="text-primary hover:underline font-semibold"
+                >
+                  Download .vcf instead
+                </button>
+              </div>
+            )}
 
             {/* Contact preview card */}
             <div className="bg-white/5 border border-white/10 rounded-2xl px-4 py-3.5 mb-5 space-y-2">
@@ -385,7 +447,7 @@ function SaveContactModal({ contact, onClose }) {
             {/* Save CTA */}
             <button
               type="button"
-              onClick={handleSave}
+              onClick={() => handleSave(false)}
               disabled={nameIsEmpty || status === "saving"}
               aria-disabled={nameIsEmpty || status === "saving"}
               className="w-full min-h-[52px] flex items-center justify-center gap-2.5 py-3.5 px-6 bg-primary text-white rounded-2xl font-bold text-[15px] shadow-btn-primary hover:bg-[#003ea8] active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer select-none"
@@ -398,7 +460,7 @@ function SaveContactModal({ contact, onClose }) {
                   >
                     progress_activity
                   </span>
-                  <span>Saving…</span>
+                  <span>Opening device options…</span>
                 </>
               ) : (
                 <>
@@ -407,16 +469,16 @@ function SaveContactModal({ contact, onClose }) {
                     aria-hidden="true"
                     style={{ fontVariationSettings: "'FILL' 1" }}
                   >
-                    download
+                    person_add
                   </span>
                   <span>Save Contact</span>
                 </>
               )}
             </button>
 
-            {/* Hint */}
+            {/* Platform capability hint */}
             <p className="text-white/30 text-[10.5px] text-center mt-3 leading-relaxed">
-              A .vcf contact file will download. Open it to add the contact to your phone or app.
+              Your device may offer Contacts as an option, or downloads a .vcf contact file.
             </p>
           </>
         ) : (
@@ -432,12 +494,38 @@ function SaveContactModal({ contact, onClose }) {
               </span>
             </div>
             <div>
-              <p className="text-white font-bold text-[15px]">Contact file downloaded!</p>
+              <p className="text-white font-bold text-[15px]">
+                {resultMethod === "direct" ? "Device share options opened" : "Contact file downloaded!"}
+              </p>
               <p className="text-white/50 text-[12.5px] mt-1 leading-relaxed max-w-[260px]">
-                Open the .vcf file from your downloads to add&nbsp;
-                <strong className="text-white/80">{contactName.trim()}</strong> to your contacts.
+                {resultMethod === "direct" ? (
+                  <>
+                    Choose Contacts or another supported option to save&nbsp;
+                    <strong className="text-white/80">{contactName.trim()}</strong>.
+                  </>
+                ) : (
+                  <>
+                    Open the .vcf file from your downloads to add&nbsp;
+                    <strong className="text-white/80">{contactName.trim()}</strong> to your contacts.
+                  </>
+                )}
               </p>
             </div>
+
+            {/* Fallback download button */}
+            <button
+              type="button"
+              onClick={() => {
+                downloadVcf({ ...contact, fullName: contactName.trim() });
+                setResultMethod("download");
+              }}
+              className="text-white/45 hover:text-white text-[11.5px] underline transition-colors"
+            >
+              {resultMethod === "direct"
+                ? "Didn't see device options? Download .vcf file"
+                : "Download file again"}
+            </button>
+
             <button
               type="button"
               onClick={onClose}
