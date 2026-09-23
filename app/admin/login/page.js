@@ -29,7 +29,7 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
@@ -45,6 +45,22 @@ export default function AdminLoginPage() {
         }
         setIsLoading(false);
         return;
+      }
+
+      // Establish HttpOnly server session for proxy gating (never in document.cookie)
+      if (data?.session?.access_token) {
+        try {
+          await fetch("/api/admin/session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              access_token: data.session.access_token,
+              expires_in: data.session.expires_in,
+            }),
+          });
+        } catch {
+          // Non-blocking fallback
+        }
       }
 
       // Successful authentication -> redirect to /admin

@@ -1,18 +1,52 @@
 import { NextResponse } from "next/server";
 import { checkRateLimit, getClientIp } from "./lib/rateLimit";
+import { supabase } from "./lib/supabaseClient";
 
 /**
  * Next.js Proxy / Middleware (Next.js 16 convention)
  *
  * Scope:
- * - ONLY rate-limits public customer profile routes (/p/[slug]).
- * - Strictly excludes /admin, authentication, Supabase operations, and static assets.
- * - Protects customer profiles against automated scraping & dictionary enumeration.
+ * - Server-side authentication gating for /admin/* (redirects unauthenticated to /admin/login).
+ * - Rate-limits public customer profile routes (/p/[slug]).
  */
 export async function proxy(request) {
   const { pathname } = request.nextUrl;
 
-  // Defensive path check: Only process /p/* routes
+  // 1. Server-side session gating for /admin/*
+  if (pathname.startsWith("/admin")) {
+    // /admin/login must remain accessible without an authenticated session
+    if (pathname === "/admin/login") {
+      return NextResponse.next();
+    }
+
+    const token = request.cookies.get("sb-access-token")?.value;
+    if (!token) {
+      const loginUrl = new URL("/admin/login", request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    if (!supabase) {
+      const loginUrl = new URL("/admin/login", request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    try {
+      const { data, error } = await supabase.auth.getUser(token);
+      if (error || !data?.user) {
+        const loginUrl = new URL("/admin/login", request.url);
+        const response = NextResponse.redirect(loginUrl);
+        response.cookies.delete("sb-access-token");
+        return response;
+      }
+
+      return NextResponse.next();
+    } catch {
+      const loginUrl = new URL("/admin/login", request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  // 2. Defensive path check: Only process /p/* routes
   if (!pathname.startsWith("/p/")) {
     return NextResponse.next();
   }
@@ -95,7 +129,7 @@ export async function proxy(request) {
   }
 }
 
-// Strictly match only /p/* routes; /admin, auth, and static assets bypass completely
+// Match /p/* for rate limiting, and /admin routes for server-side session gating
 export const config = {
-  matcher: ["/p/:path*"],
+  matcher: ["/p/:path*", "/admin", "/admin/:path*"],
 };

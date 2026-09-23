@@ -20,10 +20,24 @@ export default function AdminLayout({ children }) {
     }
 
     // 1. Initial session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user);
         if (isLoginPage) {
+          if (session.access_token) {
+            try {
+              await fetch("/api/admin/session", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  access_token: session.access_token,
+                  expires_in: session.expires_in,
+                }),
+              });
+            } catch {
+              // Non-blocking
+            }
+          }
           router.replace("/admin");
         }
       } else {
@@ -84,6 +98,11 @@ export default function AdminLayout({ children }) {
 
   async function handleSignOut() {
     if (supabase) {
+      try {
+        await fetch("/api/admin/session", { method: "DELETE" });
+      } catch {
+        // Continue sign out regardless
+      }
       await supabase.auth.signOut();
       router.replace("/admin/login");
     }
