@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function ProductsPreview() {
   const products = [
     {
@@ -174,13 +176,13 @@ export default function ProductsPreview() {
                   </span>
                 </div>
 
-                <a
-                  href="#products"
+                <Link
+                  href={`/products/${product.id}`}
                   className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface-container-low text-primary border border-primary/20 font-semibold text-label-md hover:bg-primary hover:text-white transition-all active:scale-[0.98]"
                 >
                   <span>View Product</span>
-                  <span className="material-symbols-outlined text-[16px]">visibility</span>
-                </a>
+                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </Link>
               </div>
             </div>
           ))}

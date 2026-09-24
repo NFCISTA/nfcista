@@ -1,0 +1,362 @@
+import Link from "next/link";
+
+const WHATSAPP_URL =
+  "https://wa.me/919000000000?text=Hi%20NFCISTA%2C%20I%20would%20like%20to%20order%20an%20NFC%20card.";
+
+/**
+ * Shared product page template for all NFCISTA product pages.
+ * Accepts a `product` object and renders the full page layout.
+ */
+export default function ProductPageTemplate({ product }) {
+  const {
+    name,
+    badge,
+    tagline,
+    description,
+    theme,
+    benefits,
+    useCases,
+    howItWorks,
+  } = product;
+
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] selection:bg-primary selection:text-white">
+      {/* ── Sticky Header ───────────────────────────────────── */}
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-outline-variant/30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-btn-primary group-hover:scale-105 transition-transform">
+              <span className="material-symbols-outlined text-[20px]">contactless</span>
+            </div>
+            <span className="text-headline-md font-bold tracking-tight text-on-surface">
+              NFCISTA
+            </span>
+          </Link>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/#products"
+              className="hidden sm:inline-flex items-center gap-1.5 text-body-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
+            >
+              <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+              All Products
+            </Link>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#25D366] text-white text-label-sm font-semibold hover:bg-[#20ba59] shadow-sm transition-all active:scale-[0.98]"
+            >
+              <span className="material-symbols-outlined text-[16px]">chat</span>
+              <span>Order on WhatsApp</span>
+            </a>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        {/* ── Hero Section ─────────────────────────────────── */}
+        <section className="relative pt-14 pb-20 md:pt-20 md:pb-28 overflow-hidden">
+          {/* Background glow */}
+          <div
+            className={`absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-80 ${theme.heroBg} pointer-events-none -z-10`}
+          />
+
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+              {/* Left: Copy */}
+              <div className="lg:col-span-6 flex flex-col items-start text-left space-y-6">
+                {/* Back link — mobile */}
+                <Link
+                  href="/#products"
+                  className="sm:hidden inline-flex items-center gap-1.5 text-body-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+                  All Products
+                </Link>
+
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container-low border border-outline-variant/30">
+                  <span
+                    className={`material-symbols-outlined text-[16px] ${theme.accentText}`}
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    {theme.accentIcon}
+                  </span>
+                  <span className={`text-label-sm font-bold tracking-wide uppercase ${theme.accentText}`}>
+                    {badge}
+                  </span>
+                </div>
+
+                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-on-surface leading-[1.15]">
+                  {name}
+                </h1>
+
+                <p className="text-lg text-on-surface-variant leading-relaxed max-w-lg">
+                  {tagline}
+                </p>
+
+                {/* Coming Soon badge */}
+                <div className="flex items-center gap-3 pt-1">
+                  <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-label-sm font-semibold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    Coming Soon — Notify Me via WhatsApp
+                  </span>
+                </div>
+
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#25D366] text-white font-semibold text-label-lg hover:bg-[#20ba59] shadow-sm transition-all active:scale-[0.98]"
+                >
+                  <span className="material-symbols-outlined text-[20px]">chat</span>
+                  <span>Get Notified — Order on WhatsApp</span>
+                </a>
+              </div>
+
+              {/* Right: Product card mockup */}
+              <div className="lg:col-span-6 flex justify-center items-center relative">
+                {/* Aura glow */}
+                <div className={`absolute -inset-6 ${theme.auraGlow} rounded-3xl blur-3xl -z-10`} />
+
+                <div className="relative w-full max-w-[420px]">
+                  {/* Physical card mockup */}
+                  <div
+                    className={`aspect-[1.586] w-full rounded-2xl p-7 bg-gradient-to-br ${theme.cardBg} text-white shadow-2xl border border-white/10 relative overflow-hidden flex flex-col justify-between select-none`}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.04] to-transparent pointer-events-none" />
+                    <div className={`absolute -top-16 -right-16 w-48 h-48 ${theme.glowSpot} rounded-full blur-2xl pointer-events-none`} />
+
+                    {/* Card header */}
+                    <div className="flex items-center justify-between relative z-10">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center">
+                          <span className="material-symbols-outlined text-[15px] text-white">contactless</span>
+                        </div>
+                        <span className="text-[11px] font-bold tracking-widest text-white uppercase">NFCISTA</span>
+                      </div>
+                      <span className="material-symbols-outlined text-[24px] text-white/40">contactless</span>
+                    </div>
+
+                    {/* Card center: chip + accent */}
+                    <div className="relative z-10 flex items-center justify-between my-auto py-3">
+                      {/* Golden chip */}
+                      <div className="w-10 h-8 rounded bg-gradient-to-tr from-[#E6B762] via-[#F8E19B] to-[#D49E3C] p-0.5 shadow-sm">
+                        <div className="w-full h-full rounded-[2px] border border-black/20 grid grid-cols-2 grid-rows-2 gap-[1px] p-0.5 bg-[#D49E3C]/20">
+                          <div className="border-r border-b border-black/20" />
+                          <div className="border-b border-black/20" />
+                          <div className="border-r border-black/20" />
+                          <div />
+                        </div>
+                      </div>
+
+                      {/* Accent pill */}
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm">
+                        <span
+                          className={`material-symbols-outlined text-[18px] ${theme.accentIconColor}`}
+                          style={{ fontVariationSettings: "'FILL' 1" }}
+                        >
+                          {theme.accentIcon}
+                        </span>
+                        <span className="text-[12px] font-semibold text-white/90">{theme.highlightBadge}</span>
+                      </div>
+                    </div>
+
+                    {/* Card footer */}
+                    <div className="relative z-10 flex items-end justify-between">
+                      <div>
+                        <div className="text-base font-bold text-white tracking-wide">{name}</div>
+                        <div className="text-[10px] text-white/50 uppercase tracking-wider mt-0.5">Tap &amp; QR Enabled</div>
+                      </div>
+                      <span className="text-[9px] uppercase tracking-widest text-white/30 font-semibold">NFCISTA</span>
+                    </div>
+                  </div>
+
+                  {/* Floating pill: Coming Soon */}
+                  <div className="absolute -bottom-4 -right-2 sm:-right-6 bg-white border border-outline-variant/30 rounded-xl px-3.5 py-2 shadow-float flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[16px]">schedule</span>
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-bold text-on-surface">Coming Soon</div>
+                      <div className="text-[10px] text-on-surface-variant">Order via WhatsApp</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Description ──────────────────────────────────── */}
+        <section className="py-16 bg-white border-y border-outline-variant/20">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+            <span className="text-label-sm font-bold text-primary uppercase tracking-wider">
+              About This Card
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-on-surface mt-2 mb-4 tracking-tight">
+              What Is the {name}?
+            </h2>
+            <p className="text-body-lg text-on-surface-variant leading-relaxed max-w-2xl mx-auto">
+              {description}
+            </p>
+          </div>
+        </section>
+
+        {/* ── How It Works ─────────────────────────────────── */}
+        <section className="py-20 bg-[#F8FAFC]">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-14">
+              <span className="text-label-sm font-bold text-primary uppercase tracking-wider">
+                Simple Process
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-on-surface mt-2 tracking-tight">
+                How It Works
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {howItWorks.map((step, i) => (
+                <div
+                  key={step.title}
+                  className="bg-white border border-outline-variant/30 rounded-2xl p-6 shadow-card flex flex-col"
+                >
+                  <div className="flex items-center justify-between mb-5">
+                    <span className="text-3xl font-black text-primary/25 tracking-tight">
+                      0{i + 1}
+                    </span>
+                    <div className="w-11 h-11 rounded-xl bg-surface-container-low text-primary flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[22px]">{step.icon}</span>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-on-surface mb-2">{step.title}</h3>
+                  <p className="text-body-md text-on-surface-variant leading-relaxed">{step.detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Key Benefits ─────────────────────────────────── */}
+        <section className="py-20 bg-white border-y border-outline-variant/20">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-14">
+              <span className="text-label-sm font-bold text-primary uppercase tracking-wider">
+                Why It Works
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-on-surface mt-2 tracking-tight">
+                Key Benefits
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {benefits.map((b) => (
+                <div
+                  key={b.title}
+                  className="flex items-start gap-4 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-card hover:border-primary/30 transition-all"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-surface-container-low text-primary flex-shrink-0 flex items-center justify-center mt-0.5">
+                    <span className="material-symbols-outlined text-[20px]">{b.icon}</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-on-surface text-sm mb-1">{b.title}</h3>
+                    <p className="text-body-sm text-on-surface-variant leading-relaxed">{b.detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Use Cases ────────────────────────────────────── */}
+        <section className="py-20 bg-[#F8FAFC]">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-12">
+              <span className="text-label-sm font-bold text-primary uppercase tracking-wider">
+                Who It&apos;s For
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-on-surface mt-2 tracking-tight">
+                Ideal Use Cases
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {useCases.map((u) => (
+                <div
+                  key={u}
+                  className="flex items-center gap-3 bg-white border border-outline-variant/30 rounded-xl px-5 py-4 shadow-card"
+                >
+                  <span className="material-symbols-outlined text-[20px] text-primary flex-shrink-0">
+                    check_circle
+                  </span>
+                  <span className="text-body-md font-medium text-on-surface">{u}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── CTA ──────────────────────────────────────────── */}
+        <section className="py-20 bg-white border-t border-outline-variant/20">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+            <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-10 sm:p-14 shadow-float">
+              <span className="text-label-sm font-bold text-primary uppercase tracking-wider">
+                Interested?
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-on-surface mt-2 mb-3 tracking-tight">
+                Get Yours When Available
+              </h2>
+              <p className="text-body-lg text-on-surface-variant mb-8 max-w-md mx-auto leading-relaxed">
+                This card is coming soon. Reach out on WhatsApp to express interest and be among the first to order.
+              </p>
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-[#25D366] text-white font-bold text-label-lg hover:bg-[#20ba59] shadow-sm transition-all active:scale-[0.98]"
+              >
+                <span className="material-symbols-outlined text-[20px]">chat</span>
+                <span>Order on WhatsApp — Coming Soon</span>
+              </a>
+              <p className="text-xs text-on-surface-variant mt-4">WhatsApp inquiry: +91 90000 00000</p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Back to all products ──────────────────────────── */}
+        <div className="py-8 flex justify-center bg-[#F8FAFC] border-t border-outline-variant/20">
+          <Link
+            href="/#products"
+            className="inline-flex items-center gap-2 text-body-md font-semibold text-primary hover:underline transition-colors"
+          >
+            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            View All NFCISTA Products
+          </Link>
+        </div>
+      </main>
+
+      {/* ── Footer ───────────────────────────────────────── */}
+      <footer className="bg-white border-t border-outline-variant/20 py-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-on-surface-variant">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-primary flex items-center justify-center text-white">
+              <span className="material-symbols-outlined text-[13px]">contactless</span>
+            </div>
+            <span className="font-bold text-on-surface">NFCISTA</span>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap justify-center">
+            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+            <span>·</span>
+            <Link href="/#products" className="hover:text-primary transition-colors">Products</Link>
+            <span>·</span>
+            <Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
+            <span>·</span>
+            <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
+          </div>
+          <span>© 2026 NFCISTA. All rights reserved.</span>
+        </div>
+      </footer>
+    </div>
+  );
+}
