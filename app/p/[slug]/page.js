@@ -28,8 +28,9 @@ export async function generateMetadata({ params }) {
     `${customer.full_name} — ${customer.job_title || "Digital Business Card"}`;
   const profileUrl = `https://nfcista.vercel.app/p/${slug}`;
 
-  const ogImages = customer.photo_url?.trim()
-    ? [{ url: customer.photo_url.trim(), alt: customer.full_name }]
+  const safePhotoUrl = getSafeExternalUrl(customer.photo_url);
+  const ogImages = safePhotoUrl
+    ? [{ url: safePhotoUrl, alt: customer.full_name }]
     : [{ url: "/icon.svg", width: 512, height: 512, alt: "NFCISTA" }];
 
   return {
@@ -118,10 +119,11 @@ export default async function CustomerPublicProfilePage({ params }) {
   const hasDescription = Boolean(customer.description?.trim());
 
   // External URL security validation (only http/https pass)
-  const safeWebsite     = getSafeExternalUrl(customer.website);
+  const safeWebsite      = getSafeExternalUrl(customer.website);
   const safeGoogleReview = getSafeExternalUrl(customer.google_review_url);
-  const hasWebsite      = Boolean(safeWebsite);
-  const hasGoogleReview = Boolean(safeGoogleReview);
+  const safePhotoUrl     = getSafeExternalUrl(customer.photo_url);
+  const hasWebsite       = Boolean(safeWebsite);
+  const hasGoogleReview  = Boolean(safeGoogleReview);
 
   // Normalize Instagram handle — strip leading @ characters
   const rawInstagram   = customer.instagram?.trim() || "";
@@ -322,7 +324,7 @@ export default async function CustomerPublicProfilePage({ params }) {
             {/* Avatar overlaps the hero via negative margin */}
             <div className="-mt-14 mb-3 relative z-10">
               <ProfileAvatar
-                photoUrl={customer.photo_url}
+                photoUrl={safePhotoUrl}
                 fullName={customer.full_name}
                 initials={initials}
               />
