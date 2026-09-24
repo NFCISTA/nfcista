@@ -1,32 +1,43 @@
 import Navbar from "@/components/home/Navbar";
 import Hero from "@/components/home/Hero";
-import NfcExplanation from "@/components/home/NfcExplanation";
-import HowItWorks from "@/components/home/HowItWorks";
-import Features from "@/components/home/Features";
 import WhyNfcista from "@/components/home/WhyNfcista";
-import CardShowcase from "@/components/home/CardShowcase";
-import DemoSection from "@/components/home/DemoSection";
-import WhoItsFor from "@/components/home/WhoItsFor";
-import FAQ from "@/components/home/FAQ";
+import ProductsPreview from "@/components/home/ProductsPreview";
+import HowItWorks from "@/components/home/HowItWorks";
+import NfcExplanation from "@/components/home/NfcExplanation";
 import ContactCTA from "@/components/home/ContactCTA";
+import FAQ from "@/components/home/FAQ";
 import Footer from "@/components/home/Footer";
 
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] selection:bg-primary selection:text-white">
+      {/* 1. HEADER */}
       <Navbar />
+
       <main className="flex-1">
+        {/* 2. HERO SECTION */}
         <Hero />
-        <NfcExplanation />
-        <HowItWorks />
-        <Features />
+
+        {/* 3. WHY NFCISTA */}
         <WhyNfcista />
-        <CardShowcase />
-        <DemoSection />
-        <WhoItsFor />
-        <FAQ />
+
+        {/* 4. PRODUCTS PREVIEW */}
+        <ProductsPreview />
+
+        {/* 5. HOW IT WORKS */}
+        <HowItWorks />
+
+        {/* 6. NFC + QR EXPLANATION */}
+        <NfcExplanation />
+
+        {/* 7. ORDER CTA */}
         <ContactCTA />
+
+        {/* 8. FAQ */}
+        <FAQ />
       </main>
+
+      {/* 9. FOOTER */}
       <Footer />
     </div>
   );

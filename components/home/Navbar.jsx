@@ -7,13 +7,13 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
-    { label: "Home", href: "#" },
+    { label: "Products", href: "#products" },
     { label: "How It Works", href: "#how-it-works" },
-    { label: "Features", href: "#features" },
-    { label: "Cards", href: "#cards" },
     { label: "FAQ", href: "#faq" },
     { label: "Contact", href: "#contact" },
   ];
+
+  const whatsappUrl = "https://wa.me/919000000000?text=Hi%20NFCISTA%2C%20I%20would%20like%20to%20order%20an%20NFC%20card.";
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-outline-variant/30">
@@ -29,7 +29,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-7" aria-label="Main navigation">
+        <nav className="hidden md:flex items-center gap-8" aria-label="Main navigation">
           {navLinks.map((link) => (
             <a
               key={link.label}
@@ -44,11 +44,13 @@ export default function Navbar() {
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-3">
           <a
-            href="#contact"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary text-label-md font-semibold hover:bg-primary-container shadow-btn-primary transition-all active:scale-[0.98]"
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#25D366] text-white text-label-md font-semibold hover:bg-[#20ba59] shadow-sm transition-all active:scale-[0.98]"
           >
-            <span>Get Your NFC Card</span>
-            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+            <span className="material-symbols-outlined text-[18px]">chat</span>
+            <span>Order on WhatsApp</span>
           </a>
         </div>
 
@@ -82,21 +84,15 @@ export default function Navbar() {
             ))}
             <div className="pt-3 mt-1 border-t border-outline-variant/20 flex flex-col gap-2">
               <a
-                href="#contact"
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={() => setIsOpen(false)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-on-primary text-label-md font-semibold hover:bg-primary-container shadow-btn-primary transition-all text-center"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#25D366] text-white text-label-md font-semibold hover:bg-[#20ba59] shadow-sm transition-all text-center"
               >
-                <span>Get Your NFC Card</span>
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                <span className="material-symbols-outlined text-[18px]">chat</span>
+                <span>Order on WhatsApp</span>
               </a>
-              <Link
-                href="/p/demo-customer"
-                onClick={() => setIsOpen(false)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-surface-container-low text-primary text-label-md font-medium hover:bg-surface-container transition-all text-center"
-              >
-                <span>View Demo Card</span>
-                <span className="material-symbols-outlined text-[16px]">visibility</span>
-              </Link>
             </div>
           </nav>
         </div>

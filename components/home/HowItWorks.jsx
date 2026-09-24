@@ -2,27 +2,27 @@ export default function HowItWorks() {
   const steps = [
     {
       number: "01",
-      title: "Get Your NFC Card",
-      description: "Choose your card and provide your details.",
+      title: "Choose Your Card",
+      description: "Select the NFC card that matches your business goal — Google Reviews, Instagram, WhatsApp, or a Digital Business Card.",
       icon: "credit_card",
     },
     {
       number: "02",
       title: "We Create Your Digital Profile",
-      description: "Your information is connected to your unique digital profile.",
-      icon: "account_box",
+      description: "Your details, review link, or social channels are configured and connected to your card.",
+      icon: "badge",
     },
     {
       number: "03",
-      title: "Tap & Share",
-      description: "Your customer/client taps the NFC card with their phone.",
+      title: "Tap Your NFC Card",
+      description: "Hold your card near any smartphone with NFC enabled, or scan the built-in QR backup.",
       icon: "contactless",
     },
     {
       number: "04",
       title: "Connect Instantly",
-      description: "They can view your profile, contact you, visit your social links and save your contact.",
-      icon: "how_to_reg",
+      description: "Your customer immediately lands on your review page, chat, social profile, or digital contact card.",
+      icon: "hub",
     },
   ];
 

@@ -18,39 +18,41 @@ export default function Hero() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-on-surface leading-[1.15]">
-              Smart NFC <br className="hidden sm:inline" />
+              Turn Every Tap Into a{" "}
               <span className="bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">
-                Business Cards
+                Connection.
               </span>
             </h1>
 
             <p className="text-lg sm:text-xl text-on-surface-variant font-normal leading-relaxed max-w-xl">
-              Share your contact and business details with a simple tap. No paper waste, no app downloads required for your clients.
+              Smart NFC cards for Google Reviews, Instagram, WhatsApp and digital business profiles.
             </p>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full sm:w-auto pt-2">
               <a
-                href="#contact"
+                href="#products"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-on-primary font-semibold text-label-lg hover:bg-primary-container shadow-btn-primary transition-all active:scale-[0.98]"
               >
-                <span>Get Your NFC Card</span>
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                <span>Explore Products</span>
+                <span className="material-symbols-outlined text-[18px]">arrow_downward</span>
               </a>
 
               <a
-                href="#how-it-works"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white text-on-surface border border-outline-variant/40 font-semibold text-label-lg hover:bg-surface-container-low hover:border-outline transition-all active:scale-[0.98]"
+                href="https://wa.me/919000000000?text=Hi%20NFCISTA%2C%20I%20would%20like%20to%20order%20an%20NFC%20card."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#25D366] text-white font-semibold text-label-lg hover:bg-[#20ba59] shadow-sm transition-all active:scale-[0.98]"
               >
-                <span>See How It Works</span>
-                <span className="material-symbols-outlined text-[18px]">touch_app</span>
+                <span className="material-symbols-outlined text-[18px]">chat</span>
+                <span>Order on WhatsApp</span>
               </a>
             </div>
 
-            {/* Quick benefit badges */}
+            {/* Quick factual benefit badges */}
             <div className="pt-4 flex flex-wrap items-center gap-y-2 gap-x-6 text-body-sm text-on-surface-variant border-t border-outline-variant/20 w-full">
               <div className="flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[18px] text-primary">check_circle</span>
-                <span>Works with iPhone & Android</span>
+                <span>Tap to Connect</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[18px] text-primary">check_circle</span>
@@ -58,7 +60,7 @@ export default function Hero() {
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[18px] text-primary">check_circle</span>
-                <span>One-Tap Save Contact</span>
+                <span>NFC + QR Backup</span>
               </div>
             </div>
           </div>

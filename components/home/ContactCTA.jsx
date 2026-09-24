@@ -7,27 +7,27 @@ export default function ContactCTA() {
             Start Networking Smarter
           </span>
           <h2 className="text-3xl sm:text-4xl font-bold text-on-surface mt-2 tracking-tight">
-            Ready to Go Digital?
+            Ready to Make Your Business More Connected?
           </h2>
           <p className="text-body-lg text-on-surface-variant mt-3 max-w-xl mx-auto leading-relaxed">
-            Get your NFC business card and make sharing your details easier. Reach out directly on WhatsApp to inquire about designs, pricing, and custom cards.
+            Choose your NFC card and contact NFCISTA to get started.
           </p>
 
           {/* Primary WhatsApp Action */}
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
-              href="https://wa.me/919000000000?text=Hi%20NFCISTA%2C%20I%20would%20like%20to%20order%20an%20NFC%20business%20card."
+              href="https://wa.me/919000000000?text=Hi%20NFCISTA%2C%20I%20would%20like%20to%20order%20an%20NFC%20card."
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-primary text-on-primary font-bold text-label-lg hover:bg-primary-container shadow-btn-primary transition-all active:scale-[0.98]"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-[#25D366] text-white font-bold text-label-lg hover:bg-[#20ba59] shadow-btn-primary transition-all active:scale-[0.98]"
             >
               <span className="material-symbols-outlined text-[20px]">chat</span>
-              <span>Order Your NFC Card</span>
+              <span>Order on WhatsApp</span>
             </a>
           </div>
 
           <p className="text-xs text-on-surface-variant mt-3">
-            Demo contact line: +91 90000 00000 (WhatsApp inquiry)
+            WhatsApp inquiry line: +91 90000 00000
           </p>
 
           {/* Contact Details Grid */}

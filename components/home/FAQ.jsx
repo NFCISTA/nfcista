@@ -7,36 +7,20 @@ export default function FAQ() {
 
   const faqs = [
     {
-      q: "What is an NFC business card?",
-      a: "An NFC business card is a physical card embedded with a microchip that transmits your digital business profile wirelessly when tapped against an NFC-enabled smartphone.",
-    },
-    {
-      q: "How does the NFC card work?",
-      a: "Simply bring your card close to the back of a compatible smartphone. The phone's built-in NFC reader detects the card and automatically prompts to open your NFCISTA digital profile in the browser.",
+      q: "What is an NFC card?",
+      a: "An NFC card is a physical card embedded with a microchip that wirelessly opens your digital profile, Google review page, or chat when tapped against a compatible smartphone.",
     },
     {
       q: "Does the customer need an app?",
-      a: "No. Customers can open your digital profile directly from the NFC link without installing a dedicated NFCISTA app.",
+      a: "No. Customers and clients do not need to install any app. Tapping the card opens your link directly in their phone's built-in web browser.",
     },
     {
-      q: "Can I save my contact?",
-      a: "Yes. Every profile includes a 'Save Contact' button that downloads a standard vCard (.vcf) file directly into the client's phone address book with all your details.",
+      q: "Can I use QR if NFC doesn't work?",
+      a: "Yes. Every NFCISTA card includes a printed QR code backup on the back, so older phones or devices with NFC disabled can simply scan to connect.",
     },
     {
-      q: "Can my digital profile be updated?",
-      a: "Yes. Because the card links to your unique digital profile, your contact details, website, social handles, or address can be updated anytime without replacing the physical card.",
-    },
-    {
-      q: "Can I add WhatsApp and Instagram?",
-      a: "Yes. Your profile supports dedicated direct-action buttons for WhatsApp chat, Instagram profile, phone calls, email, and Google Reviews.",
-    },
-    {
-      q: "How do I order an NFCISTA card?",
-      a: "You can reach out to us via WhatsApp or contact inquiry. Choose your preferred card design, share your business details, and we'll prepare your card and digital profile.",
-    },
-    {
-      q: "Does NFC work on every phone?",
-      a: "NFC works on modern smartphones that include NFC hardware (including iPhones from iPhone XS onwards and the majority of modern Android phones). NFC must be turned on in the phone settings for Android devices. Note that NFC chip placement and behavior can vary by device manufacturer.",
+      q: "Can my digital profile be updated later?",
+      a: "Yes. Because your card connects to your digital profile, your phone number, social links, or business details can be updated without reprinting your physical card.",
     },
   ];
 
