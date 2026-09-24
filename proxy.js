@@ -14,8 +14,39 @@ export async function proxy(request) {
 
   // 1. Server-side session gating for /admin/*
   if (pathname.startsWith("/admin")) {
-    // /admin/login must remain accessible without an authenticated session
+    // /admin/login must remain accessible without an authenticated session,
+    // but is rate-limited to 10 attempts per 5 minutes per client IP.
+    // Key suffix ":login" ensures these counters are completely separate from
+    // the /p/* sliding-window counters (which use the bare IP as their key).
     if (pathname === "/admin/login") {
+      try {
+        const ip = getClientIp(request);
+        const loginResult = await checkRateLimit(`${ip}:login`, {
+          limit: 10,
+          windowMs: 5 * 60 * 1000, // 5 minutes
+        });
+
+        if (!loginResult.success) {
+          return new Response(
+            JSON.stringify({
+              error: "Too Many Requests",
+              message: "Too many login attempts. Please wait before trying again.",
+            }),
+            {
+              status: 429,
+              headers: {
+                "Content-Type": "application/json",
+                "Retry-After": String(loginResult.reset || 300),
+                "X-RateLimit-Limit": "10",
+                "X-RateLimit-Remaining": "0",
+                "X-RateLimit-Reset": String(loginResult.reset || 300),
+              },
+            }
+          );
+        }
+      } catch {
+        // Fail-open: never block the login page on rate-limiter failure
+      }
       return NextResponse.next();
     }
 
