@@ -1,7 +1,5 @@
 import Link from "next/link";
-
-const WHATSAPP_URL =
-  "https://wa.me/919000000000?text=Hi%20NFCISTA%2C%20I%20would%20like%20to%20order%20an%20NFC%20card.";
+import WhatsAppOrderButton from "@/components/products/WhatsAppOrderButton";
 
 /**
  * Shared product page template for all NFCISTA product pages.
@@ -41,15 +39,10 @@ export default function ProductPageTemplate({ product }) {
               <span className="material-symbols-outlined text-[16px]">arrow_back</span>
               All Products
             </Link>
-            <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#25D366] text-white text-label-sm font-semibold hover:bg-[#20ba59] shadow-sm transition-all active:scale-[0.98]"
-            >
-              <span className="material-symbols-outlined text-[16px]">chat</span>
-              <span>Order on WhatsApp</span>
-            </a>
+            <WhatsAppOrderButton
+              productName={name}
+              size="sm"
+            />
           </div>
         </div>
       </header>
@@ -104,15 +97,11 @@ export default function ProductPageTemplate({ product }) {
                   </span>
                 </div>
 
-                <a
-                  href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#25D366] text-white font-semibold text-label-lg hover:bg-[#20ba59] shadow-sm transition-all active:scale-[0.98]"
-                >
-                  <span className="material-symbols-outlined text-[20px]">chat</span>
-                  <span>Get Notified — Order on WhatsApp</span>
-                </a>
+                <WhatsAppOrderButton
+                  productName={name}
+                  size="lg"
+                  label="Get Notified — Order on WhatsApp"
+                />
               </div>
 
               {/* Right: Product card mockup */}
@@ -310,15 +299,20 @@ export default function ProductPageTemplate({ product }) {
               <p className="text-body-lg text-on-surface-variant mb-8 max-w-md mx-auto leading-relaxed">
                 This card is coming soon. Reach out on WhatsApp to express interest and be among the first to order.
               </p>
-              <a
-                href={WHATSAPP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-[#25D366] text-white font-bold text-label-lg hover:bg-[#20ba59] shadow-sm transition-all active:scale-[0.98]"
-              >
-                <span className="material-symbols-outlined text-[20px]">chat</span>
-                <span>Order on WhatsApp — Coming Soon</span>
-              </a>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <WhatsAppOrderButton
+                  productName={name}
+                  size="lg"
+                  label="Order on WhatsApp — Coming Soon"
+                />
+                <Link
+                  href="/#products"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl border border-outline-variant/60 bg-white text-on-surface font-semibold text-label-lg hover:border-primary hover:text-primary transition-all active:scale-[0.98]"
+                >
+                  <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+                  <span>Back to Products</span>
+                </Link>
+              </div>
               <p className="text-xs text-on-surface-variant mt-4">WhatsApp inquiry: +91 90000 00000</p>
             </div>
           </div>
