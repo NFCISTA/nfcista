@@ -4,9 +4,9 @@ export default function Footer() {
   return (
     <footer className="bg-white border-t border-outline-variant/30 py-12">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           {/* Brand Col */}
-          <div className="md:col-span-2 space-y-3">
+          <div className="md:col-span-1 space-y-3">
             <Link href="/" className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary shadow-sm">
                 <span className="material-symbols-outlined text-[18px]">contactless</span>
@@ -15,8 +15,14 @@ export default function Footer() {
                 NFCISTA
               </span>
             </Link>
-            <p className="text-body-md text-on-surface-variant max-w-sm leading-relaxed">
+            <p className="text-body-sm text-on-surface-variant leading-relaxed">
               Smart NFC business cards for modern professionals. Share your contact and business details with a single tap.
+            </p>
+            <p className="text-[12px] text-tertiary">
+              Privacy / Grievance Contact:<br />
+              <a href="mailto:hellonfcista@gmail.com" className="text-primary hover:underline">
+                hellonfcista@gmail.com
+              </a>
             </p>
           </div>
 
@@ -62,7 +68,7 @@ export default function Footer() {
             <ul className="space-y-2 text-body-sm">
               <li>
                 <a href="#contact" className="text-on-surface-variant hover:text-primary transition-colors">
-                  Contact
+                  Contact &amp; Orders
                 </a>
               </li>
               <li>
@@ -77,6 +83,30 @@ export default function Footer() {
               </li>
             </ul>
           </div>
+
+          {/* Privacy & Legal Column */}
+          <div>
+            <h4 className="text-label-md font-bold text-on-surface uppercase tracking-wider mb-3">
+              Privacy &amp; Terms
+            </h4>
+            <ul className="space-y-2 text-body-sm">
+              <li>
+                <Link href="/privacy" className="text-on-surface-variant hover:text-primary transition-colors">
+                  Privacy Notice (DPDP)
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="text-on-surface-variant hover:text-primary transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy/data-request" className="text-primary font-medium hover:underline">
+                  Data Rights Request
+                </Link>
+              </li>
+            </ul>
+          </div>
         </div>
 
         {/* Bottom Bar */}
@@ -84,8 +114,13 @@ export default function Footer() {
           <div>
             &copy; 2026 NFCISTA. All rights reserved.
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+          <div className="flex flex-wrap items-center gap-4 text-xs">
+            <Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
+            <span>&bull;</span>
+            <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
+            <span>&bull;</span>
+            <Link href="/privacy/data-request" className="hover:text-primary transition-colors">Rights Request</Link>
+            <span>&bull;</span>
             <span>Built for modern business networking</span>
           </div>
         </div>
