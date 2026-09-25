@@ -128,7 +128,8 @@ export default function ProductPageTemplate({ product }) {
                 <div className="relative w-full max-w-[420px]">
                   {/* Physical card mockup */}
                   <div
-                    className={`aspect-[1.586] w-full rounded-2xl p-7 bg-gradient-to-br ${theme.cardBg} text-white shadow-2xl border border-white/10 relative overflow-hidden flex flex-col justify-between select-none`}
+                    className={`aspect-[1.586] w-full rounded-2xl p-7 text-white shadow-2xl border border-white/10 relative overflow-hidden flex flex-col justify-between select-none`}
+                    style={{ background: theme.cardBg }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.04] to-transparent pointer-events-none" />
                     <div className={`absolute -top-16 -right-16 w-48 h-48 ${theme.glowSpot} rounded-full blur-2xl pointer-events-none`} />

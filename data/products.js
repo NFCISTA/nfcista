@@ -23,7 +23,7 @@ export const products = [
     whatsappMessage:
       "Hi NFCISTA, I'm interested in the Google Review NFC Card. Please share the details and pricing.",
     theme: {
-      cardBg: "from-[#1A2639] via-[#121B2A] to-[#0A101A]",
+      cardBg: "linear-gradient(to bottom right, #1A2639, #121B2A, #0A101A)",
       accentIcon: "star",
       accentColor: "text-amber-400",
       accentText: "text-amber-600",
@@ -118,7 +118,7 @@ export const products = [
     whatsappMessage:
       "Hi NFCISTA, I'm interested in the Instagram NFC Card. Please share the details and pricing.",
     theme: {
-      cardBg: "from-[#2A1224] via-[#1F0D1A] to-[#120710]",
+      cardBg: "linear-gradient(to bottom right, #2A1224, #1F0D1A, #120710)",
       accentIcon: "photo_camera",
       accentColor: "text-pink-400",
       accentText: "text-pink-600",
@@ -213,7 +213,7 @@ export const products = [
     whatsappMessage:
       "Hi NFCISTA, I'm interested in the WhatsApp NFC Card. Please share the details and pricing.",
     theme: {
-      cardBg: "from-[#0D281E] via-[#091D15] to-[#05110C]",
+      cardBg: "linear-gradient(to bottom right, #0D281E, #091D15, #05110C)",
       accentIcon: "chat",
       accentColor: "text-emerald-400",
       accentText: "text-emerald-700",
@@ -308,7 +308,7 @@ export const products = [
     whatsappMessage:
       "Hi NFCISTA, I'm interested in the Digital Business Card. Please share the details and pricing.",
     theme: {
-      cardBg: "from-[#0F1E36] via-[#16294A] to-[#0A162B]",
+      cardBg: "linear-gradient(to bottom right, #0F1E36, #16294A, #0A162B)",
       accentIcon: "badge",
       accentColor: "text-blue-400",
       accentText: "text-blue-700",
