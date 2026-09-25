@@ -1,6 +1,7 @@
 import Navbar from "@/components/home/Navbar";
 import Hero from "@/components/home/Hero";
 import WhyNfcista from "@/components/home/WhyNfcista";
+import ProductShowcase from "@/components/home/ProductShowcase";
 import ProductsPreview from "@/components/home/ProductsPreview";
 import HowItWorks from "@/components/home/HowItWorks";
 import NfcExplanation from "@/components/home/NfcExplanation";
@@ -21,7 +22,10 @@ export default function Home() {
         {/* 3. WHY NFCISTA */}
         <WhyNfcista />
 
-        {/* 4. PRODUCTS PREVIEW */}
+        {/* 4. PRODUCT SHOWCASE */}
+        <ProductShowcase />
+
+        {/* 5. PRODUCTS PREVIEW */}
         <ProductsPreview />
 
         {/* 5. HOW IT WORKS */}
