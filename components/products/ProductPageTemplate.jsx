@@ -6,15 +6,31 @@ import WhatsAppOrderButton from "@/components/products/WhatsAppOrderButton";
  * Accepts a `product` object and renders the full page layout.
  */
 export default function ProductPageTemplate({ product }) {
+  if (!product) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-[#F8FAFC]">
+        <h1 className="text-2xl font-bold text-on-surface">Product Not Found</h1>
+        <p className="text-on-surface-variant mt-2">The requested product could not be found.</p>
+        <Link
+          href="/#products"
+          className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 transition-all"
+        >
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          <span>Back to Products</span>
+        </Link>
+      </div>
+    );
+  }
+
   const {
     name,
     badge,
     tagline,
     description,
-    theme,
-    benefits,
-    useCases,
-    howItWorks,
+    theme = {},
+    benefits = [],
+    useCases = [],
+    howItWorks = [],
   } = product;
 
   return (

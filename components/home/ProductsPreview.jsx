@@ -1,65 +1,7 @@
 import Link from "next/link";
+import { products } from "@/data/products";
 
 export default function ProductsPreview() {
-  const products = [
-    {
-      id: "google-review",
-      name: "Google Review NFC Card",
-      badge: "Customer Feedback",
-      purpose: "Make it easy for customers to find your Google review page.",
-      price: "Coming Soon",
-      // Visual card design styling
-      theme: {
-        cardBg: "from-[#1A2639] via-[#121B2A] to-[#0A101A]",
-        accentIcon: "star",
-        accentColor: "text-amber-400",
-        chipStyle: "bg-gradient-to-tr from-[#E6B762] via-[#F8E19B] to-[#D49E3C]",
-        highlightBadge: "Google Reviews",
-      },
-    },
-    {
-      id: "instagram",
-      name: "Instagram NFC Card",
-      badge: "Social Presence",
-      purpose: "Let customers open your Instagram profile with a tap.",
-      price: "Coming Soon",
-      theme: {
-        cardBg: "from-[#2A1224] via-[#1F0D1A] to-[#120710]",
-        accentIcon: "photo_camera",
-        accentColor: "text-pink-400",
-        chipStyle: "bg-gradient-to-tr from-[#E6B762] via-[#F8E19B] to-[#D49E3C]",
-        highlightBadge: "Instagram Profile",
-      },
-    },
-    {
-      id: "whatsapp",
-      name: "WhatsApp NFC Card",
-      badge: "Direct Messaging",
-      purpose: "Make it simple for customers to start a WhatsApp conversation.",
-      price: "Coming Soon",
-      theme: {
-        cardBg: "from-[#0D281E] via-[#091D15] to-[#05110C]",
-        accentIcon: "chat",
-        accentColor: "text-emerald-400",
-        chipStyle: "bg-gradient-to-tr from-[#E6B762] via-[#F8E19B] to-[#D49E3C]",
-        highlightBadge: "WhatsApp Chat",
-      },
-    },
-    {
-      id: "digital-business-card",
-      name: "Digital Business Card",
-      badge: "Complete Identity",
-      purpose: "Share your digital business profile and contact details instantly.",
-      price: "Coming Soon",
-      theme: {
-        cardBg: "from-[#0F1E36] via-[#16294A] to-[#0A162B]",
-        accentIcon: "badge",
-        accentColor: "text-blue-400",
-        chipStyle: "bg-gradient-to-tr from-[#E6B762] via-[#F8E19B] to-[#D49E3C]",
-        highlightBadge: "Full Profile & vCard",
-      },
-    },
-  ];
 
   return (
     <section id="products" className="py-20 bg-white border-y border-outline-variant/20">
