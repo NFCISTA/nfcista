@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import WhatsAppOrderButton from "@/components/products/WhatsAppOrderButton";
 
 /**
@@ -27,6 +28,7 @@ export default function ProductPageTemplate({ product }) {
     badge,
     tagline,
     description,
+    image,
     theme = {},
     benefits = [],
     useCases = [],
@@ -120,63 +122,22 @@ export default function ProductPageTemplate({ product }) {
                 />
               </div>
 
-              {/* Right: Product card mockup */}
+              {/* Right: Real product visual */}
               <div className="lg:col-span-6 flex justify-center items-center relative">
                 {/* Aura glow */}
                 <div className={`absolute -inset-6 ${theme.auraGlow} rounded-3xl blur-3xl -z-10`} />
 
                 <div className="relative w-full max-w-[420px]">
-                  {/* Physical card mockup */}
-                  <div
-                    className={`aspect-[1.586] w-full rounded-2xl p-7 text-white shadow-2xl border border-white/10 relative overflow-hidden flex flex-col justify-between select-none`}
-                    style={{ background: theme.cardBg }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.04] to-transparent pointer-events-none" />
-                    <div className={`absolute -top-16 -right-16 w-48 h-48 ${theme.glowSpot} rounded-full blur-2xl pointer-events-none`} />
-
-                    {/* Card header */}
-                    <div className="flex items-center justify-between relative z-10">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center">
-                          <span className="material-symbols-outlined text-[15px] text-white">contactless</span>
-                        </div>
-                        <span className="text-[11px] font-bold tracking-widest text-white uppercase">NFCISTA</span>
-                      </div>
-                      <span className="material-symbols-outlined text-[24px] text-white/40">contactless</span>
-                    </div>
-
-                    {/* Card center: chip + accent */}
-                    <div className="relative z-10 flex items-center justify-between my-auto py-3">
-                      {/* Golden chip */}
-                      <div className="w-10 h-8 rounded bg-gradient-to-tr from-[#E6B762] via-[#F8E19B] to-[#D49E3C] p-0.5 shadow-sm">
-                        <div className="w-full h-full rounded-[2px] border border-black/20 grid grid-cols-2 grid-rows-2 gap-[1px] p-0.5 bg-[#D49E3C]/20">
-                          <div className="border-r border-b border-black/20" />
-                          <div className="border-b border-black/20" />
-                          <div className="border-r border-black/20" />
-                          <div />
-                        </div>
-                      </div>
-
-                      {/* Accent pill */}
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm">
-                        <span
-                          className={`material-symbols-outlined text-[18px] ${theme.accentIconColor}`}
-                          style={{ fontVariationSettings: "'FILL' 1" }}
-                        >
-                          {theme.accentIcon}
-                        </span>
-                        <span className="text-[12px] font-semibold text-white/90">{theme.highlightBadge}</span>
-                      </div>
-                    </div>
-
-                    {/* Card footer */}
-                    <div className="relative z-10 flex items-end justify-between">
-                      <div>
-                        <div className="text-base font-bold text-white tracking-wide">{name}</div>
-                        <div className="text-[10px] text-white/50 uppercase tracking-wider mt-0.5">Tap &amp; QR Enabled</div>
-                      </div>
-                      <span className="text-[9px] uppercase tracking-widest text-white/30 font-semibold">NFCISTA</span>
-                    </div>
+                  {/* Real product visual container */}
+                  <div className="relative aspect-square w-full rounded-2xl overflow-hidden shadow-2xl border border-outline-variant/30 bg-surface-container-lowest">
+                    <Image
+                      src={image || "/images/product-showcase.png"}
+                      alt={name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 420px"
+                      className="object-contain"
+                      priority
+                    />
                   </div>
 
                   {/* Floating pill: Coming Soon */}

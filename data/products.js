@@ -17,7 +17,8 @@ export const products = [
       "Let your customers leave a Google review with a single tap — no searching, no links to type, no friction.",
     description:
       "The NFCISTA Google Review NFC Card is a smart, professional card that takes your customers directly to your Google review page. When a customer taps the card with their phone, they're instantly taken to your review form. No app required, no URL to type, no confusion. More reviews means better local search visibility and stronger social proof for your business.",
-    image: "/images/product-showcase.png",
+    image: "/images/products/google-review-nfc-card.png",
+    standImage: "/images/products/google-review-nfc-card-stand.png",
     status: "Coming Soon",
     price: "Coming Soon",
     whatsappMessage:
@@ -112,7 +113,7 @@ export const products = [
       "Turn every in-person interaction into a new Instagram follower — with a single tap of your card.",
     description:
       "The NFCISTA Instagram NFC Card opens your Instagram profile the instant a customer or contact taps the card with their phone. No handle to type, no search needed. Perfect for businesses, creators, and entrepreneurs who want to grow their Instagram following from real, in-person conversations — whether at events, shops, markets, or meetings.",
-    image: "/images/product-showcase.png",
+    image: "/images/products/instagram-nfc-card.png",
     status: "Coming Soon",
     price: "Coming Soon",
     whatsappMessage:
@@ -207,7 +208,7 @@ export const products = [
       "Let customers start a WhatsApp conversation with your business in a single tap — no number-saving, no typing.",
     description:
       "The NFCISTA WhatsApp NFC Card opens a pre-filled WhatsApp chat with your business the moment someone taps it. No need to save your number, copy a link, or search for you. Customers are one tap away from asking a question, placing an order, or booking an appointment — directly over WhatsApp. Ideal for any business that uses WhatsApp as a primary customer communication channel.",
-    image: "/images/product-showcase.png",
+    image: "/images/products/whatsapp-nfc-card.png",
     status: "Coming Soon",
     price: "Coming Soon",
     whatsappMessage:
@@ -302,7 +303,8 @@ export const products = [
       "Share your full business profile — contact details, social links, and more — with a single tap.",
     description:
       "The NFCISTA Digital Business Card opens a complete, professionally designed digital profile when tapped. Visitors see your name, title, business, phone number, email, social media links, and any other details you choose to include. Unlike a paper business card, your digital profile can be updated instantly whenever your information changes — no reprinting required. One card, your entire professional identity.",
-    image: "/images/product-showcase.png",
+    image: "/images/products/digital-business-card-black.png",
+    variantWhiteImage: "/images/products/digital-business-card-white.png",
     status: "Coming Soon",
     price: "Coming Soon",
     whatsappMessage:
