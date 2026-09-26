@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import WhatsAppOrderButton from "@/components/products/WhatsAppOrderButton";
@@ -34,6 +37,18 @@ export default function ProductPageTemplate({ product }) {
     useCases = [],
     howItWorks = [],
   } = product;
+
+  const defaultVariantId = product?.variants?.[0]?.id || null;
+  const [selectedVariantId, setSelectedVariantId] = useState(defaultVariantId);
+
+  const activeVariant =
+    product?.variants?.find((v) => v.id === selectedVariantId) ||
+    product?.variants?.[0] ||
+    null;
+
+  const currentVariantId = activeVariant?.id || null;
+  const currentImage = activeVariant ? activeVariant.image : (image || "/images/product-showcase.png");
+  const currentAlt = activeVariant ? `${name} - ${activeVariant.label}` : name;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] selection:bg-primary selection:text-white">
@@ -127,29 +142,59 @@ export default function ProductPageTemplate({ product }) {
                 {/* Aura glow */}
                 <div className={`absolute -inset-6 ${theme.auraGlow} rounded-3xl blur-3xl -z-10`} />
 
-                <div className="relative w-full max-w-[420px]">
-                  {/* Real product visual container */}
-                  <div className="relative aspect-square w-full rounded-2xl overflow-hidden shadow-2xl border border-outline-variant/30 bg-surface-container-lowest">
-                    <Image
-                      src={image || "/images/product-showcase.png"}
-                      alt={name}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 420px"
-                      className="object-contain"
-                      priority
-                    />
+                <div className="relative w-full max-w-[420px] flex flex-col items-center">
+                  <div className="relative w-full">
+                    {/* Real product visual container */}
+                    <div className="relative aspect-square w-full rounded-2xl overflow-hidden shadow-2xl border border-outline-variant/30 bg-surface-container-lowest">
+                      <Image
+                        src={currentImage}
+                        alt={currentAlt}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 420px"
+                        className="object-contain"
+                        priority
+                      />
+                    </div>
+
+                    {/* Floating pill: Coming Soon */}
+                    <div className="absolute -bottom-4 -right-2 sm:-right-6 bg-white border border-outline-variant/30 rounded-xl px-3.5 py-2 shadow-float flex items-center gap-2 z-10 pointer-events-none">
+                      <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[16px]">schedule</span>
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-bold text-on-surface">Coming Soon</div>
+                        <div className="text-[10px] text-on-surface-variant">Order via WhatsApp</div>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Floating pill: Coming Soon */}
-                  <div className="absolute -bottom-4 -right-2 sm:-right-6 bg-white border border-outline-variant/30 rounded-xl px-3.5 py-2 shadow-float flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-[16px]">schedule</span>
+                  {/* Variant selector (only for products with variants, e.g. Digital Business Card & Google Review) */}
+                  {product.variants && product.variants.length > 1 && (
+                    <div
+                      className="mt-8 flex items-center gap-1.5 p-1 rounded-full bg-white/90 backdrop-blur-sm border border-outline-variant/30 shadow-xs relative z-20"
+                      role="group"
+                      aria-label={`${name} variants`}
+                    >
+                      {product.variants.map((v) => {
+                        const isSelected = v.id === currentVariantId;
+                        return (
+                          <button
+                            key={v.id}
+                            type="button"
+                            onClick={() => setSelectedVariantId(v.id)}
+                            aria-pressed={isSelected}
+                            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                              isSelected
+                                ? "bg-primary text-white shadow-sm"
+                                : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+                            }`}
+                          >
+                            {v.label}
+                          </button>
+                        );
+                      })}
                     </div>
-                    <div>
-                      <div className="text-[11px] font-bold text-on-surface">Coming Soon</div>
-                      <div className="text-[10px] text-on-surface-variant">Order via WhatsApp</div>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>

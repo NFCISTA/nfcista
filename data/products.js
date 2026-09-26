@@ -19,6 +19,10 @@ export const products = [
       "The NFCISTA Google Review NFC Card is a smart, professional card that takes your customers directly to your Google review page. When a customer taps the card with their phone, they're instantly taken to your review form. No app required, no URL to type, no confusion. More reviews means better local search visibility and stronger social proof for your business.",
     image: "/images/products/google-review-nfc-card.png",
     standImage: "/images/products/google-review-nfc-card-stand.png",
+    variants: [
+      { id: "card", label: "Card", image: "/images/products/google-review-nfc-card.png" },
+      { id: "stand", label: "Card + Stand", image: "/images/products/google-review-nfc-card-stand.png" },
+    ],
     status: "Coming Soon",
     price: "Coming Soon",
     whatsappMessage:
@@ -305,6 +309,10 @@ export const products = [
       "The NFCISTA Digital Business Card opens a complete, professionally designed digital profile when tapped. Visitors see your name, title, business, phone number, email, social media links, and any other details you choose to include. Unlike a paper business card, your digital profile can be updated instantly whenever your information changes — no reprinting required. One card, your entire professional identity.",
     image: "/images/products/digital-business-card-black.png",
     variantWhiteImage: "/images/products/digital-business-card-white.png",
+    variants: [
+      { id: "black", label: "Black", image: "/images/products/digital-business-card-black.png" },
+      { id: "white", label: "White", image: "/images/products/digital-business-card-white.png" },
+    ],
     status: "Coming Soon",
     price: "Coming Soon",
     whatsappMessage:
