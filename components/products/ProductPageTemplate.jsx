@@ -16,7 +16,7 @@ export default function ProductPageTemplate({ product }) {
         <h1 className="text-2xl font-bold text-on-surface">Product Not Found</h1>
         <p className="text-on-surface-variant mt-2">The requested product could not be found.</p>
         <Link
-          href="/#products"
+          href="/products"
           className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 transition-all"
         >
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
@@ -66,11 +66,11 @@ export default function ProductPageTemplate({ product }) {
 
           <div className="flex items-center gap-3">
             <Link
-              href="/#products"
+              href="/products"
               className="hidden sm:inline-flex items-center gap-1.5 text-body-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
             >
               <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-              All Products
+              Back to Products
             </Link>
             <WhatsAppOrderButton
               productName={name}
@@ -94,11 +94,11 @@ export default function ProductPageTemplate({ product }) {
               <div className="lg:col-span-6 flex flex-col items-start text-left space-y-6">
                 {/* Back link — mobile */}
                 <Link
-                  href="/#products"
+                  href="/products"
                   className="sm:hidden inline-flex items-center gap-1.5 text-body-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
                 >
                   <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-                  All Products
+                  Back to Products
                 </Link>
 
                 {/* Badge */}
