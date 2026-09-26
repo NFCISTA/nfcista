@@ -42,59 +42,59 @@ export const products = [
     howItWorks: [
       {
         icon: "contactless",
-        title: "Tap the NFC Card",
+        title: "Tap the Card",
         detail:
-          "The customer holds their phone near your Google Review NFC card. The phone detects it instantly — no app needed.",
+          "Hold any NFC-enabled phone near the card. If NFC is supported and enabled on the device, it responds in under a second — no app needed.",
       },
       {
         icon: "open_in_new",
-        title: "Google Review Page Opens",
+        title: "Open Google Reviews",
         detail:
-          "The phone automatically opens your Google review form. No typing, no searching — they land directly on the review screen.",
+          "The phone opens your Google review page directly. No typing, no searching — the customer lands straight on your review form.",
       },
       {
         icon: "star",
-        title: "Customer Leaves a Review",
+        title: "Leave a Review",
         detail:
-          "The customer rates your business and leaves feedback in seconds, boosting your local visibility and credibility.",
+          "The customer rates your business and writes feedback in seconds. More reviews mean better local search visibility.",
       },
     ],
     benefits: [
       {
         icon: "bolt",
-        title: "Instant Review Prompt",
+        title: "Zero Friction",
         detail:
-          "Remove the barrier of searching for your business. One tap and the customer is ready to write a review.",
+          "Tap → review form. No URL to type, no Google search, no extra steps. Customers who want to leave a review actually do.",
       },
       {
         icon: "smartphone",
-        title: "No App Required",
+        title: "Works on Modern Phones",
         detail:
-          "Works on any modern Android or iPhone with NFC. Customers don't need to install anything.",
+          "NFC is built into most Android phones and iPhones (iPhone 7 and later). Customers don't need to install anything.",
       },
       {
         icon: "qr_code",
         title: "QR Backup Included",
         detail:
-          "Every NFCISTA card also includes a printed QR code, so customers on devices without NFC can still reach your review page.",
+          "Every card also has a printed QR code — so customers on devices without NFC can still reach your review page easily.",
       },
       {
         icon: "visibility",
-        title: "Better Local Search Ranking",
+        title: "Improves Local Search Visibility",
         detail:
-          "More genuine reviews directly improve your Google Business Profile ranking and help new customers find you.",
+          "Regular, genuine reviews directly strengthen your Google Business Profile and help nearby customers find you.",
       },
       {
         icon: "design_services",
-        title: "Professional Custom Design",
+        title: "Custom-Designed Card",
         detail:
-          "Each card is custom designed with your brand. Premium materials, sharp print, lasting impression.",
+          "Each card is printed with your brand. Premium materials, sharp finish, and a professional look that matches your business.",
       },
       {
         icon: "update",
-        title: "Destination Can Be Updated",
+        title: "Review Link Is Updatable",
         detail:
-          "If your Google review link ever changes, your digital profile can be updated without replacing the physical card.",
+          "If your Google review link changes, your digital profile can be updated without reprinting the physical card.",
       },
     ],
     useCases: [
@@ -137,21 +137,21 @@ export const products = [
     howItWorks: [
       {
         icon: "contactless",
-        title: "Tap the NFC Card",
+        title: "Tap the Card",
         detail:
-          "The contact holds their phone near your Instagram NFC card. The phone picks it up in under a second — no app installation needed.",
+          "Hold any NFC-enabled phone near the card. If NFC is supported and enabled on the device, it picks it up in under a second — no app installation needed.",
       },
       {
         icon: "open_in_new",
-        title: "Your Instagram Profile Opens",
+        title: "Open Instagram",
         detail:
           "The phone opens your Instagram profile page directly. They see your content, bio, and posts immediately.",
       },
       {
         icon: "person_add",
-        title: "They Follow You",
+        title: "Follow the Business",
         detail:
-          "The contact follows your profile with a tap. Every real interaction becomes a potential follower in seconds.",
+          "The contact follows your profile with a tap. Every real in-person interaction becomes a potential follower in seconds.",
       },
     ],
     benefits: [
@@ -159,31 +159,31 @@ export const products = [
         icon: "bolt",
         title: "Instant Profile Access",
         detail:
-          "No handles to spell out or search for. One tap and your Instagram profile is open in front of them.",
+          "No handle to spell out or search for. One tap and your Instagram profile is open in front of them.",
       },
       {
         icon: "smartphone",
-        title: "No App Required for the Tap",
+        title: "Works on Modern Phones",
         detail:
-          "Any modern smartphone with NFC can tap your card. They'll be redirected to Instagram even without having the app open.",
+          "NFC is built into most Android phones and iPhones (iPhone 7 and later). The tap redirects to Instagram — even without the app open.",
       },
       {
         icon: "qr_code",
         title: "QR Backup Included",
         detail:
-          "Every card includes a QR code for contacts whose phones don't support NFC — ensuring no one misses your profile.",
+          "Every card includes a QR code for contacts whose phones don't support NFC — so no one misses your profile.",
       },
       {
         icon: "trending_up",
-        title: "Grow Your Audience Organically",
+        title: "Grow Your Audience in Person",
         detail:
-          "In-person followers are warm leads. They met you, they liked you, they chose to follow — the best kind of growth.",
+          "In-person followers are warm leads. They met you, liked you, and chose to follow — the most genuine kind of growth.",
       },
       {
         icon: "design_services",
         title: "Custom-Branded Card",
         detail:
-          "Your card is professionally designed with your brand identity — making a strong first impression before they even tap.",
+          "Your card is professionally designed with your brand identity — a strong first impression before they even tap.",
       },
       {
         icon: "update",
@@ -232,19 +232,19 @@ export const products = [
     howItWorks: [
       {
         icon: "contactless",
-        title: "Tap the NFC Card",
+        title: "Tap the Card",
         detail:
-          "The customer holds their phone near your WhatsApp NFC card. The phone detects it in less than a second — no app install needed.",
+          "Hold any NFC-enabled phone near the card. If NFC is supported and enabled on the device, it responds in under a second — no app install needed.",
       },
       {
         icon: "open_in_new",
-        title: "WhatsApp Chat Opens",
+        title: "Open WhatsApp",
         detail:
-          "WhatsApp opens immediately with your business number pre-loaded and an optional greeting pre-filled. No number saving required.",
+          "WhatsApp opens with your business number pre-loaded and an optional greeting pre-filled. No number-saving required.",
       },
       {
         icon: "send",
-        title: "Customer Sends a Message",
+        title: "Start a Chat",
         detail:
           "The customer sends their enquiry, order, or question in one tap. You receive it directly in your WhatsApp Business account.",
       },
@@ -258,21 +258,21 @@ export const products = [
       },
       {
         icon: "smartphone",
-        title: "Works on Any Modern Phone",
+        title: "Works on NFC-Enabled Phones",
         detail:
-          "NFC is supported on virtually all modern Android and iPhone models. No app installation required on the customer's side.",
+          "NFC is built into most Android phones and iPhones (iPhone 7 and later). No app installation required on the customer's side.",
       },
       {
         icon: "qr_code",
         title: "QR Backup Included",
         detail:
-          "A QR code is printed alongside the NFC chip. Customers without NFC can scan it and still reach your WhatsApp instantly.",
+          "A QR code is printed alongside the NFC chip — customers without NFC can scan it and still reach your WhatsApp instantly.",
       },
       {
         icon: "support_agent",
-        title: "Faster Customer Service",
+        title: "Faster Customer Conversations",
         detail:
-          "When customers can message you in one tap, response times improve, satisfaction goes up, and conversions follow.",
+          "When customers can message you in one tap, conversations start sooner and enquiries are less likely to drop off.",
       },
       {
         icon: "design_services",
@@ -284,7 +284,7 @@ export const products = [
         icon: "update",
         title: "Number or Message Is Updatable",
         detail:
-          "If your WhatsApp number or pre-filled message changes, your digital profile can be updated without replacing the physical card.",
+          "If your WhatsApp number or pre-filled greeting changes, your digital profile can be updated without replacing the physical card.",
       },
     ],
     useCases: [
@@ -332,59 +332,59 @@ export const products = [
     howItWorks: [
       {
         icon: "contactless",
-        title: "Tap the NFC Card",
+        title: "Tap the Card",
         detail:
-          "The contact holds their phone near your Digital Business Card. The phone reads it instantly — no app installation required.",
+          "Hold any NFC-enabled phone near your Digital Business Card. If NFC is supported and enabled on the device, it reads it in under a second — no app required.",
       },
       {
         icon: "open_in_new",
-        title: "Your Digital Profile Opens",
+        title: "Open Profile",
         detail:
-          "A clean, mobile-optimised profile page loads in their browser showing your name, role, contact info, and links.",
+          "A clean, mobile-optimised digital profile loads directly in their web browser showing your name, role, contact details, and links.",
       },
       {
         icon: "person_add",
-        title: "They Save or Contact You",
+        title: "Save Contact",
         detail:
-          "They save your contact details directly to their phone, call you, email you, or visit your social profiles — all from one page.",
+          "The contact saves your details directly to their phonebook or connects with you on social channels in a single tap.",
       },
     ],
     benefits: [
       {
         icon: "bolt",
-        title: "Share Everything in One Tap",
+        title: "Quick Sharing",
         detail:
-          "Name, phone, email, website, Instagram, WhatsApp — all on a single page, opened instantly when they tap your card.",
+          "Name, phone, email, website, and social links — all on a single page, opened instantly with a single tap.",
       },
       {
         icon: "smartphone",
         title: "No App Required",
         detail:
-          "Any modern iPhone or Android phone with NFC can tap your card. The profile opens in their regular browser.",
+          "Recipients don't need any special app. The profile opens directly in their smartphone's standard web browser.",
       },
       {
         icon: "qr_code",
-        title: "QR Backup Included",
+        title: "NFC + QR Backup",
         detail:
-          "Every card comes with a printed QR code so contacts on devices without NFC can still reach your profile instantly.",
+          "Every card includes a printed QR code so contacts whose devices don't have NFC can still scan and access your profile.",
       },
       {
         icon: "update",
         title: "Always Up to Date",
         detail:
-          "Changed your number, email, or social handle? Update your digital profile instantly — the physical card stays the same.",
+          "Changed your number, email, or role? Update your digital profile anytime — your physical card always directs to the latest info.",
       },
       {
         icon: "design_services",
         title: "Professional Custom Design",
         detail:
-          "Impress at first glance. Your physical card is custom designed with your brand, colours, and identity.",
+          "High-quality card finish custom-designed with your branding to leave a lasting, professional impression at meetings.",
       },
       {
         icon: "eco",
-        title: "No Paper Waste",
+        title: "Designed for Business Use",
         detail:
-          "One NFC card replaces hundreds of printed cards. Better for you, better for the environment.",
+          "A reusable, professional alternative to paper cards that never runs out and eliminates paper waste.",
       },
     ],
     useCases: [

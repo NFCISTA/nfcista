@@ -29,13 +29,14 @@ export default function Hero() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full sm:w-auto pt-2">
-              <a
-                href="#products"
+              {/* Primary CTA → /products catalog */}
+              <Link
+                href="/products"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-on-primary font-semibold text-label-lg hover:bg-primary-container shadow-btn-primary transition-all active:scale-[0.98]"
               >
-                <span>Explore Products</span>
-                <span className="material-symbols-outlined text-[18px]">arrow_downward</span>
-              </a>
+                <span>Explore NFC Cards</span>
+                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              </Link>
 
               <a
                 href="https://wa.me/919000000000?text=Hi%20NFCISTA%2C%20I%20would%20like%20to%20order%20an%20NFC%20card."

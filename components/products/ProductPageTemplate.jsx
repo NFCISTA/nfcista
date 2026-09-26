@@ -49,6 +49,10 @@ export default function ProductPageTemplate({ product }) {
   const currentVariantId = activeVariant?.id || null;
   const currentImage = activeVariant ? activeVariant.image : (image || "/images/product-showcase.png");
   const currentAlt = activeVariant ? `${name} - ${activeVariant.label}` : name;
+  const orderProductName =
+    activeVariant && product.variants && product.variants.length > 1
+      ? `${name} (${activeVariant.label})`
+      : name;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] selection:bg-primary selection:text-white">
@@ -73,7 +77,7 @@ export default function ProductPageTemplate({ product }) {
               Back to Products
             </Link>
             <WhatsAppOrderButton
-              productName={name}
+              productName={orderProductName}
               size="sm"
             />
           </div>
@@ -82,7 +86,7 @@ export default function ProductPageTemplate({ product }) {
 
       <main>
         {/* ── Hero Section ─────────────────────────────────── */}
-        <section className="relative pt-14 pb-20 md:pt-20 md:pb-28 overflow-hidden">
+        <section className="relative pt-14 pb-24 md:pt-20 md:pb-28 overflow-hidden">
           {/* Background glow */}
           <div
             className={`absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-80 ${theme.heroBg} pointer-events-none -z-10`}
@@ -126,14 +130,14 @@ export default function ProductPageTemplate({ product }) {
                 <div className="flex items-center gap-3 pt-1">
                   <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-label-sm font-semibold">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                    Coming Soon — Notify Me via WhatsApp
+                    Coming Soon
                   </span>
                 </div>
 
                 <WhatsAppOrderButton
-                  productName={name}
+                  productName={orderProductName}
                   size="lg"
-                  label="Get Notified — Order on WhatsApp"
+                  label="Order on WhatsApp"
                 />
               </div>
 
@@ -314,29 +318,42 @@ export default function ProductPageTemplate({ product }) {
           <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
             <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-10 sm:p-14 shadow-float">
               <span className="text-label-sm font-bold text-primary uppercase tracking-wider">
-                Interested?
+                Ready to Order?
               </span>
               <h2 className="text-2xl sm:text-3xl font-bold text-on-surface mt-2 mb-3 tracking-tight">
-                Get Yours When Available
+                Get Your {name}
               </h2>
               <p className="text-body-lg text-on-surface-variant mb-8 max-w-md mx-auto leading-relaxed">
                 This card is coming soon. Reach out on WhatsApp to express interest and be among the first to order.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <WhatsAppOrderButton
-                  productName={name}
+                  productName={orderProductName}
                   size="lg"
-                  label="Order on WhatsApp — Coming Soon"
+                  label="Order on WhatsApp"
                 />
                 <Link
-                  href="/#products"
+                  href="/products"
                   className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl border border-outline-variant/60 bg-white text-on-surface font-semibold text-label-lg hover:border-primary hover:text-primary transition-all active:scale-[0.98]"
                 >
                   <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                   <span>Back to Products</span>
                 </Link>
               </div>
-              <p className="text-xs text-on-surface-variant mt-4">WhatsApp inquiry: +91 90000 00000</p>
+
+              {/* Task 6 — Business contact trust CTA */}
+              <div className="mt-8 pt-6 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <span className="text-body-sm text-on-surface-variant">Have a question?</span>
+                <a
+                  href="https://wa.me/919000000000?text=Hi%20NFCISTA%2C%20I%20have%20a%20question%20about%20your%20NFC%20cards."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-body-sm font-semibold text-[#25D366] hover:underline"
+                >
+                  <span className="material-symbols-outlined text-[16px]">chat</span>
+                  <span>Talk to NFCISTA on WhatsApp</span>
+                </a>
+              </div>
             </div>
           </div>
         </section>
@@ -344,7 +361,7 @@ export default function ProductPageTemplate({ product }) {
         {/* ── Back to all products ──────────────────────────── */}
         <div className="py-8 flex justify-center bg-[#F8FAFC] border-t border-outline-variant/20">
           <Link
-            href="/#products"
+            href="/products"
             className="inline-flex items-center gap-2 text-body-md font-semibold text-primary hover:underline transition-colors"
           >
             <span className="material-symbols-outlined text-[18px]">arrow_back</span>
@@ -365,7 +382,7 @@ export default function ProductPageTemplate({ product }) {
           <div className="flex items-center gap-3 flex-wrap justify-center">
             <Link href="/" className="hover:text-primary transition-colors">Home</Link>
             <span>·</span>
-            <Link href="/#products" className="hover:text-primary transition-colors">Products</Link>
+            <Link href="/products" className="hover:text-primary transition-colors">Products</Link>
             <span>·</span>
             <Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
             <span>·</span>
