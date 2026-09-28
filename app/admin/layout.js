@@ -150,6 +150,16 @@ export default function AdminLayout({ children }) {
               >
                 QR Activation
               </Link>
+              <Link
+                href="/admin/qr-codes"
+                className={`px-3 py-1.5 rounded-lg text-label-md font-semibold transition-colors ${
+                  pathname === "/admin/qr-codes"
+                    ? "bg-surface-container-low text-primary"
+                    : "text-on-surface-variant hover:text-on-surface"
+                }`}
+              >
+                Card Generator
+              </Link>
             </nav>
           </div>
 
