@@ -5,14 +5,15 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { getQrUrl } from "@/lib/dynamicQr";
 import {
-  CARD_WIDTH_MM,
-  CARD_HEIGHT_MM,
-  CARD_GAP_MM,
-  PAGE_MARGIN_MM,
-  PDF_PAGE_FORMAT,
-  PDF_ORIENTATION,
-  QR_SIZE_MM,
-  CARD_CORNER_RADIUS_MM,
+  QR_SHEET_PAGE_FORMAT,
+  QR_SHEET_ORIENTATION,
+  QR_SHEET_COLS,
+  QR_SHEET_ROWS,
+  QR_SHEET_CELL_WIDTH_MM,
+  QR_SHEET_CELL_HEIGHT_MM,
+  QR_SHEET_QR_SIZE_MM,
+  QR_SHEET_MARGIN_X_MM,
+  QR_SHEET_MARGIN_Y_MM,
 } from "@/lib/printConfig";
 
 // ---------------------------------------------------------------------------
@@ -50,8 +51,9 @@ async function makeQrDataUrl(text, pixels = 512) {
 }
 
 /**
- * Generate the print PDF using jsPDF.
- * Draws each card at exact CR80 mm dimensions.
+ * Generate a QR-only print sheet PDF using jsPDF.
+ * Output contains ONLY the scannable QR code and the exact card code directly below it.
+ * Zero borders, zero card background, zero brand logos/headers, zero artwork.
  *
  * @param {string[]} codes  Card codes to include in the PDF
  */
@@ -59,143 +61,54 @@ async function generatePdf(codes) {
   const { jsPDF } = await import("jspdf");
 
   const doc = new jsPDF({
-    orientation: PDF_ORIENTATION,
+    orientation: QR_SHEET_ORIENTATION,
     unit: "mm",
-    format: PDF_PAGE_FORMAT,
+    format: QR_SHEET_PAGE_FORMAT,
   });
 
-  const pageW = doc.internal.pageSize.getWidth();
-  const pageH = doc.internal.pageSize.getHeight();
-  const usableW = pageW - PAGE_MARGIN_MM * 2;
-  const usableH = pageH - PAGE_MARGIN_MM * 2;
-
-  const cardsPerRow = Math.max(
-    1,
-    Math.floor((usableW + CARD_GAP_MM) / (CARD_WIDTH_MM + CARD_GAP_MM))
-  );
-  const cardsPerCol = Math.max(
-    1,
-    Math.floor((usableH + CARD_GAP_MM) / (CARD_HEIGHT_MM + CARD_GAP_MM))
-  );
-  const cardsPerPage = cardsPerRow * cardsPerCol;
-
+  const cardsPerPage = QR_SHEET_COLS * QR_SHEET_ROWS;
   let col = 0;
   let row = 0;
-  let pageCards = 0;
+  let pageItems = 0;
 
   for (let i = 0; i < codes.length; i++) {
     const code = codes[i];
     const qrUrl = getQrUrl(code);
 
-    if (pageCards > 0 && pageCards % cardsPerPage === 0) {
-      doc.addPage(PDF_PAGE_FORMAT, PDF_ORIENTATION);
+    if (pageItems > 0 && pageItems % cardsPerPage === 0) {
+      doc.addPage(QR_SHEET_PAGE_FORMAT, QR_SHEET_ORIENTATION);
       col = 0;
       row = 0;
     }
 
-    const cardX = PAGE_MARGIN_MM + col * (CARD_WIDTH_MM + CARD_GAP_MM);
-    const cardY = PAGE_MARGIN_MM + row * (CARD_HEIGHT_MM + CARD_GAP_MM);
+    const cellX = QR_SHEET_MARGIN_X_MM + col * QR_SHEET_CELL_WIDTH_MM;
+    const cellY = QR_SHEET_MARGIN_Y_MM + row * QR_SHEET_CELL_HEIGHT_MM;
 
-    // Card background
-    doc.setFillColor(255, 255, 255);
-    doc.setDrawColor(200, 210, 230);
-    doc.setLineWidth(0.3);
-    doc.roundedRect(cardX, cardY, CARD_WIDTH_MM, CARD_HEIGHT_MM, CARD_CORNER_RADIUS_MM, CARD_CORNER_RADIUS_MM, "FD");
-
-    // Top accent bar (rounded top + square bottom)
-    doc.setFillColor(0, 74, 198);
-    doc.roundedRect(cardX, cardY, CARD_WIDTH_MM, 9, CARD_CORNER_RADIUS_MM, CARD_CORNER_RADIUS_MM, "F");
-    doc.rect(cardX, cardY + 5, CARD_WIDTH_MM, 4, "F");
-
-    // Brand name
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.setTextColor(255, 255, 255);
-    doc.text("NFCISTA", cardX + 4, cardY + 6.2);
-
-    // Subtitle
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(6);
-    doc.setTextColor(180, 200, 240);
-    doc.text("SMART NFC BUSINESS CARD", cardX + 4, cardY + 8.5);
-
-    // QR code
-    const qrX = cardX + CARD_WIDTH_MM - QR_SIZE_MM - 5;
-    const qrY = cardY + 12;
+    // 1. QR code centered horizontally in the cell
+    const qrX = cellX + (QR_SHEET_CELL_WIDTH_MM - QR_SHEET_QR_SIZE_MM) / 2;
+    const qrY = cellY + 4;
     const qrDataUrl = await makeQrDataUrl(qrUrl, 512);
-    doc.addImage(qrDataUrl, "PNG", qrX, qrY, QR_SIZE_MM, QR_SIZE_MM);
+    doc.addImage(qrDataUrl, "PNG", qrX, qrY, QR_SHEET_QR_SIZE_MM, QR_SHEET_QR_SIZE_MM);
 
-    // "SCAN TO CONNECT" label
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(5);
-    doc.setTextColor(100, 120, 150);
-    const scanLabel = "SCAN TO CONNECT";
-    const scanLabelW = doc.getTextWidth(scanLabel);
-    doc.text(scanLabel, qrX + QR_SIZE_MM / 2 - scanLabelW / 2, qrY - 2.5);
-
-    // Card code below QR
+    // 2. Exact card code directly below the QR code (clean monospace bold)
     doc.setFont("courier", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(30, 40, 60);
-    const codeW = doc.getTextWidth(code);
-    doc.text(code, qrX + QR_SIZE_MM / 2 - codeW / 2, qrY + QR_SIZE_MM + 4.5);
-
-    // Left-side content
-    const textX = cardX + 4;
-    let textY = cardY + 18;
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.setTextColor(0, 74, 198);
-    doc.text("(((•)))", textX, textY);
-    textY += 7;
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7.5);
-    doc.setTextColor(20, 30, 60);
-    doc.text("Dynamic NFC Card", textX, textY);
-    textY += 5;
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(6);
-    doc.setTextColor(100, 115, 140);
-    doc.text("Tap or Scan to connect.", textX, textY);
-    textY += 3.5;
-    doc.text("Destination can be updated", textX, textY);
-    textY += 3.5;
-    doc.text("without reprinting.", textX, textY);
-    textY += 6;
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(5.5);
-    doc.setTextColor(150, 160, 175);
-    doc.text("nfcista.vercel.app", textX, textY);
-
-    // Bottom separator
-    doc.setDrawColor(220, 228, 240);
-    doc.setLineWidth(0.2);
-    doc.line(cardX + 3, cardY + CARD_HEIGHT_MM - 5.5, cardX + CARD_WIDTH_MM - 3, cardY + CARD_HEIGHT_MM - 5.5);
-
-    // Bottom card ID label
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(5);
-    doc.setTextColor(160, 170, 185);
-    doc.text("Card ID:", cardX + 4, cardY + CARD_HEIGHT_MM - 2.8);
-    doc.setFont("courier", "bold");
-    doc.setFontSize(5);
-    doc.setTextColor(0, 74, 198);
-    doc.text(code, cardX + 16, cardY + CARD_HEIGHT_MM - 2.8);
+    doc.setFontSize(9);
+    doc.setTextColor(17, 24, 39);
+    const textWidth = doc.getTextWidth(code);
+    const textX = cellX + (QR_SHEET_CELL_WIDTH_MM - textWidth) / 2;
+    const textY = qrY + QR_SHEET_QR_SIZE_MM + 5;
+    doc.text(code, textX, textY);
 
     col++;
-    if (col >= cardsPerRow) {
+    if (col >= QR_SHEET_COLS) {
       col = 0;
       row++;
     }
-    pageCards++;
+    pageItems++;
   }
 
   const timestamp = new Date().toISOString().slice(0, 10);
-  doc.save(`nfcista-cards-${timestamp}-batch${codes.length}.pdf`);
+  doc.save(`nfcista-qr-sheet-${timestamp}-${codes.length}cards.pdf`);
 }
 
 // ---------------------------------------------------------------------------
@@ -300,10 +213,10 @@ export default function QrPrintPage() {
           </span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight">
-          Print NFC Cards
+          Print Dynamic QR Sheet
         </h1>
         <p className="text-body-md text-on-surface-variant mt-1 leading-relaxed">
-          Select existing inactive cards to include in a print-ready PDF.{" "}
+          Select existing inactive cards to generate a clean, print-ready QR sheet for physical card application or sticker printing.{" "}
           <Link
             href="/admin/qr-codes"
             className="text-primary hover:underline font-semibold"
@@ -317,8 +230,8 @@ export default function QrPrintPage() {
       {/* Specs */}
       <div className="bg-surface-container-low/60 border border-outline-variant/30 rounded-2xl px-6 py-4 flex flex-wrap gap-6">
         {[
-          ["Card size", `${CARD_WIDTH_MM} × ${CARD_HEIGHT_MM} mm (CR80)`],
-          ["Paper", "A4, portrait"],
+          ["Sheet type", "QR-only print sheet (A4)"],
+          ["QR size", `${QR_SHEET_QR_SIZE_MM} × ${QR_SHEET_QR_SIZE_MM} mm`],
           ["QR encoding", "/r/[CARD_CODE] only"],
           ["DB writes", "None"],
         ].map(([label, val]) => (
@@ -445,9 +358,8 @@ export default function QrPrintPage() {
                 </p>
                 {selected.size > 0 && (
                   <p className="text-xs text-on-surface-variant mt-0.5">
-                    PDF will contain exactly {selected.size} card
-                    {selected.size !== 1 ? "s" : ""} at {CARD_WIDTH_MM}×
-                    {CARD_HEIGHT_MM}mm
+                    PDF will contain exactly {selected.size} QR code
+                    {selected.size !== 1 ? "s" : ""} on an A4 sheet
                   </p>
                 )}
               </div>
