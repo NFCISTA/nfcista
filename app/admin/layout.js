@@ -170,6 +170,16 @@ export default function AdminLayout({ children }) {
               >
                 Scan QR
               </Link>
+              <Link
+                href="/admin/qr-print"
+                className={`px-3 py-1.5 rounded-lg text-label-md font-semibold transition-colors ${
+                  pathname === "/admin/qr-print"
+                    ? "bg-surface-container-low text-primary"
+                    : "text-on-surface-variant hover:text-on-surface"
+                }`}
+              >
+                Print Cards
+              </Link>
             </nav>
           </div>
 
