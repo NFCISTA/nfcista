@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import DynamicQrCode from "@/components/qr/DynamicQrCode";
+import { getQrUrl } from "@/lib/dynamicQr";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -68,6 +69,10 @@ export default function CardCodeGeneratorPage() {
   const [inventory, setInventory] = useState(null); // { total, available, active, cards[] }
   const [inventoryLoading, setInventoryLoading] = useState(true);
   const [inventoryError, setInventoryError] = useState("");
+
+  // copy QR link state — keyed by card_code
+  const [copiedQr, setCopiedQr] = useState(null); // card_code that was just copied
+  const [clipboardError, setClipboardError] = useState(""); // brief user-facing error
 
   // ── fetch inventory ────────────────────────────────────────────────────────
   const fetchInventory = useCallback(async () => {
@@ -155,6 +160,26 @@ export default function CardCodeGeneratorPage() {
     }
   }
 
+  // ── copy QR link ───────────────────────────────────────────────────────────
+  async function handleCopyQrLink(cardCode) {
+    const url = getQrUrl(cardCode);
+    if (!url) return;
+    setClipboardError("");
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        // Fallback for environments without clipboard API
+        throw new Error("Clipboard not available");
+      }
+      setCopiedQr(cardCode);
+      setTimeout(() => setCopiedQr(null), 2000);
+    } catch {
+      setClipboardError(`Could not copy link for ${cardCode}. Please copy manually: ${url}`);
+      setTimeout(() => setClipboardError(""), 5000);
+    }
+  }
+
   // ── render ─────────────────────────────────────────────────────────────────
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -204,6 +229,14 @@ export default function CardCodeGeneratorPage() {
           </button>
         </div>
 
+        {/* Clipboard error toast */}
+        {clipboardError && (
+          <div className="p-3 rounded-xl bg-error-container/20 border border-error/30 text-error text-xs flex items-start gap-2 animate-fadeIn">
+            <span className="material-symbols-outlined text-[16px] shrink-0">content_paste_off</span>
+            <span className="font-medium break-all">{clipboardError}</span>
+          </div>
+        )}
+
         {inventoryError ? (
           <div className="p-4 rounded-xl bg-error-container/20 border border-error/30 text-error text-body-sm flex items-start gap-2.5">
             <span className="material-symbols-outlined text-[20px] shrink-0">error</span>
@@ -242,42 +275,60 @@ export default function CardCodeGeneratorPage() {
                     return (
                       <div
                         key={card.card_code}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 bg-surface-container-lowest hover:bg-surface-container-low/40 transition-colors"
+                        className="flex flex-col gap-2 px-4 py-3 bg-surface-container-lowest hover:bg-surface-container-low/40 transition-colors"
                       >
-                        {/* Code + status */}
-                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <span className="font-mono text-sm font-bold text-on-surface tracking-wider">
-                            {card.card_code}
-                          </span>
-                          {isActive ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 border border-emerald-200 text-emerald-800 shrink-0">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                              Active
+                        {/* Row 1: Code + status + date + activate */}
+                        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="font-mono text-sm font-bold text-on-surface tracking-wider">
+                              {card.card_code}
                             </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 border border-amber-200 text-amber-800 shrink-0">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                              Available
+                            {isActive ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 border border-emerald-200 text-emerald-800 shrink-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                Active
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 border border-amber-200 text-amber-800 shrink-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                Available
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-on-surface-variant shrink-0">
+                            <span title="Created date">
+                              {formatDate(card.created_at)}
                             </span>
-                          )}
+                            {!isActive && (
+                              <Link
+                                href={`/admin/qr-activate?code=${encodeURIComponent(card.card_code)}`}
+                                className="inline-flex items-center gap-0.5 font-semibold text-primary hover:underline"
+                              >
+                                <span>Activate</span>
+                                <span className="material-symbols-outlined text-[14px]">
+                                  arrow_forward
+                                </span>
+                              </Link>
+                            )}
+                          </div>
                         </div>
 
-                        {/* Created date + action */}
-                        <div className="flex items-center gap-3 text-xs text-on-surface-variant shrink-0">
-                          <span title="Created date">
-                            {formatDate(card.created_at)}
+                        {/* Row 2: QR URL + Copy button */}
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <span className="font-mono text-xs text-primary break-all">
+                            {getQrUrl(card.card_code)}
                           </span>
-                          {!isActive && (
-                            <Link
-                              href={`/admin/qr-activate?code=${encodeURIComponent(card.card_code)}`}
-                              className="inline-flex items-center gap-0.5 font-semibold text-primary hover:underline"
-                            >
-                              <span>Activate</span>
-                              <span className="material-symbols-outlined text-[14px]">
-                                arrow_forward
-                              </span>
-                            </Link>
-                          )}
+                          <button
+                            onClick={() => handleCopyQrLink(card.card_code)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-outline-variant/40 bg-surface-container-low text-xs font-semibold text-on-surface hover:bg-surface-container-high transition-all shrink-0 cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">
+                              {copiedQr === card.card_code ? "done" : "content_copy"}
+                            </span>
+                            <span>
+                              {copiedQr === card.card_code ? "Copied!" : "Copy QR Link"}
+                            </span>
+                          </button>
                         </div>
                       </div>
                     );
