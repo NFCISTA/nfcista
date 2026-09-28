@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 
 export default function AdminLayout({ children }) {
@@ -113,18 +114,43 @@ export default function AdminLayout({ children }) {
       {/* Top Admin Navigation */}
       <header className="sticky top-0 z-30 bg-surface-container-lowest border-b border-outline-variant/30 shadow-card">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-sm">
-              N
-            </span>
-            <div>
-              <span className="font-bold text-on-surface text-label-lg tracking-tight">
-                NFCISTA
+          <div className="flex items-center gap-6">
+            <Link href="/admin" className="flex items-center gap-2.5">
+              <span className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-sm">
+                N
               </span>
-              <span className="ml-2 px-2 py-0.5 rounded text-[10px] font-semibold bg-surface-container-low text-primary border border-outline-variant/20 uppercase tracking-wider">
-                Admin
-              </span>
-            </div>
+              <div>
+                <span className="font-bold text-on-surface text-label-lg tracking-tight">
+                  NFCISTA
+                </span>
+                <span className="ml-2 px-2 py-0.5 rounded text-[10px] font-semibold bg-surface-container-low text-primary border border-outline-variant/20 uppercase tracking-wider">
+                  Admin
+                </span>
+              </div>
+            </Link>
+
+            <nav className="flex items-center gap-1">
+              <Link
+                href="/admin"
+                className={`px-3 py-1.5 rounded-lg text-label-md font-semibold transition-colors ${
+                  pathname === "/admin"
+                    ? "bg-surface-container-low text-primary"
+                    : "text-on-surface-variant hover:text-on-surface"
+                }`}
+              >
+                Customers
+              </Link>
+              <Link
+                href="/admin/qr-activate"
+                className={`px-3 py-1.5 rounded-lg text-label-md font-semibold transition-colors ${
+                  pathname === "/admin/qr-activate"
+                    ? "bg-surface-container-low text-primary"
+                    : "text-on-surface-variant hover:text-on-surface"
+                }`}
+              >
+                QR Activation
+              </Link>
+            </nav>
           </div>
 
           <div className="flex items-center gap-3">
