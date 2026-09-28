@@ -1,11 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import DynamicQrCode from "@/components/qr/DynamicQrCode";
 
+// ─── helpers ────────────────────────────────────────────────────────────────
+
+async function getAuthHeader() {
+  if (!supabase) return {};
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      return { Authorization: `Bearer ${session.access_token}` };
+    }
+  } catch {
+    // Fall back to HttpOnly cookie
+  }
+  return {};
+}
+
+function formatDate(iso) {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+// ─── Inventory counter card ──────────────────────────────────────────────────
+
+function StatCard({ label, value, accent }) {
+  const accentMap = {
+    default: "text-on-surface border-outline-variant/30",
+    amber: "text-amber-700 border-amber-200",
+    green: "text-emerald-700 border-emerald-200",
+  };
+  return (
+    <div
+      className={`flex-1 min-w-0 bg-surface-container-lowest border rounded-2xl px-5 py-4 shadow-xs flex flex-col gap-1 ${accentMap[accent] ?? accentMap.default}`}
+    >
+      <span className="text-3xl font-bold font-mono tabular-nums">
+        {value ?? "—"}
+      </span>
+      <span className="text-xs font-semibold uppercase tracking-wider opacity-70">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// ─── Page ────────────────────────────────────────────────────────────────────
+
 export default function CardCodeGeneratorPage() {
+  // generation state
   const [quantity, setQuantity] = useState(5);
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -13,22 +64,40 @@ export default function CardCodeGeneratorPage() {
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [copiedAll, setCopiedAll] = useState(false);
 
-  // Helper to extract session token from client
-  async function getAuthHeader() {
-    if (!supabase) return {};
+  // inventory state
+  const [inventory, setInventory] = useState(null); // { total, available, active, cards[] }
+  const [inventoryLoading, setInventoryLoading] = useState(true);
+  const [inventoryError, setInventoryError] = useState("");
+
+  // ── fetch inventory ────────────────────────────────────────────────────────
+  const fetchInventory = useCallback(async () => {
+    setInventoryLoading(true);
+    setInventoryError("");
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session?.access_token) {
-        return { Authorization: `Bearer ${session.access_token}` };
+      const authHeader = await getAuthHeader();
+      const res = await fetch("/api/admin/dynamic-qr/inventory", {
+        headers: { ...authHeader },
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setInventoryError(d.error || "Failed to load inventory.");
+      } else {
+        const d = await res.json();
+        setInventory(d);
       }
     } catch {
-      // Fall back to HttpOnly cookie
+      setInventoryError("A network error occurred while loading inventory.");
+    } finally {
+      setInventoryLoading(false);
     }
-    return {};
-  }
+  }, []);
 
+  useEffect(() => {
+    fetchInventory();
+  }, [fetchInventory]);
+
+  // ── generate cards ────────────────────────────────────────────────────────
   async function handleGenerate(e) {
     e.preventDefault();
     const qty = parseInt(quantity, 10);
@@ -57,6 +126,8 @@ export default function CardCodeGeneratorPage() {
         setErrorMsg(data.error || "Failed to generate card codes.");
       } else {
         setGeneratedCards(data.cards || []);
+        // Refresh inventory counters after successful generation
+        fetchInventory();
       }
     } catch {
       setErrorMsg("A network error occurred while generating codes.");
@@ -84,6 +155,7 @@ export default function CardCodeGeneratorPage() {
     }
   }
 
+  // ── render ─────────────────────────────────────────────────────────────────
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header & Breadcrumb */}
@@ -109,6 +181,118 @@ export default function CardCodeGeneratorPage() {
         <p className="text-body-md text-on-surface-variant mt-1 leading-relaxed">
           Generate batches of unique, unused Dynamic QR codes for physical card printing. Generated cards are reserved in the database as inactive and can be activated later when sold.
         </p>
+      </div>
+
+      {/* ── QR Card Inventory ─────────────────────────────────────────────── */}
+      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-6 sm:p-8 shadow-card space-y-4">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-lg font-bold text-on-surface tracking-tight">
+            QR Card Inventory
+          </h2>
+          <button
+            onClick={fetchInventory}
+            disabled={inventoryLoading}
+            title="Refresh inventory"
+            className="inline-flex items-center gap-1 text-xs text-on-surface-variant hover:text-primary transition-colors disabled:opacity-40 cursor-pointer"
+          >
+            <span
+              className={`material-symbols-outlined text-[16px] ${inventoryLoading ? "animate-spin" : ""}`}
+            >
+              refresh
+            </span>
+            <span>{inventoryLoading ? "Loading…" : "Refresh"}</span>
+          </button>
+        </div>
+
+        {inventoryError ? (
+          <div className="p-4 rounded-xl bg-error-container/20 border border-error/30 text-error text-body-sm flex items-start gap-2.5">
+            <span className="material-symbols-outlined text-[20px] shrink-0">error</span>
+            <span className="font-medium">{inventoryError}</span>
+          </div>
+        ) : (
+          <>
+            {/* Counters */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <StatCard
+                label="Total Created"
+                value={inventoryLoading ? "…" : inventory?.total}
+                accent="default"
+              />
+              <StatCard
+                label="Available"
+                value={inventoryLoading ? "…" : inventory?.available}
+                accent="amber"
+              />
+              <StatCard
+                label="Active / Assigned"
+                value={inventoryLoading ? "…" : inventory?.active}
+                accent="green"
+              />
+            </div>
+
+            {/* Card list */}
+            {!inventoryLoading && inventory?.cards?.length > 0 && (
+              <div className="mt-2 space-y-2">
+                <h3 className="text-label-sm font-semibold uppercase tracking-wider text-on-surface-variant">
+                  All Cards
+                </h3>
+                <div className="divide-y divide-outline-variant/20 rounded-2xl border border-outline-variant/30 overflow-hidden">
+                  {inventory.cards.map((card) => {
+                    const isActive = card.is_active;
+                    return (
+                      <div
+                        key={card.card_code}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 bg-surface-container-lowest hover:bg-surface-container-low/40 transition-colors"
+                      >
+                        {/* Code + status */}
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <span className="font-mono text-sm font-bold text-on-surface tracking-wider">
+                            {card.card_code}
+                          </span>
+                          {isActive ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 border border-emerald-200 text-emerald-800 shrink-0">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              Active
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 border border-amber-200 text-amber-800 shrink-0">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                              Available
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Created date + action */}
+                        <div className="flex items-center gap-3 text-xs text-on-surface-variant shrink-0">
+                          <span title="Created date">
+                            {formatDate(card.created_at)}
+                          </span>
+                          {!isActive && (
+                            <Link
+                              href={`/admin/qr-activate?code=${encodeURIComponent(card.card_code)}`}
+                              className="inline-flex items-center gap-0.5 font-semibold text-primary hover:underline"
+                            >
+                              <span>Activate</span>
+                              <span className="material-symbols-outlined text-[14px]">
+                                arrow_forward
+                              </span>
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {!inventoryLoading && inventory?.total === 0 && (
+              <p className="text-body-sm text-on-surface-variant italic">
+                No QR cards have been generated yet. Use the form below to create your first batch.
+              </p>
+            )}
+          </>
+        )}
       </div>
 
       {/* Generation Form Card */}
@@ -177,7 +361,7 @@ export default function CardCodeGeneratorPage() {
                 Generated Codes ({generatedCards.length})
               </h2>
               <p className="text-xs text-on-surface-variant mt-0.5">
-                Saved in database as <span className="font-semibold text-amber-800">Inactive</span>. Ready for physical printing.
+                Saved in database as <span className="font-semibold text-amber-800">Available</span>. Ready for physical printing.
               </p>
             </div>
 
@@ -206,7 +390,7 @@ export default function CardCodeGeneratorPage() {
                     </span>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 border border-amber-200 text-amber-800">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                      Inactive
+                      Available
                     </span>
                   </div>
 
