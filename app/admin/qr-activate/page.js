@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import DynamicQrCode from "@/components/qr/DynamicQrCode";
@@ -29,6 +29,38 @@ export default function DynamicQrActivatePage() {
     }
     return {};
   }
+
+  // Pre-fill card code from URL query parameter (e.g. ?code=NF8K29 from scanner)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const codeParam = params.get("code") || params.get("cardCode");
+      if (codeParam) {
+        const clean = codeParam.trim().toUpperCase();
+        setCardCode(clean);
+        // Automatically perform lookup
+        (async () => {
+          setIsLoadingLookup(true);
+          try {
+            const authHeader = await getAuthHeader();
+            const res = await fetch(
+              `/api/admin/dynamic-qr/activate?cardCode=${encodeURIComponent(clean)}`,
+              { headers: { ...authHeader } }
+            );
+            const data = await res.json();
+            if (res.ok) {
+              setCurrentInfo(data);
+              setDestinationUrl(data.destination_url || "");
+            }
+          } catch {
+            // Non-blocking for prefill
+          } finally {
+            setIsLoadingLookup(false);
+          }
+        })();
+      }
+    }
+  }, []);
 
   // Look up existing card details
   async function handleLookup(e) {
