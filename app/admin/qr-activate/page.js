@@ -211,7 +211,7 @@ export default function DynamicQrActivatePage() {
                 placeholder="e.g. NF8K29"
                 maxLength={32}
                 required
-                className="w-full px-4 py-3 rounded-xl border border-outline-variant/60 bg-surface-container-low/40 text-on-surface font-mono text-lg font-bold placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all uppercase"
+                className="w-full px-4 py-3 rounded-xl border border-outline-variant/60 bg-surface-container-low/40 text-on-surface font-mono text-lg font-bold tracking-wider placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all uppercase"
               />
               <span className="absolute right-3.5 top-3.5 material-symbols-outlined text-[20px] text-on-surface-variant">
                 qr_code

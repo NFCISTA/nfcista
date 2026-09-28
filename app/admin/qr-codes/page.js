@@ -232,7 +232,7 @@ export default function CardCodeGeneratorPage() {
                     </button>
                     <span className="text-outline-variant">•</span>
                     <Link
-                      href="/admin/qr-activate"
+                      href={`/admin/qr-activate?code=${encodeURIComponent(card.card_code)}`}
                       className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                     >
                       <span>Activate</span>

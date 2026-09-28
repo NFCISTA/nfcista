@@ -392,9 +392,9 @@ export default function QrPrintPage() {
               {cards.map((card) => {
                 const isSelected = selected.has(card.card_code);
                 return (
-                  <label
+                  <div
                     key={card.id}
-                    className={`flex items-center gap-4 px-4 py-3 rounded-xl border cursor-pointer transition-colors ${
+                    className={`flex items-center gap-3 sm:gap-4 px-4 py-3 rounded-xl border transition-colors ${
                       isSelected
                         ? "border-primary/40 bg-primary/5"
                         : "border-outline-variant/30 bg-surface-container-low/30 hover:bg-surface-container-low/60"
@@ -402,21 +402,35 @@ export default function QrPrintPage() {
                   >
                     <input
                       type="checkbox"
+                      id={`card-${card.id}`}
                       checked={isSelected}
                       onChange={() => toggleCard(card.card_code)}
-                      className="w-4 h-4 accent-primary shrink-0"
+                      className="w-4 h-4 accent-primary shrink-0 cursor-pointer"
                     />
-                    <span className="font-mono text-base font-bold text-on-surface tracking-wider">
-                      {card.card_code}
-                    </span>
-                    <span className="font-mono text-xs text-primary/80 truncate flex-1">
-                      {getQrUrl(card.card_code)}
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 border border-amber-200 text-amber-800 shrink-0">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                      Inactive
-                    </span>
-                  </label>
+                    <label
+                      htmlFor={`card-${card.id}`}
+                      className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 cursor-pointer"
+                    >
+                      <span className="font-mono text-base font-bold text-on-surface tracking-wider">
+                        {card.card_code}
+                      </span>
+                      <span className="font-mono text-xs text-primary/80 truncate flex-1">
+                        {getQrUrl(card.card_code)}
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 border border-amber-200 text-amber-800 shrink-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        Inactive
+                      </span>
+                    </label>
+                    <Link
+                      href={`/admin/qr-activate?code=${encodeURIComponent(card.card_code)}`}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline shrink-0"
+                      title={`Activate ${card.card_code}`}
+                    >
+                      <span>Activate</span>
+                      <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                    </Link>
+                  </div>
                 );
               })}
             </div>
