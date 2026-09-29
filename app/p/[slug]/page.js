@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { getCustomerBySlug, getSafeExternalUrl } from "@/lib/customers";
+import { getCustomerGallery } from "@/lib/gallery";
 import SaveContactButton from "@/components/SaveContactButton";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import ProfileShareModal from "@/components/profile/ProfileShareModal";
 import ProfileQuickActions from "@/components/profile/ProfileQuickActions";
 import ProfileIntro from "@/components/profile/ProfileIntro";
+import ProfileGallery from "@/components/profile/ProfileGallery";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +61,10 @@ export async function generateMetadata({ params }) {
 // ---------------------------------------------------------------------------
 export default async function CustomerPublicProfilePage({ params }) {
   const { slug } = await params;
-  const customer = await getCustomerBySlug(slug);
+  const [customer, galleryItems] = await Promise.all([
+    getCustomerBySlug(slug),
+    getCustomerGallery(slug),
+  ]);
 
   // ── Profile Unavailable ─────────────────────────────────────────────────
   if (!customer) {
@@ -580,6 +585,11 @@ export default async function CustomerPublicProfilePage({ params }) {
               slug={customer.profile_slug}
             />
           </section>
+
+          {/* ── Portfolio & Products ─────────────────────────────────── */}
+          {galleryItems.length > 0 && (
+            <ProfileGallery items={galleryItems} customer={customer} />
+          )}
 
           {/* ── Mobile-only Footer ───────────────────────────────────── */}
           <footer className="lg:hidden px-5 py-6 text-center">
