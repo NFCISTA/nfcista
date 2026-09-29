@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Hero() {
   return (
@@ -66,67 +67,26 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Right Column: CSS-based NFC Card Mockup */}
+          {/* Right Column: Physical NFC Card Product Image */}
           <div className="lg:col-span-5 flex justify-center items-center relative">
             {/* Outer aura glow */}
             <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-primary-container/15 to-secondary/10 rounded-3xl blur-2xl -z-10" />
 
             <div className="relative w-full max-w-[380px] sm:max-w-[400px]">
-              {/* The Physical Card Mockup */}
-              <div className="aspect-[1.586] w-full rounded-2xl p-6 sm:p-7 bg-gradient-to-br from-[#0B1528] via-[#10203E] to-[#0A1224] text-white shadow-2xl border border-white/10 relative overflow-hidden flex flex-col justify-between select-none">
-                {/* Metallic shine diagonal */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.04] to-transparent pointer-events-none" />
-                <div className="absolute -top-16 -right-16 w-44 h-44 bg-primary/20 rounded-full blur-2xl pointer-events-none" />
-
-                {/* Card Top Row: Brand & Wireless waves */}
-                <div className="flex items-center justify-between relative z-10">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center border border-white/10">
-                      <span className="material-symbols-outlined text-[16px] text-white">contactless</span>
-                    </div>
-                    <span className="text-sm font-bold tracking-widest text-white uppercase">
-                      NFCISTA
-                    </span>
-                  </div>
-                  {/* NFC Wave Symbol */}
-                  <span className="material-symbols-outlined text-[26px] text-primary-fixed-dim">
-                    contactless
-                  </span>
-                </div>
-
-                {/* Card Middle: Metallic Smart Chip */}
-                <div className="my-auto py-2 relative z-10 flex items-center gap-3">
-                  <div className="w-11 h-9 rounded-md bg-gradient-to-tr from-[#E6B762] via-[#F8E19B] to-[#D49E3C] p-[1.5px] shadow-sm">
-                    <div className="w-full h-full rounded-[4px] border border-black/20 grid grid-cols-2 grid-rows-2 gap-[2px] p-1 bg-[#D49E3C]/30">
-                      <div className="border-r border-b border-black/20 rounded-tl-sm" />
-                      <div className="border-b border-black/20 rounded-tr-sm" />
-                      <div className="border-r border-black/20 rounded-bl-sm" />
-                      <div className="rounded-br-sm" />
-                    </div>
-                  </div>
-                  <span className="text-[10px] uppercase font-semibold text-white/40 tracking-wider">
-                    Smart NFC Card
-                  </span>
-                </div>
-
-                {/* Card Bottom Row: Demo Name & Profession */}
-                <div className="relative z-10 flex items-end justify-between">
-                  <div>
-                    <div className="text-lg sm:text-xl font-bold tracking-wide text-white">
-                      Your Name
-                    </div>
-                    <div className="text-xs font-medium text-white/60 tracking-wider">
-                      Your Profession / Business
-                    </div>
-                  </div>
-                  <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 border border-white/10 text-[10px] font-semibold text-white/90">
-                    <span>Tap to Connect</span>
-                  </div>
-                </div>
+              {/* Real Physical NFC Card Product Image */}
+              <div className="relative aspect-square w-full rounded-2xl overflow-hidden shadow-2xl border border-outline-variant/30 bg-surface-container-lowest">
+                <Image
+                  src="/images/products/digital-business-card-black.png"
+                  alt="NFCISTA Matte Black NFC Digital Business Card"
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+                  className="object-cover"
+                  priority
+                />
               </div>
 
               {/* Floating Interaction Pills */}
-              <div className="absolute -bottom-4 -left-3 sm:-left-6 bg-white border border-outline-variant/30 rounded-xl px-3.5 py-2 shadow-float flex items-center gap-2">
+              <div className="absolute -bottom-4 -left-3 sm:-left-6 bg-white border border-outline-variant/30 rounded-xl px-3.5 py-2 shadow-float flex items-center gap-2 z-10">
                 <div className="w-7 h-7 rounded-lg bg-green-50 text-green-600 flex items-center justify-center">
                   <span className="material-symbols-outlined text-[16px]">chat</span>
                 </div>
@@ -136,7 +96,7 @@ export default function Hero() {
                 </div>
               </div>
 
-              <div className="absolute -top-4 -right-3 sm:-right-6 bg-white border border-outline-variant/30 rounded-xl px-3.5 py-2 shadow-float flex items-center gap-2">
+              <div className="absolute -top-4 -right-3 sm:-right-6 bg-white border border-outline-variant/30 rounded-xl px-3.5 py-2 shadow-float flex items-center gap-2 z-10">
                 <div className="w-7 h-7 rounded-lg bg-blue-50 text-primary flex items-center justify-center">
                   <span className="material-symbols-outlined text-[16px]">contact_page</span>
                 </div>
