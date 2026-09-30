@@ -16,6 +16,8 @@ import {
   recordConsentForCustomer,
   isValidHttpUrl,
 } from "@/lib/customers";
+import CustomerGallerySection from "@/components/admin/CustomerGallerySection";
+import { getAdminGalleryItems, savePendingGalleryItems } from "@/lib/gallery";
 
 // Default empty form template
 const initialFormData = {
@@ -54,6 +56,8 @@ export default function AdminCustomersDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   // DPDP: admin publication-consent confirmation (separate from formData; never auto-checked)
   const [consentConfirmed, setConsentConfirmed] = useState(false);
+  // Portfolio & Products items for customer modal
+  const [galleryItems, setGalleryItems] = useState([]);
 
   // Photo management state
   const [photoFile, setPhotoFile] = useState(null);
@@ -125,6 +129,7 @@ export default function AdminCustomersDashboard() {
     if (fileInputRef.current) fileInputRef.current.value = "";
     setFormErrors({});
     setConsentConfirmed(false); // DPDP: always start unchecked
+    setGalleryItems([]);
     setIsFormModalOpen(true);
   }
 
@@ -137,11 +142,16 @@ export default function AdminCustomersDashboard() {
     if (fileInputRef.current) fileInputRef.current.value = "";
     setFormErrors({});
     setConsentConfirmed(false); // DPDP: not required on edit, but always start unchecked
+    setGalleryItems([]);
     setIsSubmitting(true);
     setIsFormModalOpen(true);
 
     try {
-      const fullRecord = await getAdminCustomerDetails(customer.id);
+      const [fullRecord, existingGalleryItems] = await Promise.all([
+        getAdminCustomerDetails(customer.id),
+        getAdminGalleryItems(customer.id),
+      ]);
+
       setFormData({
         full_name: fullRecord.full_name || "",
         job_title: fullRecord.job_title || "",
@@ -160,6 +170,7 @@ export default function AdminCustomersDashboard() {
         is_active: fullRecord.is_active !== undefined ? fullRecord.is_active : true,
       });
       setPhotoPreview(fullRecord.photo_url || null);
+      setGalleryItems(existingGalleryItems || []);
     } catch (err) {
       console.error("Failed to load customer details:", err);
       setFormErrors({ general: "Failed to load full customer details." });
@@ -325,6 +336,15 @@ export default function AdminCustomersDashboard() {
         const created = await createCustomer(payload);
         setCustomers((prev) => [created, ...prev]);
         setSuccessMsg(`Created new customer "${formData.full_name}".`);
+
+        // Save pending gallery items if any were added during Add Customer
+        if (created?.id && galleryItems.length > 0) {
+          try {
+            await savePendingGalleryItems(created.id, galleryItems);
+          } catch (gErr) {
+            console.error("Failed to save pending gallery items:", gErr);
+          }
+        }
 
         // Customer Approval: record in public.customer_consents for new active customer
         if (payload.is_active && consentConfirmed && created?.id) {
@@ -1107,8 +1127,16 @@ export default function AdminCustomersDashboard() {
                 </div>
               </div>{/* end Profile Settings */}
 
+              {/* 5. Portfolio & Products */}
+              <CustomerGallerySection
+                customerId={editingId}
+                items={galleryItems}
+                setItems={setGalleryItems}
+                customerWhatsApp={formData.whatsapp}
+              />
+
               {/* ------------------------------------------------------------ */}
-              {/* 5. Customer Approval (Only for Add New Customer)             */}
+              {/* 6. Customer Approval (Only for Add New Customer)             */}
               {/* ------------------------------------------------------------ */}
               {!editingId && (
                 <div className="pt-2 space-y-2">
