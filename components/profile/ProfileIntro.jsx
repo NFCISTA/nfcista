@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 export default function ProfileIntro({ name }) {
   const [visible, setVisible] = useState(true);
@@ -158,11 +159,14 @@ export default function ProfileIntro({ name }) {
       <div className="intro-overlay fixed inset-0 z-[9999] overflow-hidden bg-[#071426]">
         {/* Cinematic background */}
         <div className="absolute inset-0">
-          <img
+          <Image
             src="/images/hero-mountains.jpg"
             alt=""
             aria-hidden="true"
-            className="intro-background h-full w-full object-cover"
+            fill
+            priority
+            sizes="100vw"
+            className="intro-background object-cover"
           />
 
           <div className="absolute inset-0 bg-gradient-to-b from-[#041126]/80 via-[#071426]/60 to-[#020817]" />

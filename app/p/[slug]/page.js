@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getCustomerBySlug, getSafeExternalUrl } from "@/lib/customers";
 import { getCustomerGallery } from "@/lib/gallery";
 import SaveContactButton from "@/components/SaveContactButton";
@@ -274,21 +275,16 @@ export default async function CustomerPublicProfilePage({ params }) {
         <div className="flex flex-col bg-white lg:border-r lg:border-gray-100">
 
           {/* ── Premium Hero Banner ─────────────────────────────────── */}
-          <div
-            className="relative overflow-hidden h-44 sm:h-48 lg:h-56 bg-[#071426]"
-            style={{
-              backgroundImage: "url('/images/hero-mountains.jpg')",
-              backgroundSize: "cover",
-              backgroundPosition: "center 35%",
-              backgroundRepeat: "no-repeat",
-            }}
-          >
-            {/* Mountain photography background tag */}
-            <img
+          <div className="relative overflow-hidden h-44 sm:h-48 lg:h-56 bg-[#071426]">
+            {/* Mountain photography background banner */}
+            <Image
               src="/images/hero-mountains.jpg"
               alt=""
               aria-hidden="true"
-              className="absolute inset-0 w-full h-full object-cover object-[center_35%] select-none pointer-events-none"
+              fill
+              priority
+              sizes="(max-width: 430px) 100vw, (max-width: 1024px) 430px, 390px"
+              className="object-cover object-[center_35%] select-none pointer-events-none"
             />
 
             {/* Gradient overlays: balanced for crisp mountain visibility and high text contrast */}

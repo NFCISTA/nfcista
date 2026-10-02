@@ -39,7 +39,6 @@ export default function ProductShowcase() {
               height={1024}
               className="w-full h-auto object-cover rounded-2xl"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1152px"
-              priority
             />
           </div>
 
