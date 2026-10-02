@@ -51,6 +51,7 @@ export default function AdminCustomersDashboard() {
   // Modal states
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [originalSlug, setOriginalSlug] = useState(null);
   const [formData, setFormData] = useState(initialFormData);
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -122,6 +123,7 @@ export default function AdminCustomersDashboard() {
   // Open Create Modal
   function handleOpenCreate() {
     setEditingId(null);
+    setOriginalSlug(null);
     setFormData(initialFormData);
     setPhotoFile(null);
     setPhotoPreview(null);
@@ -136,6 +138,7 @@ export default function AdminCustomersDashboard() {
   // Open Edit Modal (fetches full customer details on demand)
   async function handleOpenEdit(customer) {
     setEditingId(customer.id);
+    setOriginalSlug(customer.profile_slug || null);
     setPhotoFile(null);
     setPhotoPreview(null);
     setIsPhotoRemoved(false);
@@ -151,6 +154,10 @@ export default function AdminCustomersDashboard() {
         getAdminCustomerDetails(customer.id),
         getAdminGalleryItems(customer.id),
       ]);
+
+      if (fullRecord?.profile_slug) {
+        setOriginalSlug(fullRecord.profile_slug);
+      }
 
       setFormData({
         full_name: fullRecord.full_name || "",
@@ -222,10 +229,34 @@ export default function AdminCustomersDashboard() {
     }
   }
 
+  // Trigger on-demand profile cache revalidation
+  async function triggerProfileRevalidation(slug, oldSlug = null) {
+    if (!slug && !oldSlug) return;
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const headers = { "Content-Type": "application/json" };
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
+
+      const slugs = [slug, oldSlug].filter(Boolean);
+      await fetch("/api/admin/revalidate", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ slugs }),
+      });
+    } catch (err) {
+      console.error("[Revalidate] Failed to trigger profile revalidation:", err);
+    }
+  }
+
   // Toggle active status
   async function handleToggleStatus(customer) {
     try {
       await toggleCustomerActive(customer.id, customer.is_active);
+      await triggerProfileRevalidation(customer.profile_slug);
       setCustomers((prev) =>
         prev.map((item) =>
           item.id === customer.id ? { ...item, is_active: !item.is_active } : item
@@ -248,6 +279,7 @@ export default function AdminCustomersDashboard() {
         await deleteCustomerPhoto(deletingCustomer.photo_url);
       }
       await deleteCustomer(deletingCustomer.id);
+      await triggerProfileRevalidation(deletingCustomer.profile_slug);
       setCustomers((prev) => prev.filter((c) => c.id !== deletingCustomer.id));
       setSuccessMsg(`Deleted "${deletingCustomer.full_name}".`);
       setTimeout(() => setSuccessMsg(""), 3000);
@@ -328,6 +360,7 @@ export default function AdminCustomersDashboard() {
 
       if (editingId) {
         const updated = await updateCustomer(editingId, payload);
+        await triggerProfileRevalidation(payload.profile_slug, originalSlug);
         setCustomers((prev) =>
           prev.map((c) => (c.id === editingId ? { ...c, ...updated } : c))
         );
@@ -350,6 +383,9 @@ export default function AdminCustomersDashboard() {
         if (payload.is_active && consentConfirmed && created?.id) {
           await recordConsentForCustomer(created.id);
         }
+
+        // Invalidate newly created customer profile cache
+        await triggerProfileRevalidation(payload.profile_slug);
       }
       setTimeout(() => setSuccessMsg(""), 3000);
       setIsFormModalOpen(false);

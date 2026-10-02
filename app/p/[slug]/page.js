@@ -9,14 +9,40 @@ import ProfileQuickActions from "@/components/profile/ProfileQuickActions";
 import ProfileIntro from "@/components/profile/ProfileIntro";
 import ProfileGallery from "@/components/profile/ProfileGallery";
 
-export const dynamic = "force-dynamic";
+import { unstable_cache } from "next/cache";
+
+export const revalidate = 60;
+
+const getCachedCustomerBySlug = (slug) => {
+  const cleanSlug = (slug || "").toLowerCase().trim();
+  return unstable_cache(
+    async () => getCustomerBySlug(cleanSlug),
+    ["customer-profile", cleanSlug],
+    {
+      tags: [`customer-profile:${cleanSlug}`],
+      revalidate: 60,
+    }
+  )();
+};
+
+const getCachedCustomerGallery = (slug) => {
+  const cleanSlug = (slug || "").toLowerCase().trim();
+  return unstable_cache(
+    async () => getCustomerGallery(cleanSlug),
+    ["customer-gallery", cleanSlug],
+    {
+      tags: [`customer-profile:${cleanSlug}`],
+      revalidate: 60,
+    }
+  )();
+};
 
 // ---------------------------------------------------------------------------
 // Metadata & SEO
 // ---------------------------------------------------------------------------
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const customer = await getCustomerBySlug(slug);
+  const customer = await getCachedCustomerBySlug(slug);
 
   if (!customer) {
     return {
@@ -63,8 +89,8 @@ export async function generateMetadata({ params }) {
 export default async function CustomerPublicProfilePage({ params }) {
   const { slug } = await params;
   const [customer, galleryItems] = await Promise.all([
-    getCustomerBySlug(slug),
-    getCustomerGallery(slug),
+    getCachedCustomerBySlug(slug),
+    getCachedCustomerGallery(slug),
   ]);
 
   // ── Profile Unavailable ─────────────────────────────────────────────────

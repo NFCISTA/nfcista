@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticateAdmin } from "@/lib/adminAuth";
+import { revalidateCustomerById } from "@/lib/revalidateProfile";
 
 export const dynamic = "force-dynamic";
 
@@ -72,6 +73,9 @@ export async function DELETE(request) {
       }
     }
 
+    // Invalidate public profile cache on-demand after image deletion
+    await revalidateCustomerById(customerId, authClient);
+
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Unexpected error in DELETE /api/admin/gallery/image:", err);
@@ -134,6 +138,9 @@ export async function POST(request) {
     );
 
     await Promise.all(updates);
+
+    // Invalidate public profile cache on-demand after image reordering
+    await revalidateCustomerById(customerId, authClient);
 
     return NextResponse.json({ success: true });
   } catch (err) {

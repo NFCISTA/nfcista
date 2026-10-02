@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticateAdmin } from "@/lib/adminAuth";
 import { isValidHttpUrl, getSafeExternalUrl } from "@/lib/customers";
+import { revalidateCustomerById } from "@/lib/revalidateProfile";
 
 export const dynamic = "force-dynamic";
 
@@ -245,6 +246,9 @@ export async function POST(request) {
       }
     }
 
+    // Invalidate public profile cache on-demand after successful creation
+    await revalidateCustomerById(customerId, authClient);
+
     return NextResponse.json({
       item: {
         ...newItem,
@@ -385,6 +389,9 @@ export async function PUT(request) {
       return NextResponse.json({ error: "Failed to update gallery item." }, { status: 500 });
     }
 
+    // Invalidate public profile cache on-demand after successful update
+    await revalidateCustomerById(customerId, authClient);
+
     return NextResponse.json({ item: updated });
   } catch (err) {
     console.error("Unexpected error in PUT /api/admin/gallery:", err);
@@ -402,7 +409,7 @@ export async function DELETE(request) {
 
   const { searchParams } = new URL(request.url);
   const customerId = searchParams.get("customerId");
-  const itemId = searchParams.get("itemId");
+  const itemId = searchParams.get("itemId") || searchParams.get("id");
 
   if (!isValidUuid(customerId) || !isValidUuid(itemId)) {
     return NextResponse.json({ error: "Invalid customer or item ID." }, { status: 400 });
@@ -457,6 +464,9 @@ export async function DELETE(request) {
         });
       }
     }
+
+    // Invalidate public profile cache on-demand after successful deletion
+    await revalidateCustomerById(customerId, authClient);
 
     return NextResponse.json({ success: true });
   } catch (err) {

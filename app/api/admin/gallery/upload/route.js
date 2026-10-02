@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticateAdmin } from "@/lib/adminAuth";
+import { revalidateCustomerById } from "@/lib/revalidateProfile";
 
 export const dynamic = "force-dynamic";
 
@@ -118,6 +119,9 @@ export async function POST(request) {
       authClient.storage.from("gallery-images").remove([storagePath]).catch(() => {});
       return NextResponse.json({ error: "Failed to record image in database." }, { status: 500 });
     }
+
+    // Invalidate public profile cache on-demand after successful image upload
+    await revalidateCustomerById(customerId, authClient);
 
     return NextResponse.json({ image: newImage }, { status: 201 });
   } catch (err) {

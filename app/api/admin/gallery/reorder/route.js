@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticateAdmin } from "@/lib/adminAuth";
+import { revalidateCustomerById } from "@/lib/revalidateProfile";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,9 @@ export async function POST(request) {
     );
 
     await Promise.all(updates);
+
+    // Invalidate public profile cache on-demand after successful reorder
+    await revalidateCustomerById(customerId, authClient);
 
     return NextResponse.json({ success: true, count: itemIds.length });
   } catch (err) {
