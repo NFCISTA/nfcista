@@ -201,8 +201,8 @@ function GalleryCard({ item, whatsapp }) {
 
         {/* Card body */}
         <div className="flex flex-col flex-1 p-3">
-          {/* Category */}
-          {item.category && (
+          {/* Category — only shown when it adds information beyond the title */}
+          {item.category && item.category.trim().toLowerCase() !== item.title.trim().toLowerCase() && (
             <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-0.5 truncate">
               {item.category}
             </p>
@@ -212,6 +212,7 @@ function GalleryCard({ item, whatsapp }) {
           <h3 className="text-[13px] font-bold text-gray-900 leading-snug line-clamp-2">
             {item.title}
           </h3>
+
 
           {/* Price — products only */}
           {isProduct && item.price && (

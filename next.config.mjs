@@ -13,6 +13,15 @@ const cspReportOnlyHeader = [
 ].join("; ");
 
 const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "xajdjydcurfaznqpidla.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
+  },
   async headers() {
     return [
       {
