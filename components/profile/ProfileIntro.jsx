@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
+import ProfileIcon from "./ProfileIcon";
 
 export default function ProfileIntro({ name }) {
   const [visible, setVisible] = useState(true);
+
+  const dismiss = useCallback(() => {
+    setVisible(false);
+  }, []);
 
   useEffect(() => {
     const reducedMotion = window.matchMedia(
@@ -15,7 +20,7 @@ export default function ProfileIntro({ name }) {
       () => {
         setVisible(false);
       },
-      reducedMotion ? 700 : 1850
+      reducedMotion ? 250 : 850
     );
 
     return () => clearTimeout(timer);
@@ -31,14 +36,14 @@ export default function ProfileIntro({ name }) {
             transform: scale(1);
           }
           to {
-            transform: scale(1.08);
+            transform: scale(1.05);
           }
         }
 
         @keyframes introLogo {
           from {
             opacity: 0;
-            transform: translateY(10px) scale(0.92);
+            transform: translateY(8px) scale(0.94);
           }
           to {
             opacity: 1;
@@ -49,7 +54,7 @@ export default function ProfileIntro({ name }) {
         @keyframes introText {
           from {
             opacity: 0;
-            transform: translateY(14px);
+            transform: translateY(10px);
           }
           to {
             opacity: 1;
@@ -60,8 +65,8 @@ export default function ProfileIntro({ name }) {
         @keyframes introName {
           0% {
             opacity: 0;
-            transform: translateY(18px) scale(0.96);
-            filter: blur(6px);
+            transform: translateY(14px) scale(0.96);
+            filter: blur(4px);
           }
           100% {
             opacity: 1;
@@ -73,7 +78,7 @@ export default function ProfileIntro({ name }) {
         @keyframes introTagline {
           from {
             opacity: 0;
-            transform: translateY(8px);
+            transform: translateY(6px);
           }
           to {
             opacity: 1;
@@ -84,56 +89,55 @@ export default function ProfileIntro({ name }) {
         @keyframes introGlow {
           from {
             opacity: 0.25;
-            transform: scale(0.8);
+            transform: scale(0.85);
           }
           to {
-            opacity: 0.55;
-            transform: scale(1.15);
+            opacity: 0.5;
+            transform: scale(1.1);
           }
         }
 
         @keyframes introExit {
           from {
             opacity: 1;
+            pointer-events: auto;
           }
           to {
             opacity: 0;
+            pointer-events: none;
           }
         }
 
         .intro-background {
-          animation: introBackground 2.2s ease-out forwards;
+          animation: introBackground 1.2s ease-out forwards;
         }
 
         .intro-logo {
           opacity: 0;
-          animation: introLogo 550ms cubic-bezier(0.22, 1, 0.36, 1)
-            120ms forwards;
+          animation: introLogo 280ms cubic-bezier(0.22, 1, 0.36, 1) 40ms forwards;
         }
 
         .intro-hi {
           opacity: 0;
-          animation: introText 500ms cubic-bezier(0.22, 1, 0.36, 1)
-            420ms forwards;
+          animation: introText 260ms cubic-bezier(0.22, 1, 0.36, 1) 120ms forwards;
         }
 
         .intro-name {
           opacity: 0;
-          animation: introName 700ms cubic-bezier(0.22, 1, 0.36, 1)
-            560ms forwards;
+          animation: introName 320ms cubic-bezier(0.22, 1, 0.36, 1) 180ms forwards;
         }
 
         .intro-tagline {
           opacity: 0;
-          animation: introTagline 500ms ease-out 1050ms forwards;
+          animation: introTagline 280ms ease-out 260ms forwards;
         }
 
         .intro-glow {
-          animation: introGlow 1.8s ease-in-out infinite alternate;
+          animation: introGlow 1.4s ease-in-out infinite alternate;
         }
 
         .intro-overlay {
-          animation: introExit 400ms ease-in 1450ms forwards;
+          animation: introExit 250ms ease-in 550ms forwards;
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -156,15 +160,24 @@ export default function ProfileIntro({ name }) {
         }
       `}</style>
 
-      <div className="intro-overlay fixed inset-0 z-[9999] overflow-hidden bg-[#071426]">
-        {/* Cinematic background */}
+      <div
+        role="dialog"
+        aria-label="Welcome screen (tap to skip)"
+        tabIndex={0}
+        onClick={dismiss}
+        onTouchStart={dismiss}
+        onKeyDown={(e) => {
+          if (e.key === "Escape" || e.key === "Enter" || e.key === " ") dismiss();
+        }}
+        className="intro-overlay fixed inset-0 z-[9999] overflow-hidden bg-[#071426] cursor-pointer select-none"
+      >
+        {/* Cinematic background — non-priority so the canonical hero image preloads cleanly */}
         <div className="absolute inset-0">
           <Image
             src="/images/hero-mountains.jpg"
             alt=""
             aria-hidden="true"
             fill
-            priority
             sizes="100vw"
             className="intro-background object-cover"
           />
@@ -188,12 +201,11 @@ export default function ProfileIntro({ name }) {
             {/* NFCISTA logo */}
             <div className="intro-logo mb-10 flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/20 bg-white/10 shadow-lg backdrop-blur-xl">
-                <span
-                  className="material-symbols-outlined text-[22px] text-white"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  nfc
-                </span>
+                <ProfileIcon
+                  name="nfc"
+                  className="text-[22px] text-white"
+                  aria-hidden={true}
+                />
               </div>
 
               <span className="text-[15px] font-semibold tracking-[0.18em]">

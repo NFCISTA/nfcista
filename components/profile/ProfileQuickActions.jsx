@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ProfileIcon from "./ProfileIcon";
 
 /**
  * ProfileQuickActions — flat icon-circle action row.
@@ -70,13 +71,11 @@ export default function ProfileQuickActions({ actions = [], profileUrl, profileN
             <div
               className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full ${action.bg} flex items-center justify-center shadow-md group-active:scale-95 transition-transform flex-shrink-0`}
             >
-              <span
-                className="material-symbols-outlined text-white text-[20px] sm:text-[22px]"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-                aria-hidden="true"
-              >
-                {action.icon}
-              </span>
+              <ProfileIcon
+                name={action.icon}
+                className="text-white text-[20px] sm:text-[22px]"
+                aria-hidden={true}
+              />
             </div>
             <span className="text-[10px] sm:text-[11px] font-semibold text-gray-600 leading-tight truncate max-w-full">
               {action.label}
@@ -94,13 +93,11 @@ export default function ProfileQuickActions({ actions = [], profileUrl, profileN
             <div
               className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full ${action.bg} flex items-center justify-center shadow-md group-active:scale-95 transition-transform flex-shrink-0`}
             >
-              <span
-                className="material-symbols-outlined text-white text-[20px] sm:text-[22px]"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-                aria-hidden="true"
-              >
-                {action.icon}
-              </span>
+              <ProfileIcon
+                name={action.icon}
+                className="text-white text-[20px] sm:text-[22px]"
+                aria-hidden={true}
+              />
             </div>
             <span className="text-[10px] sm:text-[11px] font-semibold text-gray-600 leading-tight truncate max-w-full">
               {action.label}

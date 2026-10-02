@@ -8,6 +8,7 @@ import ProfileShareModal from "@/components/profile/ProfileShareModal";
 import ProfileQuickActions from "@/components/profile/ProfileQuickActions";
 import ProfileIntro from "@/components/profile/ProfileIntro";
 import ProfileGallery from "@/components/profile/ProfileGallery";
+import ProfileIcon from "@/components/profile/ProfileIcon";
 
 import { unstable_cache } from "next/cache";
 
@@ -107,21 +108,22 @@ export default async function CustomerPublicProfilePage({ params }) {
         <div className="w-full max-w-[390px] bg-white rounded-3xl p-8 text-center shadow-xl">
           <div className="mb-5 flex items-center justify-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
-              <span
-                className="material-symbols-outlined text-white text-[16px]"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                nfc
-              </span>
+              <ProfileIcon
+                name="nfc"
+                className="text-white text-[16px]"
+                aria-hidden={true}
+              />
             </div>
             <span className="text-[14px] font-bold tracking-wide text-gray-900">
               NFCISTA
             </span>
           </div>
           <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-            <span className="material-symbols-outlined text-[32px] text-gray-400">
-              person_off
-            </span>
+            <ProfileIcon
+              name="person_off"
+              className="text-[32px] text-gray-400"
+              aria-hidden={true}
+            />
           </div>
           <h1 className="text-[20px] font-bold text-gray-900">Profile Unavailable</h1>
           <p className="text-[13px] text-gray-500 mt-2 leading-relaxed">
@@ -133,7 +135,7 @@ export default async function CustomerPublicProfilePage({ params }) {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-primary text-white text-[13px] font-semibold hover:bg-[#003ea8] transition-colors active:scale-[0.97]"
             >
               <span>Visit NFCISTA</span>
-              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              <ProfileIcon name="arrow_forward" className="text-[16px]" aria-hidden={true} />
             </Link>
           </div>
         </div>
@@ -328,12 +330,11 @@ export default async function CustomerPublicProfilePage({ params }) {
             <div className="relative z-10 flex items-center justify-between px-3.5 sm:px-4 pt-3.5 sm:pt-4">
               <Link href="/" className="flex items-center gap-1.5 sm:gap-2 group flex-shrink-0">
                 <div className="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center flex-shrink-0 shadow-sm group-hover:bg-white/30 transition-colors">
-                  <span
-                    className="material-symbols-outlined text-white text-[15px] sm:text-[16px]"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    nfc
-                  </span>
+                  <ProfileIcon
+                    name="nfc"
+                    className="text-white text-[15px] sm:text-[16px]"
+                    aria-hidden={true}
+                  />
                 </div>
                 <span className="text-white text-[12.5px] sm:text-[13px] font-bold tracking-wide drop-shadow-md">
                   NFCISTA
@@ -390,9 +391,7 @@ export default async function CustomerPublicProfilePage({ params }) {
               <div className="mt-3 flex flex-wrap justify-center gap-2">
                 {customer.category?.trim() && (
                   <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
-                    <span className="material-symbols-outlined text-[12px] text-primary">
-                      label
-                    </span>
+                    <ProfileIcon name="label" className="text-[12px] text-primary" aria-hidden={true} />
                     <span className="truncate max-w-[110px]">
                       {customer.category.trim()}
                     </span>
@@ -400,12 +399,7 @@ export default async function CustomerPublicProfilePage({ params }) {
                 )}
                 {hasAddress && (
                   <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
-                    <span
-                      className="material-symbols-outlined text-[12px] text-rose-400"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      location_on
-                    </span>
+                    <ProfileIcon name="location_on" className="text-[12px] text-rose-400" aria-hidden={true} />
                     <span className="truncate max-w-[120px]">
                       {customer.address.trim()}
                     </span>
@@ -438,12 +432,11 @@ export default async function CustomerPublicProfilePage({ params }) {
           <footer className="hidden lg:flex flex-col items-center py-5 px-5 border-t border-gray-100">
             <div className="flex items-center gap-2 mb-0.5">
               <div className="w-6 h-6 rounded-lg bg-primary flex items-center justify-center">
-                <span
-                  className="material-symbols-outlined text-white text-[13px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  nfc
-                </span>
+                <ProfileIcon
+                  name="nfc"
+                  className="text-white text-[13px]"
+                  aria-hidden={true}
+                />
               </div>
               <span className="text-[13px] font-bold text-gray-800">NFCISTA</span>
             </div>
@@ -509,13 +502,11 @@ export default async function CustomerPublicProfilePage({ params }) {
                     <div
                       className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl ${item.iconBg} flex items-center justify-center flex-shrink-0`}
                     >
-                      <span
-                        className={`material-symbols-outlined text-[22px] sm:text-[24px] ${item.iconColor}`}
-                        style={{ fontVariationSettings: "'FILL' 1" }}
-                        aria-hidden="true"
-                      >
-                        {item.icon}
-                      </span>
+                      <ProfileIcon
+                        name={item.icon}
+                        className={`text-[22px] sm:text-[24px] ${item.iconColor}`}
+                        aria-hidden={true}
+                      />
                     </div>
                     <span className="text-[11.5px] sm:text-[12px] font-semibold text-gray-800 truncate max-w-full text-center">
                       {item.label}
@@ -544,13 +535,11 @@ export default async function CustomerPublicProfilePage({ params }) {
                     <div
                       className={`w-9 h-9 rounded-xl ${link.iconBg} flex items-center justify-center flex-shrink-0`}
                     >
-                      <span
-                        className={`material-symbols-outlined text-[18px] ${link.iconColor}`}
-                        style={{ fontVariationSettings: "'FILL' 1" }}
-                        aria-hidden="true"
-                      >
-                        {link.icon}
-                      </span>
+                      <ProfileIcon
+                        name={link.icon}
+                        className={`text-[18px] ${link.iconColor}`}
+                        aria-hidden={true}
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[13px] font-semibold text-gray-900 leading-tight">
@@ -560,9 +549,11 @@ export default async function CustomerPublicProfilePage({ params }) {
                         {link.secondary}
                       </p>
                     </div>
-                    <span className="material-symbols-outlined text-[20px] text-gray-300 group-hover:text-primary transition-colors flex-shrink-0">
-                      chevron_right
-                    </span>
+                    <ProfileIcon
+                      name="chevron_right"
+                      className="text-[20px] text-gray-300 group-hover:text-primary transition-colors flex-shrink-0"
+                      aria-hidden={true}
+                    />
                   </a>
                 ))}
               </div>
@@ -581,24 +572,13 @@ export default async function CustomerPublicProfilePage({ params }) {
                 <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
                   {hasAddress && (
                     <span className="inline-flex items-center gap-1 text-[11.5px] text-gray-400">
-                      <span
-                        className="material-symbols-outlined text-[14px]"
-                        style={{ fontVariationSettings: "'FILL' 1" }}
-                        aria-hidden="true"
-                      >
-                        location_on
-                      </span>
+                      <ProfileIcon name="location_on" className="text-[14px]" aria-hidden={true} />
                       {customer.address.trim()}
                     </span>
                   )}
                   {customer.category?.trim() && (
                     <span className="inline-flex items-center gap-1 text-[11.5px] text-gray-400">
-                      <span
-                        className="material-symbols-outlined text-[14px]"
-                        aria-hidden="true"
-                      >
-                        label
-                      </span>
+                      <ProfileIcon name="label" className="text-[14px]" aria-hidden={true} />
                       {customer.category.trim()}
                     </span>
                   )}
@@ -624,12 +604,11 @@ export default async function CustomerPublicProfilePage({ params }) {
           <footer className="lg:hidden px-5 py-6 text-center">
             <div className="flex items-center justify-center gap-2 mb-0.5">
               <div className="w-6 h-6 rounded-lg bg-primary flex items-center justify-center">
-                <span
-                  className="material-symbols-outlined text-white text-[13px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  nfc
-                </span>
+                <ProfileIcon
+                  name="nfc"
+                  className="text-white text-[13px]"
+                  aria-hidden={true}
+                />
               </div>
               <span className="text-[13px] font-bold text-gray-800">NFCISTA</span>
             </div>

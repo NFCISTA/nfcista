@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
+import ProfileIcon from "./ProfileIcon";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -70,7 +71,7 @@ function Lightbox({ images, initialIndex, title, onClose }) {
         aria-label="Close lightbox"
         className="absolute top-3 right-3 sm:top-4 sm:right-4 w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition-colors z-10"
       >
-        <span className="material-symbols-outlined text-[20px]">close</span>
+        <ProfileIcon name="close" className="text-[20px]" aria-hidden={true} />
       </button>
 
       {/* Image */}
@@ -95,14 +96,14 @@ function Lightbox({ images, initialIndex, title, onClose }) {
             aria-label="Previous image"
             className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
           >
-            <span className="material-symbols-outlined text-[22px]">chevron_left</span>
+            <ProfileIcon name="chevron_left" className="text-[22px]" aria-hidden={true} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); goNext(); }}
             aria-label="Next image"
             className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
           >
-            <span className="material-symbols-outlined text-[22px]">chevron_right</span>
+            <ProfileIcon name="chevron_right" className="text-[22px]" aria-hidden={true} />
           </button>
 
           {/* Dot indicators */}
@@ -166,7 +167,7 @@ function GalleryCard({ item, whatsapp }) {
             {/* Multi-image badge */}
             {item.images.length > 1 && (
               <span className="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                <span className="material-symbols-outlined text-[11px]" aria-hidden="true">photo_library</span>
+                <ProfileIcon name="photo_library" className="text-[11px]" aria-hidden={true} />
                 {item.images.length}
               </span>
             )}
@@ -184,9 +185,11 @@ function GalleryCard({ item, whatsapp }) {
         ) : (
           /* Placeholder when no images */
           <div className="relative w-full aspect-[4/3] bg-gray-100 flex items-center justify-center flex-shrink-0">
-            <span className="material-symbols-outlined text-[40px] text-gray-300" aria-hidden="true">
-              {isPortfolio ? "collections" : "inventory_2"}
-            </span>
+            <ProfileIcon
+              name={isPortfolio ? "collections" : "inventory_2"}
+              className="text-[40px] text-gray-300"
+              aria-hidden={true}
+            />
             <span
               className={`absolute top-2 left-2 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
                 isPortfolio
@@ -238,7 +241,7 @@ function GalleryCard({ item, whatsapp }) {
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-1.5 py-2 px-3 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-[11.5px] font-semibold rounded-xl transition-colors active:scale-[0.97]"
               >
-                <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">chat</span>
+                <ProfileIcon name="chat" className="text-[14px]" aria-hidden={true} />
                 Order on WhatsApp
               </a>
             )}
@@ -252,7 +255,7 @@ function GalleryCard({ item, whatsapp }) {
                 className="flex items-center justify-center gap-1 py-2 px-3 border border-gray-200 text-gray-700 hover:bg-gray-50 text-[11.5px] font-medium rounded-xl transition-colors active:scale-[0.97]"
               >
                 {item.cta_text || "View Details"}
-                <span className="material-symbols-outlined text-[13px]" aria-hidden="true">open_in_new</span>
+                <ProfileIcon name="open_in_new" className="text-[13px]" aria-hidden={true} />
               </a>
             )}
           </div>
@@ -328,7 +331,7 @@ export default function ProfileGallery({ items, customer }) {
             className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-gray-200 text-[12.5px] font-semibold text-gray-700 hover:bg-gray-50 transition-colors active:scale-[0.97]"
           >
             View All ({items.length})
-            <span className="material-symbols-outlined text-[16px]" aria-hidden="true">expand_more</span>
+            <ProfileIcon name="expand_more" className="text-[16px]" aria-hidden={true} />
           </button>
         </div>
       )}

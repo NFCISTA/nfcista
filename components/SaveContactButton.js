@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import ProfileIcon from "./profile/ProfileIcon";
 
 // ---------------------------------------------------------------------------
 // vCard helpers
@@ -706,13 +707,11 @@ export default function SaveContactButton({ contact }) {
         aria-label={`Save ${fullName || "contact"} to your phone contacts`}
         className="w-full min-h-[52px] flex items-center justify-center gap-2.5 py-4 px-6 bg-primary text-white rounded-2xl font-bold text-label-lg shadow-btn-primary hover:bg-[#003ea8] active:scale-[0.98] transition-all cursor-pointer select-none"
       >
-        <span
-          className="material-symbols-outlined text-[22px]"
-          aria-hidden="true"
-          style={{ fontVariationSettings: "'FILL' 1" }}
-        >
-          person_add
-        </span>
+        <ProfileIcon
+          name="person_add"
+          className="text-[22px]"
+          aria-hidden={true}
+        />
         <span>Save Contact</span>
       </button>
 

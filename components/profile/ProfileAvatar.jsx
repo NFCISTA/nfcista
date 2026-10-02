@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ProfileIcon from "./ProfileIcon";
 
 /**
  * ProfileAvatar — renders a resilient customer avatar with verified status.
@@ -48,13 +49,11 @@ export default function ProfileAvatar({ photoUrl, fullName, initials = "NC" }) {
 
       {/* Official Verified badge */}
       <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-primary text-white text-[9px] font-bold px-2.5 py-0.5 rounded-full shadow-btn-primary whitespace-nowrap tracking-wider">
-        <span
-          className="material-symbols-outlined text-[12px]"
-          style={{ fontVariationSettings: "'FILL' 1" }}
-          aria-hidden="true"
-        >
-          verified
-        </span>
+        <ProfileIcon
+          name="verified"
+          className="text-[12px]"
+          aria-hidden={true}
+        />
         <span>VERIFIED</span>
       </div>
     </div>

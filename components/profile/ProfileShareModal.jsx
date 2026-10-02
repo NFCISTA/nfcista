@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import ProfileIcon from "./ProfileIcon";
 
 /**
  * ProfileShareModal — compact inline share strip + fullscreen QR modal.
@@ -107,12 +108,11 @@ export default function ProfileShareModal({ name, slug }) {
             onClick={() => setIsOpen(true)}
             className="mt-2 inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-white text-[11px] font-bold rounded-lg shadow-sm hover:bg-[#003ea8] transition-colors active:scale-95"
           >
-            <span
-              className="material-symbols-outlined text-[13px]"
-              aria-hidden="true"
-            >
-              qr_code_2
-            </span>
+            <ProfileIcon
+              name="qr_code_2"
+              className="text-[13px]"
+              aria-hidden={true}
+            />
             Show QR
           </button>
         </div>
@@ -124,9 +124,11 @@ export default function ProfileShareModal({ name, slug }) {
           aria-label="Share profile link"
           className="flex-shrink-0 w-9 h-9 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all"
         >
-          <span className="material-symbols-outlined text-[18px] text-primary">
-            {copied ? "check" : "share"}
-          </span>
+          <ProfileIcon
+            name={copied ? "check" : "share"}
+            className="text-[18px] text-primary"
+            aria-hidden={true}
+          />
         </button>
       </div>
 
@@ -150,7 +152,7 @@ export default function ProfileShareModal({ name, slug }) {
               aria-label="Close QR code"
               className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors"
             >
-              <span className="material-symbols-outlined text-[18px]">close</span>
+              <ProfileIcon name="close" className="text-[18px]" aria-hidden={true} />
             </button>
 
             {/* Modal header */}
@@ -197,9 +199,11 @@ export default function ProfileShareModal({ name, slug }) {
                   {url}
                 </span>
                 <span className="text-[11px] font-bold text-primary flex items-center gap-1 flex-shrink-0 ml-2">
-                  <span className="material-symbols-outlined text-[14px]">
-                    {copied ? "check" : "content_copy"}
-                  </span>
+                  <ProfileIcon
+                    name={copied ? "check" : "content_copy"}
+                    className="text-[14px]"
+                    aria-hidden={true}
+                  />
                   {copied ? "Copied" : "Copy"}
                 </span>
               </button>
