@@ -13,6 +13,13 @@ import { unstable_cache } from "next/cache";
 
 export const revalidate = 60;
 
+// Required by Next.js to enable ISR (fallback ISR) for this dynamic route.
+// Returning an empty array means no paths are prerendered at build time,
+// but every slug visited at runtime is cached and revalidated per `revalidate`.
+export async function generateStaticParams() {
+  return [];
+}
+
 const getCachedCustomerBySlug = (slug) => {
   const cleanSlug = (slug || "").toLowerCase().trim();
   return unstable_cache(
