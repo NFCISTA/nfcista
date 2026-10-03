@@ -25,6 +25,7 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Global security headers applied to every route
         source: "/(.*)",
         headers: [
           {
@@ -46,6 +47,18 @@ const nextConfig = {
           {
             key: "Content-Security-Policy-Report-Only",
             value: cspReportOnlyHeader,
+          },
+        ],
+      },
+      {
+        // Override: allow camera on the admin QR scanner page only.
+        // camera=() from the global rule above is superseded by this
+        // more-specific route match in Next.js header resolution.
+        source: "/admin/qr-scan",
+        headers: [
+          {
+            key: "Permissions-Policy",
+            value: "camera=(self), microphone=(), geolocation=()",
           },
         ],
       },
