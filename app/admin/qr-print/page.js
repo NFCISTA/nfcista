@@ -228,7 +228,7 @@ export default function QrPrintPage() {
       </div>
 
       {/* Specs */}
-      <div className="bg-surface-container-low/60 border border-outline-variant/30 rounded-2xl px-6 py-4 flex flex-wrap gap-6">
+      <div className="bg-surface-container-low/60 border border-outline-variant/30 rounded-2xl p-4 sm:px-6 sm:py-4 grid grid-cols-2 sm:flex sm:flex-wrap gap-3 sm:gap-6">
         {[
           ["Sheet type", "QR-only print sheet (A4)"],
           ["QR size", `${QR_SHEET_QR_SIZE_MM} × ${QR_SHEET_QR_SIZE_MM} mm`],
@@ -236,7 +236,7 @@ export default function QrPrintPage() {
           ["DB writes", "None"],
         ].map(([label, val]) => (
           <div key={label}>
-            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
+            <p className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase tracking-wider">
               {label}
             </p>
             <p className="text-body-sm font-semibold text-on-surface mt-0.5">
@@ -247,7 +247,7 @@ export default function QrPrintPage() {
       </div>
 
       {/* Card list */}
-      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-6 sm:p-8 shadow-card space-y-4">
+      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-card space-y-4">
         {/* List header */}
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-on-surface">Available Cards</h2>
@@ -307,49 +307,54 @@ export default function QrPrintPage() {
                 return (
                   <div
                     key={card.id}
-                    className={`flex items-center gap-3 sm:gap-4 px-4 py-3 rounded-xl border transition-colors ${
+                    className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 p-3 sm:px-4 sm:py-3 rounded-xl border transition-colors ${
                       isSelected
                         ? "border-primary/40 bg-primary/5"
                         : "border-outline-variant/30 bg-surface-container-low/30 hover:bg-surface-container-low/60"
                     }`}
                   >
-                    <input
-                      type="checkbox"
-                      id={`card-${card.id}`}
-                      checked={isSelected}
-                      onChange={() => toggleCard(card.card_code)}
-                      className="w-4 h-4 accent-primary shrink-0 cursor-pointer"
-                    />
-                    <label
-                      htmlFor={`card-${card.id}`}
-                      className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 cursor-pointer"
-                    >
-                      <span className="font-mono text-base font-bold text-on-surface tracking-wider">
-                        {card.card_code}
-                      </span>
-                      <span className="font-mono text-xs text-primary/80 truncate flex-1">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <input
+                        type="checkbox"
+                        id={`card-${card.id}`}
+                        checked={isSelected}
+                        onChange={() => toggleCard(card.card_code)}
+                        className="w-4 h-4 accent-primary shrink-0 cursor-pointer"
+                      />
+                      <label
+                        htmlFor={`card-${card.id}`}
+                        className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer"
+                      >
+                        <span className="font-mono text-base font-bold text-on-surface tracking-wider">
+                          {card.card_code}
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 border border-amber-200 text-amber-800 shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                          Inactive
+                        </span>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between sm:justify-end gap-3 pl-7 sm:pl-0 min-w-0 flex-1">
+                      <span className="font-mono text-xs text-primary/80 truncate">
                         {getQrUrl(card.card_code)}
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 border border-amber-200 text-amber-800 shrink-0">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                        Inactive
-                      </span>
-                    </label>
-                    <Link
-                      href={`/admin/qr-activate?code=${encodeURIComponent(card.card_code)}`}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline shrink-0"
-                      title={`Activate ${card.card_code}`}
-                    >
-                      <span>Activate</span>
-                      <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                    </Link>
+                      <Link
+                        href={`/admin/qr-activate?code=${encodeURIComponent(card.card_code)}`}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline shrink-0"
+                        title={`Activate ${card.card_code}`}
+                      >
+                        <span>Activate</span>
+                        <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                      </Link>
+                    </div>
                   </div>
                 );
               })}
             </div>
 
             {/* Selection summary + PDF button */}
-            <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-t border-outline-variant/20">
+            <div className="pt-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 border-t border-outline-variant/20">
               <div>
                 <p className="text-label-md font-semibold text-on-surface">
                   {selected.size === 0
@@ -364,11 +369,11 @@ export default function QrPrintPage() {
                 )}
               </div>
 
-              <div className="flex flex-col items-end gap-1.5">
+              <div className="flex flex-col items-stretch sm:items-end gap-1.5">
                 <button
                   onClick={handleGeneratePdf}
                   disabled={selected.size === 0 || isPdfGenerating}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-label-md shadow-btn-primary hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-label-md shadow-btn-primary hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {isPdfGenerating ? (
                     <>
@@ -389,7 +394,7 @@ export default function QrPrintPage() {
                   )}
                 </button>
                 {pdfError && (
-                  <p className="text-xs text-error font-medium max-w-xs text-right">
+                  <p className="text-xs text-error font-medium max-w-xs text-center sm:text-right">
                     {pdfError}
                   </p>
                 )}

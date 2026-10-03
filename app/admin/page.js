@@ -431,7 +431,7 @@ export default function AdminCustomersDashboard() {
 
         <button
           onClick={handleOpenCreate}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-semibold text-label-md shadow-btn-primary transition-all active:scale-[0.98] self-start sm:self-auto"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-semibold text-label-md shadow-btn-primary transition-all active:scale-[0.98] w-full sm:w-auto"
         >
           <span className="material-symbols-outlined text-[18px]">add</span>
           <span>Add Customer</span>
@@ -439,43 +439,43 @@ export default function AdminCustomersDashboard() {
       </div>
 
       {/* Stats Counter Cards */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
-        <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-4 shadow-card">
-          <span className="text-label-sm text-tertiary uppercase tracking-wider font-semibold">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-card">
+          <span className="text-[10px] sm:text-label-sm text-tertiary uppercase tracking-wider font-semibold block truncate">
             Total Customers
           </span>
-          <p className="text-2xl sm:text-3xl font-bold text-on-surface mt-1">
+          <p className="text-xl sm:text-3xl font-bold text-on-surface mt-0.5 sm:mt-1">
             {stats.total}
           </p>
         </div>
-        <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-4 shadow-card">
-          <span className="text-label-sm text-emerald-700 uppercase tracking-wider font-semibold">
+        <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-card">
+          <span className="text-[10px] sm:text-label-sm text-emerald-700 uppercase tracking-wider font-semibold block truncate">
             Active Cards
           </span>
-          <p className="text-2xl sm:text-3xl font-bold text-emerald-600 mt-1">
+          <p className="text-xl sm:text-3xl font-bold text-emerald-600 mt-0.5 sm:mt-1">
             {stats.active}
           </p>
         </div>
-        <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-4 shadow-card">
-          <span className="text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">
+        <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-card">
+          <span className="text-[10px] sm:text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold block truncate">
             Inactive
           </span>
-          <p className="text-2xl sm:text-3xl font-bold text-on-surface-variant mt-1">
+          <p className="text-xl sm:text-3xl font-bold text-on-surface-variant mt-0.5 sm:mt-1">
             {stats.inactive}
           </p>
         </div>
       </div>
 
       {/* Search & Filter Toolbar */}
-      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-4 shadow-card flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-3 sm:p-4 shadow-card flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         {/* Search input */}
         <div className="relative flex-1">
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by name, company, job title, or slug..."
-            className="w-full h-11 pl-10 pr-4 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-sm placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+            placeholder="Search name, company, title, or slug..."
+            className="w-full h-11 pl-10 pr-8 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-sm placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
           />
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline pointer-events-none">
             search
@@ -491,7 +491,7 @@ export default function AdminCustomersDashboard() {
         </div>
 
         {/* Status filter tabs */}
-        <div className="flex items-center gap-1 bg-surface-container-low p-1 rounded-xl border border-outline-variant/20 self-start sm:self-auto">
+        <div className="flex items-center gap-1 bg-surface-container-low p-1 rounded-xl border border-outline-variant/20 w-full sm:w-auto overflow-x-auto">
           {[
             { id: "all", label: "All" },
             { id: "active", label: "Active" },
@@ -500,7 +500,7 @@ export default function AdminCustomersDashboard() {
             <button
               key={tab.id}
               onClick={() => setStatusFilter(tab.id)}
-              className={`px-3 py-1.5 rounded-lg text-label-sm font-semibold transition-all ${
+              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-label-sm font-semibold transition-all whitespace-nowrap ${
                 statusFilter === tab.id
                   ? "bg-surface-container-lowest text-primary shadow-sm"
                   : "text-on-surface-variant hover:text-on-surface"
@@ -557,172 +557,293 @@ export default function AdminCustomersDashboard() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-outline-variant/20 bg-surface-container-low/40 text-[11px] uppercase tracking-wider text-tertiary font-semibold">
-                  <th className="py-3.5 px-4 sm:px-6">Customer</th>
-                  <th className="py-3.5 px-4">Company &amp; Title</th>
-                  <th className="py-3.5 px-4">Slug &amp; URL</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4 hidden md:table-cell">Created</th>
-                  <th className="py-3.5 px-4 sm:px-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-outline-variant/15 text-body-sm text-on-surface">
-                {filteredCustomers.map((customer) => (
-                  <tr
-                    key={customer.id}
-                    className="hover:bg-surface-container-low/30 transition-colors"
-                  >
-                    {/* Full Name & Avatar */}
-                    <td className="py-3.5 px-4 sm:px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-surface-container-low border border-outline-variant/30 flex items-center justify-center overflow-hidden shrink-0">
-                          {customer.photo_url ? (
-                            <img
-                              src={customer.photo_url}
-                              alt={customer.full_name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-[11px] font-bold text-primary select-none">
-                              {customer.full_name
-                                ? customer.full_name
-                                    .split(" ")
-                                    .map((n) => n[0])
-                                    .join("")
-                                    .slice(0, 2)
-                                    .toUpperCase()
-                                : "NC"}
-                            </span>
-                          )}
-                        </div>
-                        <div className="font-semibold text-on-surface">
+          <>
+            {/* Mobile Card List (md:hidden) */}
+            <div className="block md:hidden divide-y divide-outline-variant/15">
+              {filteredCustomers.map((customer) => (
+                <div key={customer.id} className="p-3.5 space-y-2.5 hover:bg-surface-container-low/20 transition-colors">
+                  {/* Row 1: Avatar + Name + Status */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-10 h-10 rounded-full bg-surface-container-low border border-outline-variant/30 flex items-center justify-center overflow-hidden shrink-0">
+                        {customer.photo_url ? (
+                          <img
+                            src={customer.photo_url}
+                            alt={customer.full_name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xs font-bold text-primary select-none">
+                            {customer.full_name
+                              ? customer.full_name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .slice(0, 2)
+                                  .toUpperCase()
+                              : "NC"}
+                          </span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-on-surface text-body-md truncate">
                           {customer.full_name}
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Company & Job Title */}
-                    <td className="py-3.5 px-4">
-                      {customer.company_name ? (
-                        <>
-                          <div className="font-medium text-on-surface truncate max-w-[160px]">
+                        </p>
+                        {(customer.company_name || customer.job_title) && (
+                          <p className="text-xs text-on-surface-variant truncate">
                             {customer.company_name}
-                          </div>
-                          {customer.job_title && (
-                            <div className="text-[12px] text-on-surface-variant truncate max-w-[160px]">
-                              {customer.job_title}
-                            </div>
-                          )}
-                        </>
-                      ) : customer.job_title ? (
-                        <div className="text-body-sm text-on-surface truncate max-w-[160px]">
-                          {customer.job_title}
-                        </div>
-                      ) : (
-                        <span className="text-on-surface-variant/40 text-[12px]">—</span>
-                      )}
-                    </td>
-
-                    {/* Profile Slug & Link */}
-                    <td className="py-3.5 px-4">
-                      <div className="inline-flex items-center gap-1 font-mono text-[12px] bg-surface-container-low px-2 py-0.5 rounded border border-outline-variant/20 text-on-surface">
-                        <span>/p/{customer.profile_slug}</span>
+                            {customer.company_name && customer.job_title ? " · " : ""}
+                            {customer.job_title}
+                          </p>
+                        )}
                       </div>
-                    </td>
+                    </div>
 
-                    {/* Active/Inactive Status Pill */}
-                    <td className="py-3.5 px-4">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide shrink-0 ${
+                        customer.is_active
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          : "bg-slate-100 text-slate-600 border border-slate-200"
+                      }`}
+                    >
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${
-                          customer.is_active
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            : "bg-slate-100 text-slate-600 border border-slate-200"
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          customer.is_active ? "bg-emerald-500" : "bg-slate-400"
                         }`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            customer.is_active ? "bg-emerald-500" : "bg-slate-400"
-                          }`}
-                        />
-                        <span>{customer.is_active ? "Active" : "Inactive"}</span>
+                      />
+                      <span>{customer.is_active ? "Active" : "Inactive"}</span>
+                    </span>
+                  </div>
+
+                  {/* Row 2: Profile Slug & Date */}
+                  <div className="flex items-center justify-between gap-2 text-xs">
+                    <div className="inline-flex items-center gap-1 font-mono text-[11px] bg-surface-container-low px-2 py-0.5 rounded border border-outline-variant/20 text-on-surface truncate max-w-[200px]">
+                      <span>/p/{customer.profile_slug}</span>
+                    </div>
+                    {customer.created_at && (
+                      <span className="text-[11px] text-on-surface-variant">
+                        {new Date(customer.created_at).toLocaleDateString()}
                       </span>
-                    </td>
+                    )}
+                  </div>
 
-                    {/* Created Date */}
-                    <td className="py-3.5 px-4 hidden md:table-cell text-[12px] text-on-surface-variant">
-                      {customer.created_at
-                        ? new Date(customer.created_at).toLocaleDateString()
-                        : "—"}
-                    </td>
+                  {/* Row 3: Touch-friendly Action Buttons */}
+                  <div className="flex items-center justify-end gap-1.5 pt-1 border-t border-outline-variant/10">
+                    {customer.is_active && (
+                      <Link
+                        href={`/p/${customer.profile_slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-outline-variant/30 text-primary text-xs font-semibold hover:bg-surface-container-low transition-colors"
+                        title="View Public Profile"
+                      >
+                        <span className="material-symbols-outlined text-[15px]">open_in_new</span>
+                        <span>View</span>
+                      </Link>
+                    )}
 
-                    {/* Actions Column */}
-                    <td className="py-3.5 px-4 sm:px-6 text-right">
-                      <div className="inline-flex items-center gap-1 justify-end">
-                        {/* View Public Profile (Active only) */}
-                        {customer.is_active && (
-                          <Link
-                            href={`/p/${customer.profile_slug}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-1.5 rounded-lg text-primary hover:bg-surface-container-low transition-colors"
-                            title="View Public Profile"
+                    <button
+                      onClick={() => handleToggleStatus(customer)}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                        customer.is_active
+                          ? "border-emerald-200 text-emerald-700 bg-emerald-50/50 hover:bg-emerald-50"
+                          : "border-slate-200 text-slate-600 bg-slate-50 hover:bg-slate-100"
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[16px]">
+                        {customer.is_active ? "toggle_on" : "toggle_off"}
+                      </span>
+                      <span>{customer.is_active ? "Active" : "Inactive"}</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleOpenEdit(customer)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-outline-variant/40 text-on-surface text-xs font-semibold hover:bg-surface-container-low transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[15px]">edit</span>
+                      <span>Edit</span>
+                    </button>
+
+                    <button
+                      onClick={() => setDeletingCustomer(customer)}
+                      className="inline-flex items-center justify-center p-1.5 rounded-lg border border-error/20 text-error hover:bg-error-container/30 transition-colors"
+                      title="Delete Customer"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">delete</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table (hidden md:block) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-outline-variant/20 bg-surface-container-low/40 text-[11px] uppercase tracking-wider text-tertiary font-semibold">
+                    <th className="py-3.5 px-4 sm:px-6">Customer</th>
+                    <th className="py-3.5 px-4">Company &amp; Title</th>
+                    <th className="py-3.5 px-4">Slug &amp; URL</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4 hidden md:table-cell">Created</th>
+                    <th className="py-3.5 px-4 sm:px-6 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-outline-variant/15 text-body-sm text-on-surface">
+                  {filteredCustomers.map((customer) => (
+                    <tr
+                      key={customer.id}
+                      className="hover:bg-surface-container-low/30 transition-colors"
+                    >
+                      {/* Full Name & Avatar */}
+                      <td className="py-3.5 px-4 sm:px-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-surface-container-low border border-outline-variant/30 flex items-center justify-center overflow-hidden shrink-0">
+                            {customer.photo_url ? (
+                              <img
+                                src={customer.photo_url}
+                                alt={customer.full_name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-[11px] font-bold text-primary select-none">
+                                {customer.full_name
+                                  ? customer.full_name
+                                      .split(" ")
+                                      .map((n) => n[0])
+                                      .join("")
+                                      .slice(0, 2)
+                                      .toUpperCase()
+                                  : "NC"}
+                              </span>
+                            )}
+                          </div>
+                          <div className="font-semibold text-on-surface">
+                            {customer.full_name}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Company & Job Title */}
+                      <td className="py-3.5 px-4">
+                        {customer.company_name ? (
+                          <>
+                            <div className="font-medium text-on-surface truncate max-w-[160px]">
+                              {customer.company_name}
+                            </div>
+                            {customer.job_title && (
+                              <div className="text-[12px] text-on-surface-variant truncate max-w-[160px]">
+                                {customer.job_title}
+                              </div>
+                            )}
+                          </>
+                        ) : customer.job_title ? (
+                          <div className="text-body-sm text-on-surface truncate max-w-[160px]">
+                            {customer.job_title}
+                          </div>
+                        ) : (
+                          <span className="text-on-surface-variant/40 text-[12px]">—</span>
+                        )}
+                      </td>
+
+                      {/* Profile Slug & Link */}
+                      <td className="py-3.5 px-4">
+                        <div className="inline-flex items-center gap-1 font-mono text-[12px] bg-surface-container-low px-2 py-0.5 rounded border border-outline-variant/20 text-on-surface">
+                          <span>/p/{customer.profile_slug}</span>
+                        </div>
+                      </td>
+
+                      {/* Active/Inactive Status Pill */}
+                      <td className="py-3.5 px-4">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${
+                            customer.is_active
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-slate-100 text-slate-600 border border-slate-200"
+                          }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              customer.is_active ? "bg-emerald-500" : "bg-slate-400"
+                            }`}
+                          />
+                          <span>{customer.is_active ? "Active" : "Inactive"}</span>
+                        </span>
+                      </td>
+
+                      {/* Created Date */}
+                      <td className="py-3.5 px-4 hidden md:table-cell text-[12px] text-on-surface-variant">
+                        {customer.created_at
+                          ? new Date(customer.created_at).toLocaleDateString()
+                          : "—"}
+                      </td>
+
+                      {/* Actions Column */}
+                      <td className="py-3.5 px-4 sm:px-6 text-right">
+                        <div className="inline-flex items-center gap-1 justify-end">
+                          {/* View Public Profile (Active only) */}
+                          {customer.is_active && (
+                            <Link
+                              href={`/p/${customer.profile_slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 rounded-lg text-primary hover:bg-surface-container-low transition-colors"
+                              title="View Public Profile"
+                            >
+                              <span className="material-symbols-outlined text-[18px]">
+                                open_in_new
+                              </span>
+                            </Link>
+                          )}
+
+                          {/* Quick Toggle Active */}
+                          <button
+                            onClick={() => handleToggleStatus(customer)}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              customer.is_active
+                                ? "text-emerald-700 hover:bg-emerald-50"
+                                : "text-slate-500 hover:bg-slate-100"
+                            }`}
+                            title={
+                              customer.is_active
+                                ? "Deactivate Profile"
+                                : "Activate Profile"
+                            }
                           >
                             <span className="material-symbols-outlined text-[18px]">
-                              open_in_new
+                              {customer.is_active ? "toggle_on" : "toggle_off"}
                             </span>
-                          </Link>
-                        )}
+                          </button>
 
-                        {/* Quick Toggle Active */}
-                        <button
-                          onClick={() => handleToggleStatus(customer)}
-                          className={`p-1.5 rounded-lg transition-colors ${
-                            customer.is_active
-                              ? "text-emerald-700 hover:bg-emerald-50"
-                              : "text-slate-500 hover:bg-slate-100"
-                          }`}
-                          title={
-                            customer.is_active
-                              ? "Deactivate Profile"
-                              : "Activate Profile"
-                          }
-                        >
-                          <span className="material-symbols-outlined text-[18px]">
-                            {customer.is_active ? "toggle_on" : "toggle_off"}
-                          </span>
-                        </button>
+                          {/* Edit Button */}
+                          <button
+                            onClick={() => handleOpenEdit(customer)}
+                            className="p-1.5 rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
+                            title="Edit Customer"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">
+                              edit
+                            </span>
+                          </button>
 
-                        {/* Edit Button */}
-                        <button
-                          onClick={() => handleOpenEdit(customer)}
-                          className="p-1.5 rounded-lg text-on-surface hover:bg-surface-container-low transition-colors"
-                          title="Edit Customer"
-                        >
-                          <span className="material-symbols-outlined text-[18px]">
-                            edit
-                          </span>
-                        </button>
-
-                        {/* Delete Button */}
-                        <button
-                          onClick={() => setDeletingCustomer(customer)}
-                          className="p-1.5 rounded-lg text-error hover:bg-error-container/30 transition-colors"
-                          title="Delete Customer"
-                        >
-                          <span className="material-symbols-outlined text-[18px]">
-                            delete
-                          </span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                          {/* Delete Button */}
+                          <button
+                            onClick={() => setDeletingCustomer(customer)}
+                            className="p-1.5 rounded-lg text-error hover:bg-error-container/30 transition-colors"
+                            title="Delete Customer"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">
+                              delete
+                            </span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
@@ -730,11 +851,11 @@ export default function AdminCustomersDashboard() {
       {/* ADD / EDIT CUSTOMER MODAL */}
       {/* ============================================================================== */}
       {isFormModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs overflow-y-auto">
-          <div className="w-full max-w-2xl my-8 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-float overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/40 backdrop-blur-xs overflow-y-auto">
+          <div className="w-full max-w-2xl my-2 sm:my-8 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-float overflow-hidden flex flex-col max-h-[96vh] sm:max-h-[90vh]">
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between bg-surface-container-low/30">
-              <h2 className="text-headline-md font-bold text-on-surface">
+            <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-outline-variant/20 flex items-center justify-between bg-surface-container-low/30">
+              <h2 className="text-title-lg sm:text-headline-md font-bold text-on-surface">
                 {editingId ? "Edit Customer Profile" : "Add New Customer"}
               </h2>
               <button
@@ -748,7 +869,7 @@ export default function AdminCustomersDashboard() {
             </div>
 
             {/* Modal Form Body */}
-            <form onSubmit={handleFormSubmit} className="flex-1 min-h-0 overflow-y-auto p-6 space-y-5">
+            <form onSubmit={handleFormSubmit} className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5">
               {formErrors.general && (
                 <div className="p-3.5 rounded-xl bg-error-container/40 border border-error/30 text-on-error-container text-body-sm flex items-center gap-2">
                   <span className="material-symbols-outlined text-[18px] text-error">
@@ -1226,19 +1347,19 @@ export default function AdminCustomersDashboard() {
               )}
 
               {/* Modal Footer Actions */}
-              <div className="pt-4 border-t border-outline-variant/20 flex items-center justify-end gap-3">
+              <div className="pt-4 border-t border-outline-variant/20 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3">
                 <button
                   type="button"
                   disabled={isSubmitting}
                   onClick={() => setIsFormModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl border border-outline-variant/40 text-on-surface font-semibold text-label-md hover:bg-surface-container-low transition-colors"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-outline-variant/40 text-on-surface font-semibold text-label-md hover:bg-surface-container-low transition-colors text-center"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-semibold text-label-md shadow-btn-primary transition-all disabled:opacity-60"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-semibold text-label-md shadow-btn-primary transition-all disabled:opacity-60"
                 >
                   {isSubmitting ? (
                     <>
@@ -1259,15 +1380,15 @@ export default function AdminCustomersDashboard() {
       {/* DELETE CONFIRMATION MODAL */}
       {/* ============================================================================== */}
       {deletingCustomer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-float flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 sm:p-6 shadow-float flex flex-col">
             <div className="w-12 h-12 rounded-xl bg-error-container/40 text-error flex items-center justify-center mb-4">
               <span className="material-symbols-outlined text-[24px]">
                 warning
               </span>
             </div>
 
-            <h3 className="text-headline-md font-bold text-on-surface">
+            <h3 className="text-title-lg sm:text-headline-md font-bold text-on-surface">
               Delete Customer Profile?
             </h3>
             <p className="text-body-sm text-on-surface-variant mt-2 leading-relaxed">
@@ -1275,16 +1396,16 @@ export default function AdminCustomersDashboard() {
               <span className="font-semibold text-on-surface">
                 &ldquo;{deletingCustomer.full_name}&rdquo;
               </span>{" "}
-              (<code className="text-[12px] bg-surface-container-low px-1 py-0.5 rounded">/p/{deletingCustomer.profile_slug}</code>)?
+              (<code className="text-[12px] bg-surface-container-low px-1 py-0.5 rounded break-all">/p/{deletingCustomer.profile_slug}</code>)?
               This action cannot be undone.
             </p>
 
-            <div className="mt-6 flex items-center justify-end gap-3">
+            <div className="mt-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3">
               <button
                 type="button"
                 disabled={isDeleting}
                 onClick={() => setDeletingCustomer(null)}
-                className="px-4 py-2.5 rounded-xl border border-outline-variant/40 text-on-surface font-semibold text-label-md hover:bg-surface-container-low transition-colors"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-outline-variant/40 text-on-surface font-semibold text-label-md hover:bg-surface-container-low transition-colors text-center"
               >
                 Cancel
               </button>
@@ -1292,7 +1413,7 @@ export default function AdminCustomersDashboard() {
                 type="button"
                 disabled={isDeleting}
                 onClick={handleConfirmDelete}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-error hover:bg-red-700 text-on-error font-semibold text-label-md shadow-sm transition-all disabled:opacity-60"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-error hover:bg-red-700 text-on-error font-semibold text-label-md shadow-sm transition-all disabled:opacity-60"
               >
                 {isDeleting ? (
                   <>

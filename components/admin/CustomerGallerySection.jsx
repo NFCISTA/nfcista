@@ -429,11 +429,11 @@ export default function CustomerGallerySection({
 
         {/* Add Action Buttons */}
         {!isEditorOpen && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => openAddItem("product")}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-label-sm font-semibold transition-colors active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-label-sm font-semibold transition-colors active:scale-[0.98] flex-1 sm:flex-none"
             >
               <span className="material-symbols-outlined text-[16px]">add</span>
               <span>Add Product / Service</span>
@@ -441,7 +441,7 @@ export default function CustomerGallerySection({
             <button
               type="button"
               onClick={() => openAddItem("portfolio")}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/40 hover:bg-surface-container-low text-on-surface text-label-sm font-semibold transition-colors active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/40 hover:bg-surface-container-low text-on-surface text-label-sm font-semibold transition-colors active:scale-[0.98] flex-1 sm:flex-none"
             >
               <span className="material-symbols-outlined text-[16px]">add</span>
               <span>Add Portfolio</span>
@@ -809,110 +809,116 @@ export default function CustomerGallerySection({
             return (
               <div
                 key={item.id || item.tempId || idx}
-                className="flex items-center gap-3 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/30 hover:border-outline-variant/60 transition-all shadow-xs"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/30 hover:border-outline-variant/60 transition-all shadow-xs"
               >
-                {/* Thumbnail */}
-                <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-surface-container-low shrink-0 flex items-center justify-center border border-outline-variant/20">
-                  {thumbUrl ? (
-                    <img
-                      src={thumbUrl}
-                      alt={item.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="material-symbols-outlined text-[22px] text-outline">
-                      {item.type === "product" ? "inventory_2" : "collections"}
-                    </span>
-                  )}
-                  {/* Badge for multiple images */}
-                  {((item.images?.length || 0) + (item.pendingPreviews?.length || 0) > 1) && (
-                    <span className="absolute bottom-0 right-0 bg-black/70 text-white text-[9px] px-1 rounded-tl font-bold">
-                      {(item.images?.length || 0) + (item.pendingPreviews?.length || 0)}
-                    </span>
-                  )}
-                </div>
-
-                {/* Details */}
-                <div className="flex-1 min-w-0 space-y-0.5">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span
-                      className={`text-[9px] font-bold uppercase px-1.5 py-0.2 rounded ${
-                        item.type === "product"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-purple-100 text-purple-800"
-                      }`}
-                    >
-                      {item.type === "product" ? "Product" : "Portfolio"}
-                    </span>
-                    <h4 className="text-label-sm font-bold text-on-surface truncate">
-                      {item.title}
-                    </h4>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-[11px] text-on-surface-variant flex-wrap">
-                    {item.type === "product" && item.price && (
-                      <span className="font-semibold text-primary">{item.price}</span>
+                {/* Details & Thumbnail */}
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  {/* Thumbnail */}
+                  <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-surface-container-low shrink-0 flex items-center justify-center border border-outline-variant/20">
+                    {thumbUrl ? (
+                      <img
+                        src={thumbUrl}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="material-symbols-outlined text-[22px] text-outline">
+                        {item.type === "product" ? "inventory_2" : "collections"}
+                      </span>
                     )}
-                    {item.category && <span>{item.category}</span>}
-                    {item.whatsapp_enabled && (
-                      <span className="inline-flex items-center gap-0.5 text-emerald-700 font-medium">
-                        <span className="material-symbols-outlined text-[12px]">chat</span>
-                        <span>WhatsApp</span>
+                    {/* Badge for multiple images */}
+                    {((item.images?.length || 0) + (item.pendingPreviews?.length || 0) > 1) && (
+                      <span className="absolute bottom-0 right-0 bg-black/70 text-white text-[9px] px-1 rounded-tl font-bold">
+                        {(item.images?.length || 0) + (item.pendingPreviews?.length || 0)}
                       </span>
                     )}
                   </div>
+
+                  {/* Details */}
+                  <div className="flex-1 min-w-0 space-y-0.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span
+                        className={`text-[9px] font-bold uppercase px-1.5 py-0.2 rounded ${
+                          item.type === "product"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-purple-100 text-purple-800"
+                        }`}
+                      >
+                        {item.type === "product" ? "Product" : "Portfolio"}
+                      </span>
+                      <h4 className="text-label-sm font-bold text-on-surface truncate">
+                        {item.title}
+                      </h4>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-[11px] text-on-surface-variant flex-wrap">
+                      {item.type === "product" && item.price && (
+                        <span className="font-semibold text-primary">{item.price}</span>
+                      )}
+                      {item.category && <span>{item.category}</span>}
+                      {item.whatsapp_enabled && (
+                        <span className="inline-flex items-center gap-0.5 text-emerald-700 font-medium">
+                          <span className="material-symbols-outlined text-[12px]">chat</span>
+                          <span>WhatsApp</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Status Pill */}
-                <button
-                  type="button"
-                  onClick={() => handleToggleActive(idx)}
-                  className={`text-[10px] font-bold px-2 py-1 rounded-full transition-colors shrink-0 ${
-                    item.is_active
-                      ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
-                  title="Click to toggle visibility"
-                >
-                  {item.is_active ? "Active" : "Hidden"}
-                </button>
+                {/* Status Pill & Action Controls */}
+                <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-outline-variant/20 shrink-0">
+                  {/* Status Pill */}
+                  <button
+                    type="button"
+                    onClick={() => handleToggleActive(idx)}
+                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors shrink-0 ${
+                      item.is_active
+                        ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                    title="Click to toggle visibility"
+                  >
+                    {item.is_active ? "Active" : "Hidden"}
+                  </button>
 
-                {/* Controls: Reorder, Edit, Delete */}
-                <div className="flex items-center gap-0.5 shrink-0">
-                  <button
-                    type="button"
-                    disabled={idx === 0}
-                    onClick={() => handleMove(idx, "up")}
-                    className="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low disabled:opacity-30 disabled:pointer-events-none"
-                    title="Move up"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">arrow_upward</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={idx === items.length - 1}
-                    onClick={() => handleMove(idx, "down")}
-                    className="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low disabled:opacity-30 disabled:pointer-events-none"
-                    title="Move down"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">arrow_downward</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => openEditItem(idx)}
-                    className="p-1 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
-                    title="Edit item"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">edit</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteItem(idx)}
-                    className="p-1 rounded text-on-surface-variant hover:text-error hover:bg-error-container/30"
-                    title="Delete item"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">delete</span>
-                  </button>
+                  {/* Controls: Reorder, Edit, Delete */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      disabled={idx === 0}
+                      onClick={() => handleMove(idx, "up")}
+                      className="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low disabled:opacity-30 disabled:pointer-events-none"
+                      title="Move up"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">arrow_upward</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={idx === items.length - 1}
+                      onClick={() => handleMove(idx, "down")}
+                      className="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low disabled:opacity-30 disabled:pointer-events-none"
+                      title="Move down"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">arrow_downward</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openEditItem(idx)}
+                      className="p-1.5 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
+                      title="Edit item"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteItem(idx)}
+                      className="p-1.5 rounded-lg text-on-surface-variant hover:text-error hover:bg-error-container/30"
+                      title="Delete item"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">delete</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );

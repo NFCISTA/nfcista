@@ -235,7 +235,7 @@ export default function QrScannerPage() {
 
       {/* Result Card: Displayed when a card has been scanned/identified */}
       {scannedCard ? (
-        <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-6 sm:p-8 shadow-card space-y-6 animate-fadeIn">
+        <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-card space-y-6 animate-fadeIn">
           <div className="flex items-start justify-between gap-4">
             <div>
               <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider block">
@@ -326,10 +326,10 @@ export default function QrScannerPage() {
         </div>
       ) : (
         /* Camera Scanner & Manual Input Shell */
-        <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-6 sm:p-8 shadow-card space-y-6">
+        <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-card space-y-6">
           {/* Scanner Viewport */}
           <div className="space-y-4">
-            <div className="relative overflow-hidden rounded-2xl border border-outline-variant/30 bg-black/95 min-h-[300px] flex items-center justify-center">
+            <div className="relative overflow-hidden rounded-2xl border border-outline-variant/30 bg-black/95 min-h-[260px] sm:min-h-[300px] flex items-center justify-center">
               {/* HTML5 QR reader div */}
               <div
                 id="qr-reader"
@@ -337,7 +337,7 @@ export default function QrScannerPage() {
               />
 
               {!isScanning && (
-                <div className="p-8 text-center space-y-4">
+                <div className="p-4 sm:p-8 text-center space-y-4">
                   <div className="w-16 h-16 rounded-2xl bg-white/10 text-white flex items-center justify-center mx-auto border border-white/20">
                     <span className="material-symbols-outlined text-[36px]">
                       qr_code_scanner
@@ -353,7 +353,7 @@ export default function QrScannerPage() {
                   </div>
                   <button
                     onClick={startScanner}
-                    className="py-3 px-6 rounded-xl bg-primary text-on-primary font-bold text-label-md hover:bg-primary-hover active:scale-[0.98] transition-all shadow-btn-primary inline-flex items-center gap-2 cursor-pointer"
+                    className="w-full sm:w-auto py-3 px-6 rounded-xl bg-primary text-on-primary font-bold text-label-md hover:bg-primary-hover active:scale-[0.98] transition-all shadow-btn-primary inline-flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[20px]">videocam</span>
                     <span>Start Camera Scanner</span>
@@ -426,7 +426,7 @@ export default function QrScannerPage() {
                 <button
                   type="submit"
                   disabled={lookupLoading || !manualInput.trim()}
-                  className="py-3 px-5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                  className="py-3 px-5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 cursor-pointer shrink-0 w-full sm:w-auto"
                 >
                   {lookupLoading ? (
                     <span className="w-4 h-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />

@@ -109,13 +109,28 @@ export default function AdminLayout({ children }) {
     }
   }
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  const navLinks = [
+    { href: "/admin", label: "Customers", icon: "badge" },
+    { href: "/admin/gallery", label: "Gallery", icon: "photo_library" },
+    { href: "/admin/qr-activate", label: "QR Activation", icon: "published_with_changes" },
+    { href: "/admin/qr-codes", label: "Card Generator", icon: "add_circle" },
+    { href: "/admin/qr-scan", label: "Scan QR", icon: "qr_code_scanner" },
+    { href: "/admin/qr-print", label: "Print Cards", icon: "print" },
+  ];
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
       {/* Top Admin Navigation */}
       <header className="sticky top-0 z-30 bg-surface-container-lowest border-b border-outline-variant/30 shadow-card">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link href="/admin" className="flex items-center gap-2.5">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3 sm:gap-6 min-w-0">
+            <Link href="/admin" className="flex items-center gap-2 shrink-0">
               <span className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-sm">
                 N
               </span>
@@ -123,73 +138,37 @@ export default function AdminLayout({ children }) {
                 <span className="font-bold text-on-surface text-label-lg tracking-tight">
                   NFCISTA
                 </span>
-                <span className="ml-2 px-2 py-0.5 rounded text-[10px] font-semibold bg-surface-container-low text-primary border border-outline-variant/20 uppercase tracking-wider">
+                <span className="ml-1.5 sm:ml-2 px-1.5 sm:px-2 py-0.5 rounded text-[10px] font-semibold bg-surface-container-low text-primary border border-outline-variant/20 uppercase tracking-wider">
                   Admin
                 </span>
               </div>
             </Link>
 
-            <nav className="flex items-center gap-1">
-              <Link
-                href="/admin"
-                className={`px-3 py-1.5 rounded-lg text-label-md font-semibold transition-colors ${
-                  pathname === "/admin"
-                    ? "bg-surface-container-low text-primary"
-                    : "text-on-surface-variant hover:text-on-surface"
-                }`}
-              >
-                Customers
-              </Link>
-              <Link
-                href="/admin/qr-activate"
-                className={`px-3 py-1.5 rounded-lg text-label-md font-semibold transition-colors ${
-                  pathname === "/admin/qr-activate"
-                    ? "bg-surface-container-low text-primary"
-                    : "text-on-surface-variant hover:text-on-surface"
-                }`}
-              >
-                QR Activation
-              </Link>
-              <Link
-                href="/admin/qr-codes"
-                className={`px-3 py-1.5 rounded-lg text-label-md font-semibold transition-colors ${
-                  pathname === "/admin/qr-codes"
-                    ? "bg-surface-container-low text-primary"
-                    : "text-on-surface-variant hover:text-on-surface"
-                }`}
-              >
-                Card Generator
-              </Link>
-              <Link
-                href="/admin/qr-scan"
-                className={`px-3 py-1.5 rounded-lg text-label-md font-semibold transition-colors ${
-                  pathname === "/admin/qr-scan"
-                    ? "bg-surface-container-low text-primary"
-                    : "text-on-surface-variant hover:text-on-surface"
-                }`}
-              >
-                Scan QR
-              </Link>
-              <Link
-                href="/admin/qr-print"
-                className={`px-3 py-1.5 rounded-lg text-label-md font-semibold transition-colors ${
-                  pathname === "/admin/qr-print"
-                    ? "bg-surface-container-low text-primary"
-                    : "text-on-surface-variant hover:text-on-surface"
-                }`}
-              >
-                Print Cards
-              </Link>
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`px-3 py-1.5 rounded-lg text-label-md font-semibold transition-colors ${
+                    pathname === link.href
+                      ? "bg-surface-container-low text-primary"
+                      : "text-on-surface-variant hover:text-on-surface"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
             </nav>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="hidden sm:inline-block text-body-sm text-on-surface-variant font-medium truncate max-w-[200px]">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <span className="hidden lg:inline-block text-body-sm text-on-surface-variant font-medium truncate max-w-[180px]">
               {user.email}
             </span>
             <button
               onClick={handleSignOut}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container-lowest hover:bg-surface-container-low text-on-surface text-label-md font-semibold transition-all active:scale-[0.98]"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container-lowest hover:bg-surface-container-low text-on-surface text-label-md font-semibold transition-all active:scale-[0.98]"
               title="Sign Out"
             >
               <span className="material-symbols-outlined text-[16px] text-error">
@@ -197,12 +176,70 @@ export default function AdminLayout({ children }) {
               </span>
               <span>Sign Out</span>
             </button>
+
+            {/* Mobile Hamburger Toggle Button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden inline-flex items-center justify-center p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors"
+              aria-label="Toggle navigation menu"
+              aria-expanded={mobileMenuOpen}
+            >
+              <span className="material-symbols-outlined text-[24px]">
+                {mobileMenuOpen ? "close" : "menu"}
+              </span>
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-outline-variant/20 bg-surface-container-lowest px-3 py-3 space-y-1 shadow-float">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/60 px-3 py-1">
+              Navigation Menu
+            </div>
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-label-md font-semibold transition-colors ${
+                    isActive
+                      ? "bg-surface-container-low text-primary"
+                      : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low/50"
+                  }`}
+                >
+                  <span
+                    className={`material-symbols-outlined text-[20px] ${
+                      isActive ? "text-primary" : "text-on-surface-variant/70"
+                    }`}
+                  >
+                    {link.icon}
+                  </span>
+                  <span>{link.label}</span>
+                </Link>
+              );
+            })}
+            <div className="pt-2 mt-2 border-t border-outline-variant/20 flex items-center justify-between px-3 py-1.5">
+              <span className="text-xs text-on-surface-variant truncate max-w-[200px]">
+                {user.email}
+              </span>
+              <button
+                onClick={handleSignOut}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-error-container/20 text-error text-xs font-semibold hover:bg-error-container/40 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[16px]">logout</span>
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Admin Content Shell */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8">
         {children}
       </main>
     </div>

@@ -209,7 +209,7 @@ export default function CardCodeGeneratorPage() {
       </div>
 
       {/* ── QR Card Inventory ─────────────────────────────────────────────── */}
-      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-6 sm:p-8 shadow-card space-y-4">
+      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-card space-y-4">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-bold text-on-surface tracking-tight">
             QR Card Inventory
@@ -347,7 +347,7 @@ export default function CardCodeGeneratorPage() {
       </div>
 
       {/* Generation Form Card */}
-      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-6 sm:p-8 shadow-card">
+      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-card">
         <form onSubmit={handleGenerate} className="space-y-5">
           <div>
             <label
@@ -374,7 +374,7 @@ export default function CardCodeGeneratorPage() {
               <button
                 type="submit"
                 disabled={isGenerating}
-                className="py-3 px-6 rounded-xl bg-primary text-on-primary font-bold text-label-lg shadow-btn-primary hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto py-3 px-6 rounded-xl bg-primary text-on-primary font-bold text-label-lg shadow-btn-primary hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isGenerating ? (
                   <>
@@ -406,7 +406,7 @@ export default function CardCodeGeneratorPage() {
       {/* Generated Cards Result List */}
       {generatedCards.length > 0 && (
         <div className="space-y-4 animate-fadeIn">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-low/70 border border-outline-variant/30 rounded-2xl px-6 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-low/70 border border-outline-variant/30 rounded-2xl p-4 sm:px-6 sm:py-4">
             <div>
               <h2 className="text-lg font-bold text-on-surface">
                 Generated Codes ({generatedCards.length})
@@ -418,7 +418,7 @@ export default function CardCodeGeneratorPage() {
 
             <button
               onClick={handleCopyAll}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-container-lowest border border-outline-variant/40 text-on-surface font-semibold text-xs hover:bg-surface-container-high transition-all shadow-xs shrink-0 self-start sm:self-auto cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/40 text-on-surface font-semibold text-xs hover:bg-surface-container-high transition-all shadow-xs shrink-0 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[16px]">
                 {copiedAll ? "done" : "content_copy"}
@@ -432,9 +432,9 @@ export default function CardCodeGeneratorPage() {
             {generatedCards.map((card, idx) => (
               <div
                 key={card.card_code}
-                className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-xs flex items-center justify-between gap-4"
+                className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col-reverse sm:flex-row items-center sm:items-start justify-between gap-4"
               >
-                <div className="space-y-2 min-w-0 flex-1">
+                <div className="space-y-2 min-w-0 flex-1 w-full sm:w-auto">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xl font-bold text-on-surface tracking-wider">
                       {card.card_code}

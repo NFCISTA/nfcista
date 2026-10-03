@@ -72,8 +72,8 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-[#F8FAFC]">
-      <div className="w-full max-w-[420px] bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 sm:p-8 shadow-card flex flex-col">
+    <div className="min-h-screen flex items-center justify-center p-3 sm:p-6 bg-[#F8FAFC]">
+      <div className="w-full max-w-[420px] bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 sm:p-8 shadow-card flex flex-col">
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center mb-6">
           <div className="w-12 h-12 rounded-xl bg-surface-container-low text-primary flex items-center justify-center mb-3">
@@ -179,7 +179,7 @@ export default function AdminLoginPage() {
         </form>
 
         {/* Footer info */}
-        <div className="mt-6 pt-5 border-t border-outline-variant/20 flex items-center justify-between text-body-sm text-on-surface-variant">
+        <div className="mt-6 pt-5 border-t border-outline-variant/20 flex flex-wrap items-center justify-between gap-2 text-body-sm text-on-surface-variant">
           <Link
             href="/"
             className="inline-flex items-center gap-1 hover:text-primary transition-colors text-label-md font-medium"

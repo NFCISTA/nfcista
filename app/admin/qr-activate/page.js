@@ -179,11 +179,11 @@ export default function DynamicQrActivatePage() {
       </div>
 
       {/* Main Activation Card Form */}
-      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-6 sm:p-8 shadow-card space-y-6">
+      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-card space-y-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Card Code Field */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
               <label
                 htmlFor="cardCode"
                 className="text-label-md font-bold text-on-surface"
@@ -302,7 +302,7 @@ export default function DynamicQrActivatePage() {
 
       {/* Success Result Display */}
       {successData && (
-        <div className="bg-emerald-50/70 border border-emerald-200 rounded-3xl p-6 sm:p-8 shadow-card space-y-4 animate-fadeIn">
+        <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-card space-y-4 animate-fadeIn">
           <div className="flex items-center gap-2 text-emerald-800 font-bold text-lg">
             <span className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-[18px]">check</span>
@@ -356,7 +356,7 @@ export default function DynamicQrActivatePage() {
                   href={successData.qr_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-emerald-300 text-emerald-900 font-semibold text-xs hover:bg-emerald-100/50 transition-all shadow-xs"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-white border border-emerald-300 text-emerald-900 font-semibold text-xs hover:bg-emerald-100/50 transition-all shadow-xs"
                 >
                   <span className="material-symbols-outlined text-[16px]">sync_alt</span>
                   <span>Test Live Redirect</span>
