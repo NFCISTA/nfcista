@@ -15,6 +15,7 @@ export default function QrScannerPage() {
   const [scannedCard, setScannedCard] = useState(null);
   // DIAGNOSTIC — temporary; remove after root cause confirmed
   const [diagLog, setDiagLog] = useState([]);
+  const [envLog, setEnvLog] = useState([]);
 
   const scannerRef = useRef(null);
 
@@ -120,6 +121,84 @@ export default function QrScannerPage() {
 
     // 3. Look up the extracted card code
     await lookupCardCode(extraction.cardCode);
+  }
+
+  // DIAGNOSTIC: Passive environment check — does NOT call getUserMedia
+  async function runEnvDiag() {
+    const logs = [];
+    const log = (msg) => { logs.push(msg); setEnvLog([...logs]); console.log("[ENV]", msg); };
+
+    log("── Origin / Context ──────────────────────────────");
+    log(`origin: ${window.location.origin}`);
+    log(`href: ${window.location.href}`);
+    log(`isSecureContext: ${window.isSecureContext}`);
+    log(`protocol: ${window.location.protocol}`);
+    log(`top === self: ${window.top === window.self}  (false = inside iframe)`);
+
+    log("── User Agent ────────────────────────────────────");
+    log(`userAgent: ${navigator.userAgent}`);
+
+    log("── Permissions API ───────────────────────────────");
+    if (navigator.permissions) {
+      try {
+        const status = await navigator.permissions.query({ name: "camera" });
+        log(`permissions.query(camera).state: ${status.state}`);
+        // 'granted' | 'prompt' | 'denied'
+      } catch (e) {
+        log(`permissions.query(camera) threw: ${e?.name}: ${e?.message}`);
+      }
+    } else {
+      log("navigator.permissions: NOT AVAILABLE");
+    }
+
+    log("── Permissions Policy ────────────────────────────");
+    try {
+      const pp = document.permissionsPolicy;
+      if (pp) {
+        log(`document.permissionsPolicy exists: true`);
+        log(`  allowsFeature("camera"): ${pp.allowsFeature("camera")}`);
+        try {
+          const origins = pp.getAllowlistForFeature("camera");
+          log(`  getAllowlistForFeature("camera"): ${JSON.stringify(origins)}`);
+        } catch (e2) {
+          log(`  getAllowlistForFeature threw: ${e2?.message}`);
+        }
+      } else {
+        log("document.permissionsPolicy: NOT AVAILABLE");
+      }
+    } catch (e) {
+      log(`permissionsPolicy check threw: ${e?.message}`);
+    }
+    try {
+      const fp = document.featurePolicy;
+      if (fp) {
+        log(`document.featurePolicy exists: true`);
+        log(`  allowsFeature("camera"): ${fp.allowsFeature("camera")}`);
+      } else {
+        log("document.featurePolicy: NOT AVAILABLE");
+      }
+    } catch (e) {
+      log(`featurePolicy check threw: ${e?.message}`);
+    }
+
+    log("── Enumerate Devices (no permission needed) ──────");
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoInputs = devices.filter(d => d.kind === "videoinput");
+      log(`total devices: ${devices.length}`);
+      log(`videoinput count: ${videoInputs.length}`);
+      videoInputs.forEach((d, i) => {
+        // label is empty string until permission granted — that's expected
+        log(`  [${i}] deviceId=${d.deviceId || "(empty)"} label="${d.label || "(no label — permission not yet granted)"}"`);
+      });
+      if (videoInputs.length === 0) {
+        log("  ⚠ NO video input devices reported by browser");
+      }
+    } catch (e) {
+      log(`enumerateDevices threw: ${e?.name}: ${e?.message}`);
+    }
+
+    log("── Done ──────────────────────────────────────────");
   }
 
   // Start camera scanning with graceful mobile and desktop fallback
@@ -620,6 +699,42 @@ export default function QrScannerPage() {
             )}
           </div>
 
+          {/* ENVIRONMENT DIAGNOSIS — temporary; remove after root cause confirmed */}
+          <div className="space-y-2">
+            <button
+              onClick={runEnvDiag}
+              className="w-full py-2 px-4 rounded-xl bg-blue-900 hover:bg-blue-800 text-blue-100 font-mono font-bold text-xs border border-blue-600 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            >
+              🔬 Run Environment Diagnosis (no camera access)
+            </button>
+            {envLog.length > 0 && (
+              <div className="p-3 rounded-xl bg-slate-950 border border-blue-800/40 text-blue-200 font-mono text-[11px] leading-relaxed space-y-0.5 max-h-96 overflow-y-auto">
+                <div className="text-blue-400/60 font-bold mb-1 text-[10px] uppercase tracking-wider">
+                  🔬 Environment Diagnosis
+                </div>
+                {envLog.map((line, i) => (
+                  <div
+                    key={i}
+                    className={
+                      line.startsWith("──")
+                        ? "text-blue-400 font-bold mt-1"
+                        : line.startsWith("  ")
+                        ? "pl-4 text-yellow-200"
+                        : line.includes("⚠") || line.includes("NOT AVAILABLE") || line.includes("denied") || line.includes("threw")
+                        ? "text-red-400 font-bold"
+                        : line.includes("granted")
+                        ? "text-green-400 font-bold"
+                        : line.includes("prompt")
+                        ? "text-amber-300 font-bold"
+                        : "text-blue-200"
+                    }
+                  >
+                    {line}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Error Message */}
           {errorMsg && (
