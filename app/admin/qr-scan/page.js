@@ -154,6 +154,28 @@ export default function QrScannerPage() {
     setIsStarting(true);
 
     try {
+      // 3. Pre-flight permission probe — uses a real Error object (not html5-qrcode's
+      //    string-wrapped errors), triggered directly inside the user-gesture call stack.
+      //    This preserves the iOS Safari user-gesture requirement and gives us a proper
+      //    NotAllowedError if permission is denied or was dismissed.
+      let probeStream;
+      try {
+        probeStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      } catch (probeErr) {
+        // Re-throw as a real Error so the catch block below classifies it correctly
+        const e = new Error(probeErr?.message || String(probeErr));
+        e.name = probeErr?.name || "NotAllowedError";
+        throw e;
+      }
+      // Immediately release the probe stream — html5-qrcode will open its own
+      probeStream.getTracks().forEach((t) => t.stop());
+
+      // 4. Pre-load the html5-qrcode module. Doing this after the probe keeps the
+      //    module import outside the user-gesture chain (iOS only requires the
+      //    getUserMedia call itself to be in the gesture stack, which the probe above
+      //    satisfies). The module is already cached by the browser after first load.
+      const { Html5Qrcode } = await import("html5-qrcode");
+
       // Clean up any stale scanner instance
       if (scannerRef.current) {
         try {
@@ -165,8 +187,6 @@ export default function QrScannerPage() {
         scannerRef.current = null;
       }
 
-      const { Html5Qrcode } = await import("html5-qrcode");
-
       const readerElem = document.getElementById("qr-reader");
       if (!readerElem) {
         throw new Error("Scanner container element not found.");
@@ -176,7 +196,8 @@ export default function QrScannerPage() {
       const scanner = new Html5Qrcode("qr-reader");
       scannerRef.current = scanner;
 
-      // Responsive qrbox configuration adapting cleanly to both mobile & desktop
+      // Responsive qrbox — no aspectRatio constraint (breaks mobile Safari & some
+      // Android Chrome versions with OverconstrainedError via applyConstraints)
       const config = {
         fps: 15,
         qrbox: (viewfinderWidth, viewfinderHeight) => {
@@ -184,7 +205,6 @@ export default function QrScannerPage() {
           const size = Math.max(Math.min(Math.floor(minEdge * 0.72), 280), 160);
           return { width: size, height: size };
         },
-        aspectRatio: 1.0,
       };
 
       const onScanSuccess = (decodedText) => {
@@ -206,7 +226,8 @@ export default function QrScannerPage() {
         if (
           envErr?.name === "NotAllowedError" ||
           envErr?.name === "PermissionDeniedError" ||
-          envErr?.toString()?.toLowerCase().includes("permission")
+          envErr?.toString()?.toLowerCase().includes("permission") ||
+          envErr?.toString()?.toLowerCase().includes("notallowed")
         ) {
           throw envErr;
         }
@@ -227,7 +248,8 @@ export default function QrScannerPage() {
           if (
             userErr?.name === "NotAllowedError" ||
             userErr?.name === "PermissionDeniedError" ||
-            userErr?.toString()?.toLowerCase().includes("permission")
+            userErr?.toString()?.toLowerCase().includes("permission") ||
+            userErr?.toString()?.toLowerCase().includes("notallowed")
           ) {
             throw userErr;
           }
