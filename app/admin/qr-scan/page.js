@@ -13,9 +13,6 @@ export default function QrScannerPage() {
   const [manualInput, setManualInput] = useState("");
   const [lookupLoading, setLookupLoading] = useState(false);
   const [scannedCard, setScannedCard] = useState(null);
-  // DIAGNOSTIC — temporary; remove after root cause confirmed
-  const [diagLog, setDiagLog] = useState([]);
-  const [envLog, setEnvLog] = useState([]);
 
   const scannerRef = useRef(null);
 
@@ -123,104 +120,11 @@ export default function QrScannerPage() {
     await lookupCardCode(extraction.cardCode);
   }
 
-  // DIAGNOSTIC: Passive environment check — does NOT call getUserMedia
-  async function runEnvDiag() {
-    const logs = [];
-    const log = (msg) => { logs.push(msg); setEnvLog([...logs]); console.log("[ENV]", msg); };
-
-    log("── Origin / Context ──────────────────────────────");
-    log(`origin: ${window.location.origin}`);
-    log(`href: ${window.location.href}`);
-    log(`isSecureContext: ${window.isSecureContext}`);
-    log(`protocol: ${window.location.protocol}`);
-    log(`top === self: ${window.top === window.self}  (false = inside iframe)`);
-
-    log("── User Agent ────────────────────────────────────");
-    log(`userAgent: ${navigator.userAgent}`);
-
-    log("── Permissions API ───────────────────────────────");
-    if (navigator.permissions) {
-      try {
-        const status = await navigator.permissions.query({ name: "camera" });
-        log(`permissions.query(camera).state: ${status.state}`);
-        // 'granted' | 'prompt' | 'denied'
-      } catch (e) {
-        log(`permissions.query(camera) threw: ${e?.name}: ${e?.message}`);
-      }
-    } else {
-      log("navigator.permissions: NOT AVAILABLE");
-    }
-
-    log("── Permissions Policy ────────────────────────────");
-    try {
-      const pp = document.permissionsPolicy;
-      if (pp) {
-        log(`document.permissionsPolicy exists: true`);
-        log(`  allowsFeature("camera"): ${pp.allowsFeature("camera")}`);
-        try {
-          const origins = pp.getAllowlistForFeature("camera");
-          log(`  getAllowlistForFeature("camera"): ${JSON.stringify(origins)}`);
-        } catch (e2) {
-          log(`  getAllowlistForFeature threw: ${e2?.message}`);
-        }
-      } else {
-        log("document.permissionsPolicy: NOT AVAILABLE");
-      }
-    } catch (e) {
-      log(`permissionsPolicy check threw: ${e?.message}`);
-    }
-    try {
-      const fp = document.featurePolicy;
-      if (fp) {
-        log(`document.featurePolicy exists: true`);
-        log(`  allowsFeature("camera"): ${fp.allowsFeature("camera")}`);
-      } else {
-        log("document.featurePolicy: NOT AVAILABLE");
-      }
-    } catch (e) {
-      log(`featurePolicy check threw: ${e?.message}`);
-    }
-
-    log("── Enumerate Devices (no permission needed) ──────");
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoInputs = devices.filter(d => d.kind === "videoinput");
-      log(`total devices: ${devices.length}`);
-      log(`videoinput count: ${videoInputs.length}`);
-      videoInputs.forEach((d, i) => {
-        // label is empty string until permission granted — that's expected
-        log(`  [${i}] deviceId=${d.deviceId || "(empty)"} label="${d.label || "(no label — permission not yet granted)"}"`);
-      });
-      if (videoInputs.length === 0) {
-        log("  ⚠ NO video input devices reported by browser");
-      }
-    } catch (e) {
-      log(`enumerateDevices threw: ${e?.name}: ${e?.message}`);
-    }
-
-    log("── Done ──────────────────────────────────────────");
-  }
-
   // Start camera scanning with graceful mobile and desktop fallback
   async function startScanner() {
     setCameraError("");
     setErrorMsg("");
     setScannedCard(null);
-
-    // DIAGNOSTIC: collect step-by-step logs shown in the UI
-    const logs = [];
-    const log = (msg) => {
-      logs.push(msg);
-      setDiagLog([...logs]);
-      console.log("[DIAG]", msg);
-    };
-
-    // ── Environment checks ────────────────────────────────────────────────────
-    log(`isSecureContext: ${window?.isSecureContext}`);
-    log(`protocol: ${window?.location?.protocol}`);
-    log(`host: ${window?.location?.host}`);
-    log(`navigator.mediaDevices: ${!!navigator?.mediaDevices}`);
-    log(`getUserMedia: ${typeof navigator?.mediaDevices?.getUserMedia}`);
 
     // 1. Check for secure context (HTTPS or localhost required for camera access)
     if (
@@ -229,7 +133,6 @@ export default function QrScannerPage() {
       window.location.hostname !== "localhost" &&
       window.location.hostname !== "127.0.0.1"
     ) {
-      log("FAIL: not a secure context");
       setCameraError(
         "Camera access requires a secure HTTPS connection. Please ensure you are accessing this portal via HTTPS."
       );
@@ -242,7 +145,6 @@ export default function QrScannerPage() {
       !navigator.mediaDevices ||
       !navigator.mediaDevices.getUserMedia
     ) {
-      log("FAIL: navigator.mediaDevices not available");
       setCameraError(
         "Camera access is not supported by this browser. Please use a modern browser (such as Chrome, Safari, or Firefox), or use the manual card code input below."
       );
@@ -252,54 +154,32 @@ export default function QrScannerPage() {
     setIsStarting(true);
 
     try {
-      // ── Pre-flight raw getUserMedia probe ───────────────────────────────────
-      // This is the FIRST await — preserves iOS Safari user-gesture chain.
-      // It also catches the real Error object before html5-qrcode wraps it in a string.
-      log("probe: calling getUserMedia({video:true})...");
+      // 3. Pre-flight raw getUserMedia probe — this is the FIRST await, which
+      //    preserves the iOS Safari user-gesture chain. It also catches the real
+      //    Error object before html5-qrcode wraps failures in opaque strings.
       let probeStream = null;
       try {
         probeStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        log(`probe: SUCCESS — tracks: ${probeStream.getTracks().length}`);
-        probeStream.getTracks().forEach((t) => {
-          log(`  track: kind=${t.kind} label="${t.label}" readyState=${t.readyState}`);
-          t.stop();
-        });
-        log("probe: all tracks stopped");
+        probeStream.getTracks().forEach((t) => t.stop());
       } catch (probeErr) {
-        // Show the REAL raw error — not a generic message
-        log(`probe: FAILED`);
-        log(`  err.name: ${probeErr?.name}`);
-        log(`  err.message: ${probeErr?.message}`);
-        log(`  err.constraint: ${probeErr?.constraint}`);
-        log(`  typeof err: ${typeof probeErr}`);
-        log(`  String(err): ${String(probeErr)}`);
-        setCameraError(
-          `[DIAG] getUserMedia FAILED\n` +
-          `name: ${probeErr?.name}\n` +
-          `message: ${probeErr?.message || "(none)"}\n` +
-          `constraint: ${probeErr?.constraint || "(none)"}\n` +
-          `toString: ${String(probeErr)}`
-        );
-        setIsStarting(false);
-        return; // Stop here — no point trying html5-qrcode if raw gUM fails
+        // Re-throw as a real Error so the catch block below classifies it correctly
+        const e = new Error(probeErr?.message || String(probeErr));
+        e.name = probeErr?.name || "NotAllowedError";
+        throw e;
       }
 
-      // ── Try Html5Qrcode.getCameras() before starting ────────────────────────
-      log("loading html5-qrcode module...");
+      // 4. Load html5-qrcode after the probe (module is cached after first load)
       const { Html5Qrcode } = await import("html5-qrcode");
-      log("html5-qrcode loaded");
 
-      log("calling Html5Qrcode.getCameras()...");
+      // 5. Enumerate cameras for the Strategy 3 fallback
       let cameras = [];
       try {
         cameras = await Html5Qrcode.getCameras();
-        log(`getCameras: found ${cameras?.length ?? 0} camera(s)`);
-        cameras.forEach((c, i) => log(`  [${i}] id=${c.id} label="${c.label}"`));
-      } catch (camErr) {
-        log(`getCameras: FAILED — ${camErr?.name}: ${camErr?.message || String(camErr)}`);
+      } catch {
+        // Non-fatal — strategies 1 & 2 can still work without enumeration
       }
 
-      // ── Clean up any stale scanner instance ─────────────────────────────────
+      // Clean up any stale scanner instance
       if (scannerRef.current) {
         try {
           if (scannerRef.current.isScanning) {
@@ -314,19 +194,18 @@ export default function QrScannerPage() {
       if (!readerElem) {
         throw new Error("Scanner container element not found.");
       }
-      log(`#qr-reader clientWidth=${readerElem.clientWidth} clientHeight=${readerElem.clientHeight}`);
       readerElem.innerHTML = "";
 
       const scanner = new Html5Qrcode("qr-reader");
       scannerRef.current = scanner;
 
-      // Responsive qrbox — no aspectRatio constraint
+      // Responsive qrbox — no aspectRatio constraint (causes OverconstrainedError
+      // via applyConstraints on mobile Safari and some Android Chrome versions)
       const config = {
         fps: 15,
         qrbox: (viewfinderWidth, viewfinderHeight) => {
           const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
           const size = Math.max(Math.min(Math.floor(minEdge * 0.72), 280), 160);
-          log(`qrbox called: vw=${viewfinderWidth} vh=${viewfinderHeight} → size=${size}`);
           return { width: size, height: size };
         },
       };
@@ -335,9 +214,8 @@ export default function QrScannerPage() {
         handleQrSuccess(decodedText);
       };
 
-      // Strategy 1: Attempt back/environment camera
+      // Strategy 1: Back/environment camera — best for scanning physical cards on mobile
       let cameraStarted = false;
-      log("strategy 1: scanner.start({facingMode:environment})...");
       try {
         await scanner.start(
           { facingMode: "environment" },
@@ -346,9 +224,8 @@ export default function QrScannerPage() {
           () => {}
         );
         cameraStarted = true;
-        log("strategy 1: SUCCESS");
       } catch (envErr) {
-        log(`strategy 1: FAILED — typeof=${typeof envErr} name=${envErr?.name} msg=${envErr?.message || String(envErr)}`);
+        console.warn("Back camera attempt failed, trying fallback:", envErr);
         if (
           envErr?.name === "NotAllowedError" ||
           envErr?.name === "PermissionDeniedError" ||
@@ -359,9 +236,8 @@ export default function QrScannerPage() {
         }
       }
 
-      // Strategy 2: Fallback to front/user camera
+      // Strategy 2: Front/user-facing camera — for laptops and desktops
       if (!cameraStarted) {
-        log("strategy 2: scanner.start({facingMode:user})...");
         try {
           await scanner.start(
             { facingMode: "user" },
@@ -370,9 +246,8 @@ export default function QrScannerPage() {
             () => {}
           );
           cameraStarted = true;
-          log("strategy 2: SUCCESS");
         } catch (userErr) {
-          log(`strategy 2: FAILED — typeof=${typeof userErr} name=${userErr?.name} msg=${userErr?.message || String(userErr)}`);
+          console.warn("User camera attempt failed, trying device enumeration:", userErr);
           if (
             userErr?.name === "NotAllowedError" ||
             userErr?.name === "PermissionDeniedError" ||
@@ -384,7 +259,7 @@ export default function QrScannerPage() {
         }
       }
 
-      // Strategy 3: Device ID enumeration fallback
+      // Strategy 3: Direct device-ID fallback using enumerated camera list
       if (!cameraStarted) {
         if (cameras.length === 0) {
           const notFound = new Error("No camera detected on this device.");
@@ -393,22 +268,14 @@ export default function QrScannerPage() {
         }
         const backCam = cameras.find((c) => /back|rear|environment/i.test(c.label));
         const selectedId = backCam ? backCam.id : cameras[0].id;
-        log(`strategy 3: scanner.start(deviceId=${selectedId})...`);
-        try {
-          await scanner.start(selectedId, config, onScanSuccess, () => {});
-          cameraStarted = true;
-          log("strategy 3: SUCCESS");
-        } catch (devErr) {
-          log(`strategy 3: FAILED — ${devErr?.name}: ${devErr?.message || String(devErr)}`);
-          throw devErr;
-        }
+        await scanner.start(selectedId, config, onScanSuccess, () => {});
+        cameraStarted = true;
       }
 
       setIsScanning(true);
       setIsStarting(false);
     } catch (err) {
       console.error("Camera start failure:", err);
-      log(`FINAL catch: typeof=${typeof err} name=${err?.name} message=${err?.message || String(err)}`);
       setIsScanning(false);
       setIsStarting(false);
 
@@ -425,7 +292,7 @@ export default function QrScannerPage() {
         errStr.includes("notallowed")
       ) {
         setCameraError(
-          `[DIAG] Permission denied\nname: ${err?.name}\nmessage: ${err?.message || "(none)"}\nfull: ${String(err)}`
+          "Camera permission was denied. Please allow camera access in your browser settings (look for the camera icon in your browser address bar), or use the manual code input below."
         );
       } else if (
         err?.name === "NotFoundError" ||
@@ -435,7 +302,7 @@ export default function QrScannerPage() {
         errStr.includes("no camera")
       ) {
         setCameraError(
-          `[DIAG] No camera found\nname: ${err?.name}\nmessage: ${err?.message || "(none)"}\nfull: ${String(err)}`
+          "No camera detected on this device. Please connect a camera or use the manual code input below."
         );
       } else if (
         err?.name === "NotReadableError" ||
@@ -443,20 +310,21 @@ export default function QrScannerPage() {
         errStr.includes("in use")
       ) {
         setCameraError(
-          `[DIAG] Camera in use\nname: ${err?.name}\nmessage: ${err?.message || "(none)"}\nfull: ${String(err)}`
+          "Camera is currently in use by another application or browser tab. Please close any other app using the camera and try again."
         );
       } else if (err?.name === "OverconstrainedError") {
         setCameraError(
-          `[DIAG] OverconstrainedError\nconstraint: ${err?.constraint}\nmessage: ${err?.message || "(none)"}`
+          "Your camera does not support the requested video mode. Please use the manual card code input below."
         );
       } else {
         setCameraError(
-          `[DIAG] Unknown error\nname: ${err?.name}\nmessage: ${err?.message || "(none)"}\nfull: ${String(err)}\nerrStr: ${errStr}`
+          "Unable to access camera (" +
+            (err?.message || "device error") +
+            "). Please check your browser permissions or use the manual code input below."
         );
       }
     }
   }
-
 
   // Handle manual input fallback
   async function handleManualSubmit(e) {
@@ -680,58 +548,7 @@ export default function QrScannerPage() {
                 <span className="material-symbols-outlined text-[20px] text-amber-700 shrink-0">
                   warning
                 </span>
-                <pre className="font-mono text-xs leading-relaxed whitespace-pre-wrap break-all">{cameraError}</pre>
-              </div>
-            )}
-
-            {/* DIAGNOSTIC LOG — temporary; remove after root cause confirmed */}
-            {diagLog.length > 0 && (
-              <div className="p-3 rounded-xl bg-black border border-white/10 text-green-400 font-mono text-[11px] leading-relaxed space-y-0.5 max-h-72 overflow-y-auto">
-                <div className="text-white/50 font-bold mb-1 text-[10px] uppercase tracking-wider">
-                  📷 Camera Diagnostic Log
-                </div>
-                {diagLog.map((line, i) => (
-                  <div key={i} className={line.startsWith("  ") ? "pl-4 text-yellow-300" : line.includes("FAIL") || line.includes("FAILED") ? "text-red-400 font-bold" : line.includes("SUCCESS") ? "text-green-300 font-bold" : "text-green-400"}>
-                    {line}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* ENVIRONMENT DIAGNOSIS — temporary; remove after root cause confirmed */}
-          <div className="space-y-2">
-            <button
-              onClick={runEnvDiag}
-              className="w-full py-2 px-4 rounded-xl bg-blue-900 hover:bg-blue-800 text-blue-100 font-mono font-bold text-xs border border-blue-600 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-            >
-              🔬 Run Environment Diagnosis (no camera access)
-            </button>
-            {envLog.length > 0 && (
-              <div className="p-3 rounded-xl bg-slate-950 border border-blue-800/40 text-blue-200 font-mono text-[11px] leading-relaxed space-y-0.5 max-h-96 overflow-y-auto">
-                <div className="text-blue-400/60 font-bold mb-1 text-[10px] uppercase tracking-wider">
-                  🔬 Environment Diagnosis
-                </div>
-                {envLog.map((line, i) => (
-                  <div
-                    key={i}
-                    className={
-                      line.startsWith("──")
-                        ? "text-blue-400 font-bold mt-1"
-                        : line.startsWith("  ")
-                        ? "pl-4 text-yellow-200"
-                        : line.includes("⚠") || line.includes("NOT AVAILABLE") || line.includes("denied") || line.includes("threw")
-                        ? "text-red-400 font-bold"
-                        : line.includes("granted")
-                        ? "text-green-400 font-bold"
-                        : line.includes("prompt")
-                        ? "text-amber-300 font-bold"
-                        : "text-blue-200"
-                    }
-                  >
-                    {line}
-                  </div>
-                ))}
+                <span className="font-medium text-xs leading-relaxed">{cameraError}</span>
               </div>
             )}
           </div>
