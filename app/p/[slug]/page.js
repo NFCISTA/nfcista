@@ -2,9 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { getCustomerBySlug, getSafeExternalUrl } from "@/lib/customers";
 import { getCustomerGallery } from "@/lib/gallery";
-import SaveContactButton from "@/components/SaveContactButton";
+import SaveContactButtonLazy from "@/components/SaveContactButtonLazy";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
-import ProfileShareModal from "@/components/profile/ProfileShareModal";
+import ProfileShareModalLazy from "@/components/profile/ProfileShareModalLazy";
 import ProfileQuickActions from "@/components/profile/ProfileQuickActions";
 import ProfileIntro from "@/components/profile/ProfileIntro";
 import ProfileGallery from "@/components/profile/ProfileGallery";
@@ -411,7 +411,7 @@ export default async function CustomerPublicProfilePage({ params }) {
 
           {/* ── Save Contact CTA ─────────────────────────────────────── */}
           <div className="px-5 pb-6">
-            <SaveContactButton
+            <SaveContactButtonLazy
               contact={{
                 fullName:    customer.full_name,
                 jobTitle:    customer.job_title?.trim(),
@@ -589,7 +589,7 @@ export default async function CustomerPublicProfilePage({ params }) {
 
           {/* ── Share My Card ────────────────────────────────────────── */}
           <section className="px-3.5 sm:px-5 py-4 sm:py-5" aria-label="Share profile">
-            <ProfileShareModal
+            <ProfileShareModalLazy
               name={customer.full_name}
               slug={customer.profile_slug}
             />
