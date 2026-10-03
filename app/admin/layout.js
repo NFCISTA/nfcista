@@ -11,8 +11,14 @@ export default function AdminLayout({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   // The login page manages its own unauthenticated state
   const isLoginPage = pathname === "/admin/login";
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -108,12 +114,6 @@ export default function AdminLayout({ children }) {
       router.replace("/admin/login");
     }
   }
-
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [pathname]);
 
   const navLinks = [
     { href: "/admin", label: "Customers", icon: "badge" },
