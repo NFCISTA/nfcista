@@ -117,6 +117,7 @@ export default function AdminLayout({ children }) {
 
   const navLinks = [
     { href: "/admin", label: "Customers", icon: "badge" },
+    { href: "/admin/products", label: "Products", icon: "inventory_2" },
     { href: "/admin/gallery", label: "Gallery", icon: "photo_library" },
     { href: "/admin/qr-activate", label: "QR Activation", icon: "published_with_changes" },
     { href: "/admin/qr-codes", label: "Card Generator", icon: "add_circle" },

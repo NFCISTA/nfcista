@@ -7,7 +7,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
-    { label: "Products", href: "#products" },
+    { label: "Products", href: "/products" },
     { label: "How It Works", href: "#how-it-works" },
     { label: "FAQ", href: "#faq" },
     { label: "Contact", href: "#contact" },
@@ -31,13 +31,23 @@ export default function Navbar() {
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-8" aria-label="Main navigation">
           {navLinks.map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              className="text-body-md font-medium text-on-surface-variant hover:text-primary transition-colors"
-            >
-              {link.label}
-            </a>
+            link.href.startsWith("/") ? (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="text-body-md font-medium text-on-surface-variant hover:text-primary transition-colors"
+              >
+                {link.label}
+              </Link>
+            ) : (
+              <a
+                key={link.label}
+                href={link.href}
+                className="text-body-md font-medium text-on-surface-variant hover:text-primary transition-colors"
+              >
+                {link.label}
+              </a>
+            )
           ))}
         </nav>
 
@@ -73,14 +83,25 @@ export default function Navbar() {
         <div className="md:hidden border-t border-outline-variant/30 bg-white px-4 py-5 shadow-float">
           <nav className="flex flex-col gap-2" aria-label="Mobile navigation">
             {navLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                onClick={() => setIsOpen(false)}
-                className="px-3 py-2 rounded-lg text-body-md font-medium text-on-surface hover:bg-surface-container-low transition-colors"
-              >
-                {link.label}
-              </a>
+              link.href.startsWith("/") ? (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  onClick={() => setIsOpen(false)}
+                  className="px-3 py-2 rounded-lg text-body-md font-medium text-on-surface hover:bg-surface-container-low transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  onClick={() => setIsOpen(false)}
+                  className="px-3 py-2 rounded-lg text-body-md font-medium text-on-surface hover:bg-surface-container-low transition-colors"
+                >
+                  {link.label}
+                </a>
+              )
             ))}
             <div className="pt-3 mt-1 border-t border-outline-variant/20 flex flex-col gap-2">
               <a
