@@ -1,15 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
+
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
 export default function CustomerProfileEditorPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  // Photo upload state
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState("");
+  const [photoSuccess, setPhotoSuccess] = useState("");
+  const fileInputRef = useRef(null);
 
   const [customer, setCustomer] = useState(null);
   const [formData, setFormData] = useState({
@@ -107,7 +116,102 @@ export default function CustomerProfileEditorPage() {
     }
   }
 
+  // ── Photo Upload ────────────────────────────────────────────────────────
+  async function handlePhotoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!e.target) return;
+    // Reset so the same file can be re-selected after error
+    e.target.value = "";
+
+    if (!file) return;
+
+    // Client-side validation before upload
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setPhotoError("Invalid file type. Please choose a JPG, PNG, or WebP image.");
+      return;
+    }
+    if (file.size > MAX_SIZE_BYTES) {
+      setPhotoError("File is too large. Maximum allowed size is 5 MB.");
+      return;
+    }
+
+    setPhotoError("");
+    setPhotoSuccess("");
+    setUploadingPhoto(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Session expired. Please log in again.");
+
+      const fd = new FormData();
+      fd.append("file", file);
+
+      const res = await fetch("/api/customer/photo", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: fd,
+      });
+
+      const contentType = res.headers.get("content-type") || "";
+      const result = contentType.includes("application/json") ? await res.json() : null;
+
+      if (!res.ok) {
+        const msg = result?.error || `Upload failed (HTTP ${res.status}).`;
+        setPhotoError(msg);
+        return;
+      }
+
+      // Update local state with the new URL — no full form save needed
+      const newUrl = result.photo_url || "";
+      setFormData((prev) => ({ ...prev, photo_url: newUrl }));
+      setCustomer((prev) => ({ ...prev, photo_url: newUrl }));
+      setPhotoSuccess("Profile photo updated successfully!");
+      setTimeout(() => setPhotoSuccess(""), 5000);
+    } catch (err) {
+      setPhotoError(err.message || "An unexpected error occurred during upload.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
+
+  async function handlePhotoRemove() {
+    if (!formData.photo_url) return;
+    if (!window.confirm("Remove your profile photo? This cannot be undone.")) return;
+
+    setPhotoError("");
+    setPhotoSuccess("");
+    setUploadingPhoto(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Session expired. Please log in again.");
+
+      const res = await fetch("/api/customer/photo", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      const contentType = res.headers.get("content-type") || "";
+      const result = contentType.includes("application/json") ? await res.json() : null;
+
+      if (!res.ok) {
+        setPhotoError(result?.error || "Failed to remove photo.");
+        return;
+      }
+
+      setFormData((prev) => ({ ...prev, photo_url: "" }));
+      setCustomer((prev) => ({ ...prev, photo_url: "" }));
+      setPhotoSuccess("Profile photo removed.");
+      setTimeout(() => setPhotoSuccess(""), 4000);
+    } catch (err) {
+      setPhotoError(err.message || "An unexpected error occurred.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
+
   if (loading) {
+
     return (
       <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-12 text-center space-y-3 shadow-card">
         <div className="w-8 h-8 border-3 border-primary/20 border-t-primary rounded-full animate-spin mx-auto" />
@@ -252,30 +356,91 @@ export default function CustomerProfileEditorPage() {
             </div>
           </div>
 
+          {/* ── Profile Photo Upload ─────────────────────────────── */}
           <div>
-            <label className="block text-xs font-bold text-on-surface mb-1">
-              Profile Photo URL
+            <label className="block text-xs font-bold text-on-surface mb-2">
+              Profile Photo
             </label>
-            <div className="flex gap-3 items-center">
-              <input
-                type="url"
-                value={formData.photo_url}
-                onChange={(e) => setFormData({ ...formData, photo_url: e.target.value })}
-                placeholder="https://... or /images/..."
-                className="flex-1 px-3.5 py-2.5 rounded-xl border border-outline-variant/50 bg-surface-container-low/30 text-sm font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-              />
-              {formData.photo_url && (
-                <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-outline-variant/40 shrink-0 bg-surface-container-low">
+
+            {/* Hidden file input — triggered by buttons below */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handlePhotoUpload}
+              disabled={uploadingPhoto}
+            />
+
+            <div className="flex items-center gap-4">
+              {/* Avatar preview */}
+              <div className="relative shrink-0 w-20 h-20 rounded-2xl overflow-hidden border-2 border-outline-variant/40 bg-surface-container-low flex items-center justify-center">
+                {formData.photo_url ? (
                   <Image
                     src={formData.photo_url}
-                    alt="Preview"
+                    alt="Profile photo preview"
                     fill
                     className="object-cover"
                     unoptimized
                   />
-                </div>
-              )}
+                ) : (
+                  <span className="material-symbols-outlined text-[36px] text-on-surface-variant/40">
+                    account_circle
+                  </span>
+                )}
+                {/* Upload spinner overlay */}
+                {uploadingPhoto && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-2xl">
+                    <div className="w-6 h-6 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  disabled={uploadingPhoto}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-on-primary text-xs font-bold shadow-sm hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[15px]">
+                    {formData.photo_url ? "photo_camera" : "upload"}
+                  </span>
+                  <span>{formData.photo_url ? "Change Photo" : "Upload Photo"}</span>
+                </button>
+
+                {formData.photo_url && (
+                  <button
+                    type="button"
+                    disabled={uploadingPhoto}
+                    onClick={handlePhotoRemove}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-error/40 text-error text-xs font-semibold hover:bg-error/5 active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">delete</span>
+                    <span>Remove Photo</span>
+                  </button>
+                )}
+
+                <p className="text-[10px] text-on-surface-variant mt-0.5">
+                  JPG, PNG or WebP · Max 5 MB
+                </p>
+              </div>
             </div>
+
+            {/* Photo-specific feedback banners */}
+            {photoError && (
+              <div className="mt-3 flex items-center gap-2 p-3 rounded-xl bg-error-container/20 border border-error/30 text-error text-xs font-semibold">
+                <span className="material-symbols-outlined text-[16px] shrink-0">error</span>
+                <span>{photoError}</span>
+              </div>
+            )}
+            {photoSuccess && (
+              <div className="mt-3 flex items-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+                <span className="material-symbols-outlined text-[16px] shrink-0 text-emerald-600">check_circle</span>
+                <span>{photoSuccess}</span>
+              </div>
+            )}
           </div>
 
           <div>
