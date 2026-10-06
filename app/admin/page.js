@@ -357,10 +357,27 @@ export default function AdminCustomersDashboard() {
         }),
       });
 
-      const result = await res.json();
+      let result = null;
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        try {
+          result = await res.json();
+        } catch {
+          result = null;
+        }
+      }
+
+      if (!result) {
+        const rawText = await res.text().catch(() => "");
+        console.error("Non-JSON or unparseable response from create-login API:", res.status, rawText);
+        setLoginModalError(
+          `Server returned status ${res.status}: ${rawText.slice(0, 150) || "Unable to parse server response."}`
+        );
+        return;
+      }
 
       if (!res.ok) {
-        setLoginModalError(result.error || "Failed to create customer login.");
+        setLoginModalError(result.error || `Failed to create customer login (HTTP ${res.status}).`);
         return;
       }
 
@@ -387,7 +404,7 @@ export default function AdminCustomersDashboard() {
       }
     } catch (err) {
       console.error("Failed to create customer login:", err);
-      setLoginModalError("An unexpected error occurred. Please try again.");
+      setLoginModalError(err?.message ? `Error: ${err.message}` : "An unexpected error occurred. Please try again.");
     } finally {
       setIsCreatingLogin(false);
     }
