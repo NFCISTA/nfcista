@@ -16,8 +16,6 @@ export async function proxy(request) {
   if (pathname.startsWith("/admin")) {
     // /admin/login must remain accessible without an authenticated session,
     // but is rate-limited to 10 attempts per 5 minutes per client IP.
-    // Key suffix ":login" ensures these counters are completely separate from
-    // the /p/* sliding-window counters (which use the bare IP as their key).
     if (pathname === "/admin/login") {
       try {
         const ip = getClientIp(request);
@@ -77,7 +75,69 @@ export async function proxy(request) {
     }
   }
 
-  // 2. Defensive path check: Only process /p/* routes
+  // 2. Server-side session gating for customer /dashboard/*
+  if (pathname.startsWith("/dashboard")) {
+    const token = request.cookies.get("sb-access-token")?.value;
+    if (!token) {
+      const loginUrl = new URL("/login", request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    if (!supabase) {
+      const loginUrl = new URL("/login", request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    try {
+      const { data, error } = await supabase.auth.getUser(token);
+      if (error || !data?.user) {
+        const loginUrl = new URL("/login", request.url);
+        const response = NextResponse.redirect(loginUrl);
+        response.cookies.delete("sb-access-token");
+        return response;
+      }
+
+      return NextResponse.next();
+    } catch {
+      const loginUrl = new URL("/login", request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  // 3. Customer /login rate-limiting
+  if (pathname === "/login") {
+    try {
+      const ip = getClientIp(request);
+      const loginResult = await checkRateLimit(`${ip}:custlogin`, {
+        limit: 10,
+        windowMs: 5 * 60 * 1000,
+      });
+
+      if (!loginResult.success) {
+        return new Response(
+          JSON.stringify({
+            error: "Too Many Requests",
+            message: "Too many login attempts. Please wait before trying again.",
+          }),
+          {
+            status: 429,
+            headers: {
+              "Content-Type": "application/json",
+              "Retry-After": String(loginResult.reset || 300),
+              "X-RateLimit-Limit": "10",
+              "X-RateLimit-Remaining": "0",
+              "X-RateLimit-Reset": String(loginResult.reset || 300),
+            },
+          }
+        );
+      }
+    } catch {
+      // Fail-open
+    }
+    return NextResponse.next();
+  }
+
+  // 4. Defensive path check: Only process /p/* routes
   if (!pathname.startsWith("/p/")) {
     return NextResponse.next();
   }
@@ -160,7 +220,14 @@ export async function proxy(request) {
   }
 }
 
-// Match /p/* for rate limiting, and /admin routes for server-side session gating
+// Match /p/* for rate limiting, /admin for admin gating, /dashboard for customer gating, /login for login rate limiting
 export const config = {
-  matcher: ["/p/:path*", "/admin", "/admin/:path*"],
+  matcher: [
+    "/p/:path*",
+    "/admin",
+    "/admin/:path*",
+    "/dashboard",
+    "/dashboard/:path*",
+    "/login",
+  ],
 };

@@ -70,6 +70,16 @@ export default function AdminCustomersDashboard() {
   const [deletingCustomer, setDeletingCustomer] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Create Login modal state
+  const [loginModalCustomer, setLoginModalCustomer] = useState(null); // customer object
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [createdCredentials, setCreatedCredentials] = useState(null);
+  const [copiedCreds, setCopiedCreds] = useState(false);
+  const [isCreatingLogin, setIsCreatingLogin] = useState(false);
+  const [loginModalError, setLoginModalError] = useState("");
+  const [loginModalSuccess, setLoginModalSuccess] = useState("");
+
   // Load customer list
   async function loadCustomers() {
     setLoading(true);
@@ -292,8 +302,100 @@ export default function AdminCustomersDashboard() {
     }
   }
 
+  // Helper to generate a random temporary password
+  function generateTemporaryPassword() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%";
+    let pwd = "Nfc";
+    for (let i = 0; i < 7; i++) {
+      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return pwd + "1!";
+  }
+
+  // Open Create Login modal
+  function handleOpenLoginModal(customer) {
+    setLoginModalCustomer(customer);
+    setLoginEmail(customer.email || "");
+    setLoginPassword(generateTemporaryPassword());
+    setCreatedCredentials(null);
+    setCopiedCreds(false);
+    setLoginModalError("");
+    setLoginModalSuccess("");
+  }
+
+  // Submit Create Login
+  async function handleCreateLogin(e) {
+    e.preventDefault();
+    setLoginModalError("");
+    setLoginModalSuccess("");
+
+    const trimmedEmail = loginEmail.trim().toLowerCase();
+    if (!trimmedEmail || !trimmedEmail.includes("@")) {
+      setLoginModalError("Please enter a valid email address.");
+      return;
+    }
+
+    const trimmedPassword = loginPassword.trim();
+    if (trimmedPassword && trimmedPassword.length < 6) {
+      setLoginModalError("Password must be at least 6 characters.");
+      return;
+    }
+
+    setIsCreatingLogin(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/admin/customers/create-login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({
+          customer_id: loginModalCustomer.id,
+          email: trimmedEmail,
+          password: trimmedPassword || undefined,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        setLoginModalError(result.error || "Failed to create customer login.");
+        return;
+      }
+
+      // Update the in-memory customer list with new auth_user_id and email
+      setCustomers((prev) =>
+        prev.map((c) =>
+          c.id === loginModalCustomer.id
+            ? { ...c, auth_user_id: result.auth_user_id, email: trimmedEmail }
+            : c
+        )
+      );
+
+      if (result.status === "already_linked") {
+        setLoginModalSuccess(
+          `This customer already has a portal login linked (${result.email || "active"}).`
+        );
+      } else {
+        setCreatedCredentials({
+          email: trimmedEmail,
+          password: trimmedPassword || null,
+          actionLink: result.action_link || null,
+        });
+        setLoginModalSuccess(result.message || "Customer login created successfully.");
+      }
+    } catch (err) {
+      console.error("Failed to create customer login:", err);
+      setLoginModalError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsCreatingLogin(false);
+    }
+  }
+
   // Form submit (Create or Update)
   async function handleFormSubmit(e) {
+
     e.preventDefault();
     setFormErrors({});
 
@@ -627,6 +729,30 @@ export default function AdminCustomersDashboard() {
                     )}
                   </div>
 
+                  {/* Row 2.5: Customer Login Status (Mobile) */}
+                  <div className="flex items-center justify-between gap-2 text-xs pt-1 border-t border-outline-variant/10">
+                    <span className="text-[11px] text-on-surface-variant truncate max-w-[190px]">
+                      <span className="font-semibold text-on-surface">Login:</span> {customer.email || "No email"}
+                    </span>
+                    {customer.auth_user_id ? (
+                      <button
+                        onClick={() => handleOpenLoginModal(customer)}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span>✓ Login Created</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleOpenLoginModal(customer)}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold text-primary bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors shrink-0"
+                      >
+                        <span className="material-symbols-outlined text-[13px]">key</span>
+                        <span>Create Login</span>
+                      </button>
+                    )}
+                  </div>
+
                   {/* Row 3: Touch-friendly Action Buttons */}
                   <div className="flex items-center justify-end gap-1.5 pt-1 border-t border-outline-variant/10">
                     {customer.is_active && (
@@ -685,6 +811,7 @@ export default function AdminCustomersDashboard() {
                     <th className="py-3.5 px-4">Company &amp; Title</th>
                     <th className="py-3.5 px-4">Slug &amp; URL</th>
                     <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4">Portal Login</th>
                     <th className="py-3.5 px-4 hidden md:table-cell">Created</th>
                     <th className="py-3.5 px-4 sm:px-6 text-right">Actions</th>
                   </tr>
@@ -769,6 +896,46 @@ export default function AdminCustomersDashboard() {
                           />
                           <span>{customer.is_active ? "Active" : "Inactive"}</span>
                         </span>
+                      </td>
+
+                      {/* Portal Login Column */}
+                      <td className="py-3.5 px-4">
+                        {customer.auth_user_id ? (
+                          <div className="space-y-0.5">
+                            <button
+                              onClick={() => handleOpenLoginModal(customer)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100/60 transition-colors"
+                              title="Click to view login details"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              <span>✓ Login Created</span>
+                            </button>
+                            {customer.email && (
+                              <div className="text-[11px] text-on-surface-variant font-mono truncate max-w-[150px]">
+                                {customer.email}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            <button
+                              onClick={() => handleOpenLoginModal(customer)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-primary/40 bg-primary/5 hover:bg-primary/10 text-primary text-xs font-semibold transition-colors shadow-xs"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">key</span>
+                              <span>Create Login</span>
+                            </button>
+                            {customer.email ? (
+                              <div className="text-[11px] text-on-surface-variant truncate max-w-[150px]">
+                                {customer.email}
+                              </div>
+                            ) : (
+                              <div className="text-[10px] text-on-surface-variant/40 italic">
+                                No email set
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </td>
 
                       {/* Created Date */}
@@ -1424,6 +1591,232 @@ export default function AdminCustomersDashboard() {
                   <span>Delete Profile</span>
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================================== */}
+      {/* CREATE CUSTOMER LOGIN MODAL                                                    */}
+      {/* ============================================================================== */}
+      {loginModalCustomer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-float flex flex-col">
+            {/* Header */}
+            <div className="px-5 pt-5 pb-4 border-b border-outline-variant/20 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[20px]">key</span>
+                </div>
+                <div>
+                  <h3 className="text-title-md font-bold text-on-surface">
+                    {loginModalCustomer.auth_user_id ? "Customer Portal Login" : "Create Customer Login"}
+                  </h3>
+                  <p className="text-[11px] text-on-surface-variant truncate max-w-[220px]">
+                    {loginModalCustomer.full_name}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setLoginModalCustomer(null)}
+                className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg transition-colors"
+              >
+                <span className="material-symbols-outlined text-[22px]">close</span>
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Already linked status */}
+              {loginModalCustomer.auth_user_id && !loginModalSuccess && (
+                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-2 text-sm">
+                  <div className="flex items-center gap-2 font-semibold text-emerald-800">
+                    <span className="material-symbols-outlined text-[20px] text-emerald-600">check_circle</span>
+                    <span>Portal Login Active</span>
+                  </div>
+                  <p className="text-xs text-emerald-700 leading-relaxed">
+                    This customer has an active Supabase Auth account linked to their profile record.
+                  </p>
+                  <div className="pt-1 text-xs">
+                    <span className="font-semibold">Customer Login URL: </span>
+                    <code className="bg-emerald-100/70 px-1.5 py-0.5 rounded text-emerald-800">/login</code>
+                  </div>
+                </div>
+              )}
+
+              {/* Success message */}
+              {loginModalSuccess && (
+                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-start gap-2.5 text-sm">
+                  <span className="material-symbols-outlined text-[20px] text-emerald-600 shrink-0 mt-0.5">check_circle</span>
+                  <p className="font-medium leading-relaxed">{loginModalSuccess}</p>
+                </div>
+              )}
+
+              {/* Created credentials handover card */}
+              {createdCredentials && (
+                <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-on-surface uppercase tracking-wider">
+                      Login Credentials
+                    </span>
+                    <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                      Ready to use
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 text-xs">
+                    <div className="p-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant/20 flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] text-on-surface-variant block uppercase font-bold">Email</span>
+                        <span className="font-mono font-semibold text-on-surface">{createdCredentials.email}</span>
+                      </div>
+                    </div>
+
+                    {createdCredentials.password && (
+                      <div className="p-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant/20 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] text-on-surface-variant block uppercase font-bold">Temporary Password</span>
+                          <span className="font-mono font-semibold text-primary">{createdCredentials.password}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {createdCredentials.actionLink && (
+                      <div className="p-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant/20 space-y-1">
+                        <span className="text-[10px] text-on-surface-variant block uppercase font-bold">Password Setup Link</span>
+                        <p className="font-mono text-[11px] text-on-surface-variant truncate">{createdCredentials.actionLink}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const portalUrl = typeof window !== "undefined" ? `${window.location.origin}/login` : "https://nfcista.vercel.app/login";
+                      const text = [
+                        `NFCISTA Customer Portal Credentials:`,
+                        `Portal URL: ${portalUrl}`,
+                        `Email: ${createdCredentials.email}`,
+                        createdCredentials.password ? `Temporary Password: ${createdCredentials.password}` : "",
+                        createdCredentials.actionLink ? `Setup Link: ${createdCredentials.actionLink}` : "",
+                        `Please log in and update your profile details anytime.`,
+                      ].filter(Boolean).join("\n");
+                      navigator.clipboard.writeText(text).then(() => {
+                        setCopiedCreds(true);
+                        setTimeout(() => setCopiedCreds(false), 2500);
+                      });
+                    }}
+                    className="w-full py-2 px-3 rounded-lg bg-surface-container-lowest hover:bg-surface-container border border-outline-variant/30 text-on-surface text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <span className="material-symbols-outlined text-[16px] text-primary">
+                      {copiedCreds ? "check" : "content_copy"}
+                    </span>
+                    <span>{copiedCreds ? "Copied to Clipboard!" : "Copy Login Info for Customer"}</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Error message */}
+              {loginModalError && (
+                <div className="p-3.5 rounded-xl bg-error-container/30 border border-error/30 text-error flex items-start gap-2.5 text-sm">
+                  <span className="material-symbols-outlined text-[20px] shrink-0 mt-0.5">error</span>
+                  <p className="font-medium leading-relaxed">{loginModalError}</p>
+                </div>
+              )}
+
+              {/* Form — only show if not already linked OR if we want to retry */}
+              {!loginModalCustomer.auth_user_id && !createdCredentials && (
+                <form onSubmit={handleCreateLogin} className="space-y-4">
+                  <div>
+                    <label className="block text-label-sm font-semibold text-on-surface mb-1.5">
+                      Customer Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      autoComplete="email"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      placeholder="customer@example.com"
+                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-label-sm font-semibold text-on-surface">
+                        Temporary Password
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setLoginPassword(generateTemporaryPassword())}
+                        className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1"
+                      >
+                        <span className="material-symbols-outlined text-[13px]">refresh</span>
+                        <span>Generate new</span>
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      placeholder="Enter or generate temporary password"
+                      className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface font-mono text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                    />
+                    <p className="text-[11px] text-on-surface-variant mt-1.5 leading-relaxed">
+                      Auto-generated for immediate login. The customer can change their password anytime.
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-surface-container-low/60 border border-outline-variant/20 text-[11px] text-on-surface-variant space-y-1">
+                    <p className="font-semibold text-on-surface flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px] text-primary">security</span>
+                      Security note
+                    </p>
+                    <p>The customer logs in at <strong>/login</strong> — never /admin.</p>
+                    <p>Password is encrypted via Supabase Auth and never stored in the customer table.</p>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2.5 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setLoginModalCustomer(null)}
+                      disabled={isCreatingLogin}
+                      className="px-4 py-2.5 rounded-xl border border-outline-variant/40 text-on-surface font-semibold text-label-md hover:bg-surface-container-low transition-colors disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isCreatingLogin}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-on-primary font-semibold text-label-md shadow-btn-primary hover:bg-primary-hover transition-all disabled:opacity-60 active:scale-[0.98]"
+                    >
+                      {isCreatingLogin ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Creating Account...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-[16px]">key</span>
+                          <span>Create Customer Login</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Close button after success */}
+              {(loginModalSuccess || loginModalCustomer.auth_user_id || createdCredentials) && (
+                <div className="flex justify-end pt-1">
+                  <button
+                    onClick={() => setLoginModalCustomer(null)}
+                    className="px-5 py-2.5 rounded-xl bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 text-on-surface font-semibold text-label-md transition-colors"
+                  >
+                    Done
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
