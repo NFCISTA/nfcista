@@ -18,6 +18,7 @@ import {
 } from "@/lib/customers";
 import CustomerGallerySection from "@/components/admin/CustomerGallerySection";
 import { getAdminGalleryItems, savePendingGalleryItems } from "@/lib/gallery";
+import { supabase } from "@/lib/supabaseClient";
 
 // Default empty form template
 const initialFormData = {
