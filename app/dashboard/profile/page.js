@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
+import CustomerGalleryManager from "@/components/dashboard/CustomerGalleryManager";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -573,7 +574,12 @@ export default function CustomerProfileEditorPage() {
           </div>
         </div>
 
-        {/* Section 4: Read-Only System Properties */}
+        {/* Section 4: Products & Portfolio Gallery Showcase */}
+        {customer?.id && (
+          <CustomerGalleryManager customer={customer} />
+        )}
+
+        {/* Section 5: Read-Only System Properties */}
         <div className="bg-surface-container-low/40 border border-outline-variant/20 rounded-3xl p-5 sm:p-6 space-y-3">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px] text-on-surface-variant">lock</span>
