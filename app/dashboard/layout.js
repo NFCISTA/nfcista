@@ -71,7 +71,7 @@ export default function CustomerDashboardLayout({ children }) {
   async function handleSignOut() {
     if (supabase) {
       try {
-        await fetch("/api/admin/session", { method: "DELETE" });
+        await fetch("/api/session", { method: "DELETE" });
       } catch {}
       await supabase.auth.signOut();
       router.replace("/login");

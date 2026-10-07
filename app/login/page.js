@@ -49,7 +49,7 @@ export default function CustomerLoginPage() {
       // Establish HttpOnly server session for proxy gating
       if (data?.session?.access_token) {
         try {
-          await fetch("/api/admin/session", {
+          await fetch("/api/session", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -175,16 +175,6 @@ export default function CustomerLoginPage() {
               )}
             </button>
           </form>
-
-          {/* Admin link separator */}
-          <div className="pt-2 border-t border-outline-variant/20 text-center">
-            <p className="text-[11px] text-on-surface-variant">
-              Are you an NFCISTA Administrator?{" "}
-              <Link href="/admin/login" className="font-semibold text-primary hover:underline">
-                Admin Sign In
-              </Link>
-            </p>
-          </div>
         </div>
       </div>
 
