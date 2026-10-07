@@ -26,6 +26,14 @@ export async function POST(request) {
       return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 });
     }
 
+    // Strict admin check: Only hellonfcista@gmail.com is authorized
+    if (data.user.email?.toLowerCase() !== "hellonfcista@gmail.com") {
+      return NextResponse.json(
+        { error: "Forbidden: Administrator privileges required." },
+        { status: 403 }
+      );
+    }
+
     const response = NextResponse.json({ success: true });
     const maxAge = typeof expires_in === "number" && expires_in > 0 ? expires_in : 3600;
 

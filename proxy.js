@@ -68,6 +68,14 @@ export async function proxy(request) {
         return response;
       }
 
+      // Strict admin check: Only hellonfcista@gmail.com is authorized
+      if (data.user.email?.toLowerCase() !== "hellonfcista@gmail.com") {
+        const loginUrl = new URL("/admin/login?error=unauthorized", request.url);
+        const response = NextResponse.redirect(loginUrl);
+        response.cookies.delete("sb-access-token");
+        return response;
+      }
+
       return NextResponse.next();
     } catch {
       const loginUrl = new URL("/admin/login", request.url);

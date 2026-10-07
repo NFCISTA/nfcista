@@ -47,10 +47,18 @@ export default function AdminLoginPage() {
         return;
       }
 
+      // Strict admin check: Only hellonfcista@gmail.com is authorized
+      if (data?.user?.email?.toLowerCase() !== "hellonfcista@gmail.com") {
+        await supabase.auth.signOut();
+        setErrorMessage("Access denied: Only authorized administrators may sign in here.");
+        setIsLoading(false);
+        return;
+      }
+
       // Establish HttpOnly server session for proxy gating (never in document.cookie)
       if (data?.session?.access_token) {
         try {
-          await fetch("/api/admin/session", {
+          const sessionRes = await fetch("/api/admin/session", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -58,6 +66,12 @@ export default function AdminLoginPage() {
               expires_in: data.session.expires_in,
             }),
           });
+          if (!sessionRes.ok) {
+            await supabase.auth.signOut();
+            setErrorMessage("Access denied: Administrator privileges required.");
+            setIsLoading(false);
+            return;
+          }
         } catch {
           // Non-blocking fallback
         }

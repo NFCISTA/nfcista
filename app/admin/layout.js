@@ -26,9 +26,12 @@ export default function AdminLayout({ children }) {
       return;
     }
 
+    // Helper to verify admin email
+    const isAdminUser = (u) => u?.email?.toLowerCase() === "hellonfcista@gmail.com";
+
     // 1. Initial session check
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
+      if (session?.user && isAdminUser(session.user)) {
         setUser(session.user);
         if (isLoginPage) {
           if (session.access_token) {
@@ -48,6 +51,13 @@ export default function AdminLayout({ children }) {
           router.replace("/admin");
         }
       } else {
+        // If logged in as non-admin on admin pages, sign out and clear cookies
+        if (session?.user && !isAdminUser(session.user)) {
+          try {
+            await fetch("/api/admin/session", { method: "DELETE" });
+          } catch {}
+          await supabase.auth.signOut();
+        }
         setUser(null);
         if (!isLoginPage) {
           router.replace("/admin/login");
@@ -59,13 +69,19 @@ export default function AdminLayout({ children }) {
     // 2. Listen for auth state transitions (Sign in, Sign out, Token refresh)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user && isAdminUser(session.user)) {
         setUser(session.user);
         if (isLoginPage) {
           router.replace("/admin");
         }
       } else {
+        if (session?.user && !isAdminUser(session.user)) {
+          try {
+            await fetch("/api/admin/session", { method: "DELETE" });
+          } catch {}
+          await supabase.auth.signOut();
+        }
         setUser(null);
         if (!isLoginPage) {
           router.replace("/admin/login");
