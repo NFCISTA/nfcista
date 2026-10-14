@@ -31,10 +31,11 @@ export async function GET(request, { params }) {
     notFound();
   }
 
-  return NextResponse.redirect(destination, {
+  return new Response(null, {
     status: 307,
     headers: {
-      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+      Location: destination,
+      "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
     },
   });
 }

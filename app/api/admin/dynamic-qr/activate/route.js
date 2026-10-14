@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { authenticateAdmin } from "@/lib/adminAuth";
 import { isValidCardCode, getQrUrl } from "@/lib/dynamicQr";
 import { isValidHttpUrl } from "@/lib/customers";
@@ -167,6 +168,13 @@ export async function POST(request) {
         { error: "Failed to update card destination." },
         { status: 500 }
       );
+    }
+
+    // Invalidate cached redirect path on server/edge
+    try {
+      revalidatePath(`/r/${updated.card_code}`);
+    } catch (e) {
+      console.warn("Path revalidation warning:", e.message);
     }
 
     const qrUrl = getQrUrl(updated.card_code);
