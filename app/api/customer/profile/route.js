@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticateCustomer } from "@/lib/customerAuth";
 import { revalidateCustomerProfile } from "@/lib/revalidateProfile";
-import { isValidHttpUrl, cleanInstagramHandle } from "@/lib/customers";
+import { isValidHttpUrl, cleanInstagramHandle, getSafeExternalHttpsUrl, isValidHttpsUrl } from "@/lib/customers";
 
 export const dynamic = "force-dynamic";
 
@@ -130,6 +130,42 @@ export async function PUT(request) {
         );
       }
       updates.photo_url = cleanPhoto;
+    }
+
+    // 14. Facebook URL (Optional, strictly HTTPS)
+    const rawFbInput = body.facebook_url !== undefined ? body.facebook_url : body.facebook;
+    if (rawFbInput !== undefined) {
+      const rawFb = rawFbInput ? String(rawFbInput).trim() : null;
+      if (rawFb) {
+        const safeFb = getSafeExternalHttpsUrl(rawFb);
+        if (!safeFb) {
+          return NextResponse.json(
+            { error: "Facebook URL must be a valid HTTPS link (e.g. https://facebook.com/yourpage)." },
+            { status: 400 }
+          );
+        }
+        updates.facebook_url = safeFb;
+      } else {
+        updates.facebook_url = null;
+      }
+    }
+
+    // 15. LinkedIn URL (Optional, strictly HTTPS)
+    const rawLiInput = body.linkedin_url !== undefined ? body.linkedin_url : body.linkedin;
+    if (rawLiInput !== undefined) {
+      const rawLi = rawLiInput ? String(rawLiInput).trim() : null;
+      if (rawLi) {
+        const safeLi = getSafeExternalHttpsUrl(rawLi);
+        if (!safeLi) {
+          return NextResponse.json(
+            { error: "LinkedIn URL must be a valid HTTPS link (e.g. https://linkedin.com/in/yourprofile)." },
+            { status: 400 }
+          );
+        }
+        updates.linkedin_url = safeLi;
+      } else {
+        updates.linkedin_url = null;
+      }
     }
 
     // Ensure we are updating only where id = customer.id AND auth_user_id = user.id

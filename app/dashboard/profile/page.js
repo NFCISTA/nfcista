@@ -35,6 +35,8 @@ export default function CustomerProfileEditorPage() {
     website: "",
     address: "",
     google_review_url: "",
+    facebook: "",
+    linkedin: "",
     photo_url: "",
   });
 
@@ -68,6 +70,8 @@ export default function CustomerProfileEditorPage() {
             website: data.customer.website || "",
             address: data.customer.address || "",
             google_review_url: data.customer.google_review_url || "",
+            facebook_url: data.customer.facebook_url || data.customer.facebook || "",
+            linkedin_url: data.customer.linkedin_url || data.customer.linkedin || "",
             photo_url: data.customer.photo_url || "",
           });
         }
@@ -568,6 +572,32 @@ export default function CustomerProfileEditorPage() {
                 value={formData.google_review_url}
                 onChange={(e) => setFormData({ ...formData, google_review_url: e.target.value })}
                 placeholder="https://g.page/r/... or https://maps.google.com/..."
+                className="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/50 bg-surface-container-low/30 text-sm font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-on-surface mb-1">
+                Facebook URL <span className="text-[10px] text-on-surface-variant font-normal">(HTTPS only)</span>
+              </label>
+              <input
+                type="url"
+                value={formData.facebook_url || formData.facebook || ""}
+                onChange={(e) => setFormData({ ...formData, facebook_url: e.target.value })}
+                placeholder="https://facebook.com/yourpage"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/50 bg-surface-container-low/30 text-sm font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-on-surface mb-1">
+                LinkedIn URL <span className="text-[10px] text-on-surface-variant font-normal">(HTTPS only)</span>
+              </label>
+              <input
+                type="url"
+                value={formData.linkedin_url || formData.linkedin || ""}
+                onChange={(e) => setFormData({ ...formData, linkedin_url: e.target.value })}
+                placeholder="https://linkedin.com/in/yourprofile"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/50 bg-surface-container-low/30 text-sm font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               />
             </div>

@@ -15,6 +15,8 @@ import {
   deleteCustomerPhoto,
   recordConsentForCustomer,
   isValidHttpUrl,
+  isValidHttpsUrl,
+  getSafeExternalHttpsUrl,
 } from "@/lib/customers";
 import CustomerGallerySection from "@/components/admin/CustomerGallerySection";
 import { getAdminGalleryItems, savePendingGalleryItems } from "@/lib/gallery";
@@ -34,6 +36,8 @@ const initialFormData = {
   website: "",
   address: "",
   google_review_url: "",
+  facebook_url: "",
+  linkedin_url: "",
   photo_url: "",
   profile_slug: "",
   is_active: true,
@@ -183,6 +187,8 @@ export default function AdminCustomersDashboard() {
         website: fullRecord.website || "",
         address: fullRecord.address || "",
         google_review_url: fullRecord.google_review_url || "",
+        facebook_url: fullRecord.facebook_url || fullRecord.facebook || "",
+        linkedin_url: fullRecord.linkedin_url || fullRecord.linkedin || "",
         photo_url: fullRecord.photo_url || "",
         profile_slug: fullRecord.profile_slug || "",
         is_active: fullRecord.is_active !== undefined ? fullRecord.is_active : true,
@@ -442,6 +448,14 @@ export default function AdminCustomersDashboard() {
     }
     if (formData.google_review_url?.trim() && !isValidHttpUrl(formData.google_review_url)) {
       errors.google_review_url = "Google Review URL must begin with http:// or https://";
+    }
+    const fbVal = formData.facebook_url || formData.facebook;
+    if (fbVal?.trim() && !getSafeExternalHttpsUrl(fbVal)) {
+      errors.facebook_url = "Facebook URL must be a valid HTTPS link (e.g. https://facebook.com/yourpage)";
+    }
+    const liVal = formData.linkedin_url || formData.linkedin;
+    if (liVal?.trim() && !getSafeExternalHttpsUrl(liVal)) {
+      errors.linkedin_url = "LinkedIn URL must be a valid HTTPS link (e.g. https://linkedin.com/in/yourprofile)";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -1361,6 +1375,70 @@ export default function AdminCustomersDashboard() {
                     {formErrors.google_review_url && (
                       <p className="mt-1 text-[12px] text-error font-medium">
                         {formErrors.google_review_url}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                      Facebook URL
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.facebook_url || formData.facebook || ""}
+                      onChange={(e) => {
+                        setFormData({
+                          ...formData,
+                          facebook_url: e.target.value,
+                        });
+                        if (formErrors.facebook_url) {
+                          setFormErrors((prev) => {
+                            const copy = { ...prev };
+                            delete copy.facebook_url;
+                            return copy;
+                          });
+                        }
+                      }}
+                      placeholder="https://facebook.com/yourpage"
+                      className={`w-full h-11 px-3.5 rounded-xl border bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                        formErrors.facebook_url ? "border-error" : "border-outline-variant/40"
+                      }`}
+                    />
+                    {formErrors.facebook_url && (
+                      <p className="mt-1 text-[12px] text-error font-medium">
+                        {formErrors.facebook_url}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                      LinkedIn URL
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.linkedin_url || formData.linkedin || ""}
+                      onChange={(e) => {
+                        setFormData({
+                          ...formData,
+                          linkedin_url: e.target.value,
+                        });
+                        if (formErrors.linkedin_url) {
+                          setFormErrors((prev) => {
+                            const copy = { ...prev };
+                            delete copy.linkedin_url;
+                            return copy;
+                          });
+                        }
+                      }}
+                      placeholder="https://linkedin.com/in/yourprofile"
+                      className={`w-full h-11 px-3.5 rounded-xl border bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                        formErrors.linkedin_url ? "border-error" : "border-outline-variant/40"
+                      }`}
+                    />
+                    {formErrors.linkedin_url && (
+                      <p className="mt-1 text-[12px] text-error font-medium">
+                        {formErrors.linkedin_url}
                       </p>
                     )}
                   </div>

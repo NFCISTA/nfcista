@@ -1,6 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getCustomerBySlug, getSafeExternalUrl } from "@/lib/customers";
+import {
+  getCustomerBySlug,
+  getSafeExternalUrl,
+  getSafeExternalHttpsUrl,
+} from "@/lib/customers";
 import { getCustomerGallery } from "@/lib/gallery";
 import SaveContactButtonLazy from "@/components/SaveContactButtonLazy";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
@@ -166,6 +170,12 @@ export default async function CustomerPublicProfilePage({ params }) {
   const hasWebsite       = Boolean(safeWebsite);
   const hasGoogleReview  = Boolean(safeGoogleReview);
 
+  // Social Links: Facebook & LinkedIn (strictly HTTPS only)
+  const safeFacebook     = getSafeExternalHttpsUrl(customer.facebook_url || customer.facebook);
+  const safeLinkedin     = getSafeExternalHttpsUrl(customer.linkedin_url || customer.linkedin);
+  const hasFacebook      = Boolean(safeFacebook);
+  const hasLinkedin      = Boolean(safeLinkedin);
+
   // Normalize Instagram handle — strip leading @ characters
   const rawInstagram   = customer.instagram?.trim() || "";
   const cleanInstagram = rawInstagram.replace(/^@+/, "");
@@ -219,6 +229,26 @@ export default async function CustomerPublicProfilePage({ params }) {
       iconColor: "text-white",
     });
   }
+  if (hasFacebook) {
+    quickConnectItems.push({
+      id: "qc-fb",
+      label: "Facebook",
+      icon: "facebook",
+      href: safeFacebook,
+      iconBg: "bg-[#1877F2]/10",
+      iconColor: "text-[#1877F2]",
+    });
+  }
+  if (hasLinkedin) {
+    quickConnectItems.push({
+      id: "qc-li",
+      label: "LinkedIn",
+      icon: "linkedin",
+      href: safeLinkedin,
+      iconBg: "bg-[#0A66C2]/10",
+      iconColor: "text-[#0A66C2]",
+    });
+  }
   if (hasWebsite) {
     quickConnectItems.push({
       id: "qc-web",
@@ -262,6 +292,28 @@ export default async function CustomerPublicProfilePage({ params }) {
       icon: "photo_camera",
       iconBg: "bg-pink-50",
       iconColor: "text-[#e1306c]",
+    });
+  }
+  if (hasFacebook) {
+    presenceLinks.push({
+      id: "pl-fb",
+      label: "Facebook",
+      secondary: safeFacebook.replace(/^https?:\/\//i, "").replace(/\/$/, ""),
+      href: safeFacebook,
+      icon: "facebook",
+      iconBg: "bg-blue-50",
+      iconColor: "text-[#1877F2]",
+    });
+  }
+  if (hasLinkedin) {
+    presenceLinks.push({
+      id: "pl-li",
+      label: "LinkedIn",
+      secondary: safeLinkedin.replace(/^https?:\/\//i, "").replace(/\/$/, ""),
+      href: safeLinkedin,
+      icon: "linkedin",
+      iconBg: "bg-sky-50",
+      iconColor: "text-[#0A66C2]",
     });
   }
   if (hasWebsite) {

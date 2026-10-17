@@ -295,6 +295,30 @@ export default function CustomerDashboardPage() {
             </div>
 
             <div className="flex items-start gap-2.5 p-2 rounded-xl bg-surface-container-low/40">
+              <span className="material-symbols-outlined text-[18px] text-[#1877F2] shrink-0 mt-0.5">
+                public
+              </span>
+              <div className="min-w-0">
+                <span className="text-[10px] text-on-surface-variant block uppercase font-bold">Facebook</span>
+                <span className="font-medium text-on-surface truncate block">
+                  {customer.facebook_url || customer.facebook || <span className="text-on-surface-variant/50 italic">Not set</span>}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2.5 p-2 rounded-xl bg-surface-container-low/40">
+              <span className="material-symbols-outlined text-[18px] text-[#0A66C2] shrink-0 mt-0.5">
+                work
+              </span>
+              <div className="min-w-0">
+                <span className="text-[10px] text-on-surface-variant block uppercase font-bold">LinkedIn</span>
+                <span className="font-medium text-on-surface truncate block">
+                  {customer.linkedin_url || customer.linkedin || <span className="text-on-surface-variant/50 italic">Not set</span>}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2.5 p-2 rounded-xl bg-surface-container-low/40">
               <span className="material-symbols-outlined text-[18px] text-primary shrink-0 mt-0.5">
                 tag
               </span>
