@@ -168,6 +168,18 @@ export async function PUT(request) {
       }
     }
 
+    // 16. Banner URL (Optional)
+    if (body.banner_url !== undefined) {
+      const cleanBanner = body.banner_url ? String(body.banner_url).trim() : null;
+      if (cleanBanner && !isValidHttpUrl(cleanBanner) && !cleanBanner.startsWith("/")) {
+        return NextResponse.json(
+          { error: "Profile banner URL must be a valid image URL." },
+          { status: 400 }
+        );
+      }
+      updates.banner_url = cleanBanner;
+    }
+
     // Ensure we are updating only where id = customer.id AND auth_user_id = user.id
     const { data: updatedCustomer, error: updateErr } = await authClient
       .from("customers")

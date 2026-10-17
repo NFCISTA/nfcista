@@ -167,6 +167,7 @@ export default async function CustomerPublicProfilePage({ params }) {
   const safeWebsite      = getSafeExternalUrl(customer.website);
   const safeGoogleReview = getSafeExternalUrl(customer.google_review_url);
   const safePhotoUrl     = getSafeExternalUrl(customer.photo_url);
+  const safeBannerUrl    = getSafeExternalUrl(customer.banner_url) || "/images/hero-mountains.jpg";
   const hasWebsite       = Boolean(safeWebsite);
   const hasGoogleReview  = Boolean(safeGoogleReview);
 
@@ -363,9 +364,9 @@ export default async function CustomerPublicProfilePage({ params }) {
 
           {/* ── Premium Hero Banner ─────────────────────────────────── */}
           <div className="relative overflow-hidden h-44 sm:h-48 lg:h-56 bg-[#071426]">
-            {/* Mountain photography background banner */}
+            {/* Background banner (custom uploaded or NFCISTA default) */}
             <Image
-              src="/images/hero-mountains.jpg"
+              src={safeBannerUrl}
               alt=""
               aria-hidden="true"
               fill

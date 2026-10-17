@@ -21,6 +21,12 @@ export default function CustomerProfileEditorPage() {
   const [photoSuccess, setPhotoSuccess] = useState("");
   const fileInputRef = useRef(null);
 
+  // Banner upload state
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [bannerError, setBannerError] = useState("");
+  const [bannerSuccess, setBannerSuccess] = useState("");
+  const bannerInputRef = useRef(null);
+
   const [customer, setCustomer] = useState(null);
   const [formData, setFormData] = useState({
     full_name: "",
@@ -35,9 +41,10 @@ export default function CustomerProfileEditorPage() {
     website: "",
     address: "",
     google_review_url: "",
-    facebook: "",
-    linkedin: "",
+    facebook_url: "",
+    linkedin_url: "",
     photo_url: "",
+    banner_url: "",
   });
 
   useEffect(() => {
@@ -73,6 +80,7 @@ export default function CustomerProfileEditorPage() {
             facebook_url: data.customer.facebook_url || data.customer.facebook || "",
             linkedin_url: data.customer.linkedin_url || data.customer.linkedin || "",
             photo_url: data.customer.photo_url || "",
+            banner_url: data.customer.banner_url || "",
           });
         }
       } catch {
@@ -212,6 +220,97 @@ export default function CustomerProfileEditorPage() {
       setPhotoError(err.message || "An unexpected error occurred.");
     } finally {
       setUploadingPhoto(false);
+    }
+  }
+
+  // ── Profile Banner Handlers ──────────────────────────────────────────────
+  async function handleBannerUpload(e) {
+    const file = e.target.files?.[0];
+    if (!e.target) return;
+    e.target.value = "";
+
+    if (!file) return;
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setBannerError("Invalid file type. Please choose a JPG, PNG, or WebP image.");
+      return;
+    }
+    if (file.size > MAX_SIZE_BYTES) {
+      setBannerError("File is too large. Maximum allowed size is 5 MB.");
+      return;
+    }
+
+    setBannerError("");
+    setBannerSuccess("");
+    setUploadingBanner(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Session expired. Please log in again.");
+
+      const fd = new FormData();
+      fd.append("file", file);
+
+      const res = await fetch("/api/customer/banner", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: fd,
+      });
+
+      const contentType = res.headers.get("content-type") || "";
+      const result = contentType.includes("application/json") ? await res.json() : null;
+
+      if (!res.ok) {
+        const msg = result?.error || `Upload failed (HTTP ${res.status}).`;
+        setBannerError(msg);
+        return;
+      }
+
+      const newUrl = result.banner_url || "";
+      setFormData((prev) => ({ ...prev, banner_url: newUrl }));
+      setCustomer((prev) => ({ ...prev, banner_url: newUrl }));
+      setBannerSuccess("Custom profile banner updated successfully!");
+      setTimeout(() => setBannerSuccess(""), 5000);
+    } catch (err) {
+      setBannerError(err.message || "An unexpected error occurred during banner upload.");
+    } finally {
+      setUploadingBanner(false);
+    }
+  }
+
+  async function handleBannerRemove() {
+    if (!formData.banner_url) return;
+    if (!window.confirm("Revert to the NFCISTA default banner?")) return;
+
+    setBannerError("");
+    setBannerSuccess("");
+    setUploadingBanner(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Session expired. Please log in again.");
+
+      const res = await fetch("/api/customer/banner", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      const contentType = res.headers.get("content-type") || "";
+      const result = contentType.includes("application/json") ? await res.json() : null;
+
+      if (!res.ok) {
+        setBannerError(result?.error || "Failed to remove custom banner.");
+        return;
+      }
+
+      setFormData((prev) => ({ ...prev, banner_url: "" }));
+      setCustomer((prev) => ({ ...prev, banner_url: "" }));
+      setBannerSuccess("Reverted to NFCISTA default banner.");
+      setTimeout(() => setBannerSuccess(""), 4000);
+    } catch (err) {
+      setBannerError(err.message || "An unexpected error occurred.");
+    } finally {
+      setUploadingBanner(false);
     }
   }
 
@@ -444,6 +543,111 @@ export default function CustomerProfileEditorPage() {
               <div className="mt-3 flex items-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
                 <span className="material-symbols-outlined text-[16px] shrink-0 text-emerald-600">check_circle</span>
                 <span>{photoSuccess}</span>
+              </div>
+            )}
+          </div>
+
+          {/* ── Profile Banner Upload ─────────────────────────────── */}
+          <div className="pt-2 border-t border-outline-variant/20">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-bold text-on-surface">
+                Profile Banner
+              </label>
+              <div className="inline-flex items-center gap-3 text-xs">
+                <span className={`inline-flex items-center gap-1 font-semibold ${!formData.banner_url ? 'text-primary' : 'text-on-surface-variant'}`}>
+                  <span className="material-symbols-outlined text-[15px]">
+                    {!formData.banner_url ? "radio_button_checked" : "radio_button_unchecked"}
+                  </span>
+                  NFCISTA Default
+                </span>
+                <span className={`inline-flex items-center gap-1 font-semibold ${formData.banner_url ? 'text-primary' : 'text-on-surface-variant'}`}>
+                  <span className="material-symbols-outlined text-[15px]">
+                    {formData.banner_url ? "radio_button_checked" : "radio_button_unchecked"}
+                  </span>
+                  Custom Banner
+                </span>
+              </div>
+            </div>
+
+            {/* Hidden file input for banner */}
+            <input
+              ref={bannerInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleBannerUpload}
+              disabled={uploadingBanner}
+            />
+
+            {/* Banner preview container: approx 2.4:1 ratio matching public profile */}
+            <div className="relative w-full max-w-lg aspect-[2.4/1] rounded-2xl overflow-hidden border-2 border-outline-variant/40 bg-[#071426] shadow-sm mb-3">
+              <Image
+                src={formData.banner_url || "/images/hero-mountains.jpg"}
+                alt="Profile banner preview"
+                fill
+                className="object-cover object-[center_35%]"
+                unoptimized
+              />
+              {/* Subtle gradient matching public profile */}
+              <div className="absolute inset-0 bg-gradient-to-b from-[#051329]/60 via-transparent to-[#071426]/70 pointer-events-none" />
+
+              {/* Banner type badge overlay */}
+              <div className="absolute top-2.5 right-2.5 z-10">
+                <span className="px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-md text-white text-[10px] font-semibold tracking-wide border border-white/20">
+                  {formData.banner_url ? "Custom Banner" : "NFCISTA Default"}
+                </span>
+              </div>
+
+              {/* Upload spinner overlay */}
+              {uploadingBanner && (
+                <div className="absolute inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-20">
+                  <div className="w-8 h-8 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
+
+            {/* Banner Action Buttons */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                disabled={uploadingBanner}
+                onClick={() => bannerInputRef.current?.click()}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-on-primary text-xs font-bold shadow-sm hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[15px]">
+                  {formData.banner_url ? "photo_library" : "upload"}
+                </span>
+                <span>{formData.banner_url ? "Change Banner" : "Upload Banner"}</span>
+              </button>
+
+              {formData.banner_url && (
+                <button
+                  type="button"
+                  disabled={uploadingBanner}
+                  onClick={handleBannerRemove}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-outline-variant/40 hover:bg-surface-container-low text-on-surface text-xs font-semibold active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[15px]">restart_alt</span>
+                  <span>Revert to Default</span>
+                </button>
+              )}
+
+              <p className="text-[10px] text-on-surface-variant w-full mt-1">
+                Recommended: 1200 × 500 px (approx. 2.4:1 ratio) · JPG, PNG, or WebP · Max 5 MB
+              </p>
+            </div>
+
+            {/* Banner feedback alerts */}
+            {bannerError && (
+              <div className="mt-3 flex items-center gap-2 p-3 rounded-xl bg-error-container/20 border border-error/30 text-error text-xs font-semibold">
+                <span className="material-symbols-outlined text-[16px] shrink-0">error</span>
+                <span>{bannerError}</span>
+              </div>
+            )}
+            {bannerSuccess && (
+              <div className="mt-3 flex items-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+                <span className="material-symbols-outlined text-[16px] shrink-0 text-emerald-600">check_circle</span>
+                <span>{bannerSuccess}</span>
               </div>
             )}
           </div>

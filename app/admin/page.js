@@ -13,6 +13,9 @@ import {
   validatePhotoFile,
   uploadCustomerPhoto,
   deleteCustomerPhoto,
+  validateBannerFile,
+  uploadCustomerBanner,
+  deleteCustomerBanner,
   recordConsentForCustomer,
   isValidHttpUrl,
   isValidHttpsUrl,
@@ -39,6 +42,7 @@ const initialFormData = {
   facebook_url: "",
   linkedin_url: "",
   photo_url: "",
+  banner_url: "",
   profile_slug: "",
   is_active: true,
 };
@@ -70,6 +74,12 @@ export default function AdminCustomersDashboard() {
   const [photoPreview, setPhotoPreview] = useState(null);
   const [isPhotoRemoved, setIsPhotoRemoved] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Banner management state
+  const [bannerFile, setBannerFile] = useState(null);
+  const [bannerPreview, setBannerPreview] = useState(null);
+  const [isBannerRemoved, setIsBannerRemoved] = useState(false);
+  const bannerInputRef = useRef(null);
 
   // Delete modal state
   const [deletingCustomer, setDeletingCustomer] = useState(null);
@@ -144,6 +154,10 @@ export default function AdminCustomersDashboard() {
     setPhotoPreview(null);
     setIsPhotoRemoved(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    setBannerFile(null);
+    setBannerPreview(null);
+    setIsBannerRemoved(false);
+    if (bannerInputRef.current) bannerInputRef.current.value = "";
     setFormErrors({});
     setConsentConfirmed(false); // DPDP: always start unchecked
     setGalleryItems([]);
@@ -158,6 +172,10 @@ export default function AdminCustomersDashboard() {
     setPhotoPreview(null);
     setIsPhotoRemoved(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    setBannerFile(null);
+    setBannerPreview(null);
+    setIsBannerRemoved(false);
+    if (bannerInputRef.current) bannerInputRef.current.value = "";
     setFormErrors({});
     setConsentConfirmed(false); // DPDP: not required on edit, but always start unchecked
     setGalleryItems([]);
@@ -190,10 +208,12 @@ export default function AdminCustomersDashboard() {
         facebook_url: fullRecord.facebook_url || fullRecord.facebook || "",
         linkedin_url: fullRecord.linkedin_url || fullRecord.linkedin || "",
         photo_url: fullRecord.photo_url || "",
+        banner_url: fullRecord.banner_url || "",
         profile_slug: fullRecord.profile_slug || "",
         is_active: fullRecord.is_active !== undefined ? fullRecord.is_active : true,
       });
       setPhotoPreview(fullRecord.photo_url || null);
+      setBannerPreview(fullRecord.banner_url || null);
       setGalleryItems(existingGalleryItems || []);
     } catch (err) {
       console.error("Failed to load customer details:", err);
@@ -231,6 +251,36 @@ export default function AdminCustomersDashboard() {
     setPhotoPreview(null);
     setIsPhotoRemoved(true);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  // Banner handlers
+  function handleBannerChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validation = validateBannerFile(file);
+    if (!validation.valid) {
+      setFormErrors((prev) => ({ ...prev, banner: validation.message }));
+      if (bannerInputRef.current) bannerInputRef.current.value = "";
+      return;
+    }
+
+    setFormErrors((prev) => {
+      const copy = { ...prev };
+      delete copy.banner;
+      return copy;
+    });
+
+    setBannerFile(file);
+    setBannerPreview(URL.createObjectURL(file));
+    setIsBannerRemoved(false);
+  }
+
+  function handleRemoveBanner() {
+    setBannerFile(null);
+    setBannerPreview(null);
+    setIsBannerRemoved(true);
+    if (bannerInputRef.current) bannerInputRef.current.value = "";
   }
 
   // Auto-slug generator from Name or Company
@@ -294,6 +344,9 @@ export default function AdminCustomersDashboard() {
     try {
       if (deletingCustomer.photo_url) {
         await deleteCustomerPhoto(deletingCustomer.photo_url);
+      }
+      if (deletingCustomer.banner_url) {
+        await deleteCustomerBanner(deletingCustomer.banner_url);
       }
       await deleteCustomer(deletingCustomer.id);
       await triggerProfileRevalidation(deletingCustomer.profile_slug);
@@ -487,9 +540,34 @@ export default function AdminCustomersDashboard() {
         finalPhotoUrl = uploadResult.publicUrl;
       }
 
+      let finalBannerUrl = formData.banner_url || null;
+
+      // Handle banner removal
+      if (isBannerRemoved) {
+        if (formData.banner_url) {
+          await deleteCustomerBanner(formData.banner_url);
+        }
+        finalBannerUrl = null;
+      }
+
+      // Handle banner upload
+      if (bannerFile) {
+        const bannerUploadResult = await uploadCustomerBanner(
+          bannerFile,
+          formData.profile_slug || "customer",
+          formData.auth_user_id || null,
+          editingId || null
+        );
+        if (formData.banner_url && formData.banner_url !== bannerUploadResult.publicUrl) {
+          await deleteCustomerBanner(formData.banner_url);
+        }
+        finalBannerUrl = bannerUploadResult.publicUrl;
+      }
+
       const payload = {
         ...formData,
         photo_url: finalPhotoUrl,
+        banner_url: finalBannerUrl,
       };
 
       if (editingId) {
@@ -1151,6 +1229,77 @@ export default function AdminCustomersDashboard() {
                     {formErrors.photo && (
                       <p className="text-[12px] text-error font-medium">
                         {formErrors.photo}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Profile Banner (Optional) */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl bg-surface-container-low/40 border border-outline-variant/30">
+                  <div className="relative w-44 aspect-[2.4/1] rounded-xl border-2 border-primary/20 bg-[#071426] shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+                    <img
+                      src={bannerPreview || "/images/hero-mountains.jpg"}
+                      alt="Banner preview"
+                      className="w-full h-full object-cover object-[center_35%]"
+                    />
+                    <div className="absolute top-1.5 right-1.5">
+                      <span className="px-1.5 py-0.5 rounded-full bg-black/60 text-white text-[9px] font-semibold border border-white/20">
+                        {bannerPreview ? "Custom" : "Default"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-label-sm font-semibold text-on-surface">
+                        Profile Banner
+                      </span>
+                      <span className="text-[11px] text-tertiary font-normal">
+                        (Optional)
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <input
+                        ref={bannerInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleBannerChange}
+                        className="hidden"
+                        id="admin-banner-upload"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => bannerInputRef.current?.click()}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/40 text-on-surface text-label-sm font-medium hover:bg-surface-container-low transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">
+                          {bannerPreview ? "sync" : "upload"}
+                        </span>
+                        <span>{bannerPreview ? "Change Banner" : "Upload Banner"}</span>
+                      </button>
+
+                      {bannerPreview && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveBanner}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-error hover:bg-error-container/30 border border-error/20 text-label-sm font-medium transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">
+                            restart_alt
+                          </span>
+                          <span>Reset to Default</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <p className="text-[11px] text-on-surface-variant">
+                      Recommended: 1200 × 500 px (approx. 2.4:1 ratio) · JPG, PNG, WebP · Max 5 MB.
+                    </p>
+
+                    {formErrors.banner && (
+                      <p className="text-[12px] text-error font-medium">
+                        {formErrors.banner}
                       </p>
                     )}
                   </div>
