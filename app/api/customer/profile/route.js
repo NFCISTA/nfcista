@@ -223,6 +223,45 @@ export async function PUT(request) {
       }
     }
 
+    // 19. Enquiry Form & Delivery Settings (Optional booleans)
+    if (body.enquiry_enabled !== undefined) {
+      updates.enquiry_enabled = Boolean(body.enquiry_enabled);
+    }
+    if (body.enquiry_delivery_dashboard !== undefined) {
+      updates.enquiry_delivery_dashboard = Boolean(body.enquiry_delivery_dashboard);
+    }
+    if (body.enquiry_delivery_email !== undefined) {
+      updates.enquiry_delivery_email = Boolean(body.enquiry_delivery_email);
+    }
+    if (body.enquiry_delivery_whatsapp !== undefined) {
+      updates.enquiry_delivery_whatsapp = Boolean(body.enquiry_delivery_whatsapp);
+    }
+
+    // Validation: When enquiry_enabled is active, require at least one valid delivery method
+    const isEnquiryActive = updates.enquiry_enabled !== undefined ? updates.enquiry_enabled : customer.enquiry_enabled;
+    if (isEnquiryActive) {
+      const willDashboard = updates.enquiry_delivery_dashboard !== undefined ? updates.enquiry_delivery_dashboard : customer.enquiry_delivery_dashboard;
+      const willEmail = updates.enquiry_delivery_email !== undefined ? updates.enquiry_delivery_email : customer.enquiry_delivery_email;
+      const willWhatsapp = updates.enquiry_delivery_whatsapp !== undefined ? updates.enquiry_delivery_whatsapp : customer.enquiry_delivery_whatsapp;
+
+      if (!willDashboard && !willEmail && !willWhatsapp) {
+        return NextResponse.json(
+          { error: "At least one delivery destination (e.g. Dashboard or WhatsApp) must be selected when Enquiry Form is enabled." },
+          { status: 400 }
+        );
+      }
+
+      if (willWhatsapp) {
+        const currentWa = updates.whatsapp !== undefined ? updates.whatsapp : customer.whatsapp;
+        if (!currentWa || !String(currentWa).trim()) {
+          return NextResponse.json(
+            { error: "A WhatsApp number is required to enable WhatsApp Follow-up delivery." },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
     // Ensure we are updating only where id = customer.id AND auth_user_id = user.id
     const { data: updatedCustomer, error: updateErr } = await authClient
       .from("customers")

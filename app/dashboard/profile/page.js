@@ -47,6 +47,10 @@ export default function CustomerProfileEditorPage() {
     drive_url: "",
     photo_url: "",
     banner_url: "",
+    enquiry_enabled: false,
+    enquiry_delivery_dashboard: true,
+    enquiry_delivery_email: false,
+    enquiry_delivery_whatsapp: false,
   });
 
   useEffect(() => {
@@ -85,6 +89,10 @@ export default function CustomerProfileEditorPage() {
             drive_url: data.customer.drive_url || data.customer.google_drive_url || "",
             photo_url: data.customer.photo_url || "",
             banner_url: data.customer.banner_url || "",
+            enquiry_enabled: Boolean(data.customer.enquiry_enabled),
+            enquiry_delivery_dashboard: data.customer.enquiry_delivery_dashboard !== undefined ? Boolean(data.customer.enquiry_delivery_dashboard) : true,
+            enquiry_delivery_email: Boolean(data.customer.enquiry_delivery_email),
+            enquiry_delivery_whatsapp: Boolean(data.customer.enquiry_delivery_whatsapp),
           });
         }
       } catch {
@@ -102,6 +110,20 @@ export default function CustomerProfileEditorPage() {
     setSaving(true);
     setErrorMsg("");
     setSuccessMsg("");
+
+    // Client-side validation for Enquiry Settings
+    if (formData.enquiry_enabled) {
+      if (!formData.enquiry_delivery_dashboard && !formData.enquiry_delivery_email && !formData.enquiry_delivery_whatsapp) {
+        setErrorMsg("Please select at least one delivery destination (e.g. Dashboard or WhatsApp) when Enquiry Form is enabled.");
+        setSaving(false);
+        return;
+      }
+      if (formData.enquiry_delivery_whatsapp && !formData.whatsapp?.trim()) {
+        setErrorMsg("A WhatsApp number is required in Contact Information to enable WhatsApp Follow-up delivery.");
+        setSaving(false);
+        return;
+      }
+    }
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -839,6 +861,127 @@ export default function CustomerProfileEditorPage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Section: Enquiry Form & Delivery Settings */}
+        <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-5 sm:p-6 space-y-4 shadow-card">
+          <div className="flex items-center justify-between gap-3 border-b border-outline-variant/20 pb-3">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[20px] text-primary">mail</span>
+              <div>
+                <h2 className="text-xs font-bold uppercase tracking-wider text-on-surface">
+                  Enquiry Form &amp; Delivery Settings
+                </h2>
+                <p className="text-[11px] text-on-surface-variant">
+                  Allow visitors to send enquiries directly from your public digital card.
+                </p>
+              </div>
+            </div>
+
+            {/* Master Toggle */}
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+              <input
+                type="checkbox"
+                checked={Boolean(formData.enquiry_enabled)}
+                onChange={(e) =>
+                  setFormData({ ...formData, enquiry_enabled: e.target.checked })
+                }
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </label>
+          </div>
+
+          {!formData.enquiry_enabled ? (
+            <div className="p-3 bg-surface-container-low/50 rounded-2xl border border-outline-variant/20 text-xs text-on-surface-variant flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-on-surface-variant/70">visibility_off</span>
+              <span>Enquiry Form is currently <strong>disabled</strong>. The &ldquo;Send Enquiry&rdquo; button will not appear on your public profile.</span>
+            </div>
+          ) : (
+            <div className="space-y-4 pt-1">
+              <div>
+                <span className="text-xs font-bold text-on-surface block mb-1">
+                  Enquiry Delivery Destinations
+                </span>
+                <p className="text-[11px] text-on-surface-variant mb-3">
+                  Choose where enquiries sent through your card should be delivered. You can select multiple destinations.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* 1. Dashboard Delivery */}
+                <label className={`p-3.5 rounded-2xl border flex flex-col justify-between gap-3 cursor-pointer transition-all ${
+                  formData.enquiry_delivery_dashboard
+                    ? "border-primary/40 bg-primary/5"
+                    : "border-outline-variant/30 bg-surface-container-low/20"
+                }`}>
+                  <div className="flex items-start justify-between">
+                    <span className="material-symbols-outlined text-[20px] text-primary">inbox</span>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(formData.enquiry_delivery_dashboard)}
+                      onChange={(e) =>
+                        setFormData({ ...formData, enquiry_delivery_dashboard: e.target.checked })
+                      }
+                      className="rounded text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <span className="font-bold text-xs text-on-surface block">Dashboard</span>
+                    <span className="text-[10px] text-on-surface-variant leading-tight block mt-0.5">
+                      View and manage visitor leads securely in your Enquiries tab.
+                    </span>
+                  </div>
+                </label>
+
+                {/* 2. Email Delivery (Coming Soon) */}
+                <div className="p-3.5 rounded-2xl border border-outline-variant/20 bg-surface-container-low/40 flex flex-col justify-between gap-3 opacity-80 cursor-not-allowed">
+                  <div className="flex items-start justify-between">
+                    <span className="material-symbols-outlined text-[20px] text-on-surface-variant">forward_to_inbox</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider bg-surface-container-high text-on-surface-variant px-1.5 py-0.5 rounded-md">
+                      Coming Soon
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-xs text-on-surface-variant block">Email Notification</span>
+                    <span className="text-[10px] text-on-surface-variant/80 leading-tight block mt-0.5">
+                      Direct email notifications will be available in Phase 2.
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3. WhatsApp Follow-Up */}
+                <label className={`p-3.5 rounded-2xl border flex flex-col justify-between gap-3 transition-all ${
+                  !formData.whatsapp?.trim()
+                    ? "border-outline-variant/20 bg-surface-container-low/20 opacity-60 cursor-not-allowed"
+                    : formData.enquiry_delivery_whatsapp
+                    ? "border-[#25D366]/40 bg-[#25D366]/5 cursor-pointer"
+                    : "border-outline-variant/30 bg-surface-container-low/20 cursor-pointer"
+                }`}>
+                  <div className="flex items-start justify-between">
+                    <span className="material-symbols-outlined text-[20px] text-[#25D366]">chat</span>
+                    <input
+                      type="checkbox"
+                      disabled={!formData.whatsapp?.trim()}
+                      checked={Boolean(formData.enquiry_delivery_whatsapp)}
+                      onChange={(e) =>
+                        setFormData({ ...formData, enquiry_delivery_whatsapp: e.target.checked })
+                      }
+                      className="rounded text-[#25D366] focus:ring-[#25D366] w-4 h-4 cursor-pointer disabled:opacity-50"
+                    />
+                  </div>
+                  <div>
+                    <span className="font-bold text-xs text-on-surface block">WhatsApp Follow-up</span>
+                    <span className="text-[10px] text-on-surface-variant leading-tight block mt-0.5">
+                      {formData.whatsapp?.trim()
+                        ? "Visitors receive an instant WhatsApp link with pre-filled message."
+                        : "Add a WhatsApp number above in Contact Information to enable."}
+                    </span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Section 4: Products & Portfolio Gallery Showcase */}

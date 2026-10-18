@@ -47,6 +47,10 @@ const initialFormData = {
   drive_url: "",
   photo_url: "",
   banner_url: "",
+  enquiry_enabled: false,
+  enquiry_delivery_dashboard: true,
+  enquiry_delivery_email: false,
+  enquiry_delivery_whatsapp: false,
   profile_slug: "",
   is_active: true,
 };
@@ -72,6 +76,8 @@ export default function AdminCustomersDashboard() {
   const [consentConfirmed, setConsentConfirmed] = useState(false);
   // Portfolio & Products items for customer modal
   const [galleryItems, setGalleryItems] = useState([]);
+  // Customer enquiries for modal
+  const [customerEnquiries, setCustomerEnquiries] = useState([]);
 
   // Photo management state
   const [photoFile, setPhotoFile] = useState(null);
@@ -165,6 +171,7 @@ export default function AdminCustomersDashboard() {
     setFormErrors({});
     setConsentConfirmed(false); // DPDP: always start unchecked
     setGalleryItems([]);
+    setCustomerEnquiries([]);
     setIsFormModalOpen(true);
   }
 
@@ -183,13 +190,19 @@ export default function AdminCustomersDashboard() {
     setFormErrors({});
     setConsentConfirmed(false); // DPDP: not required on edit, but always start unchecked
     setGalleryItems([]);
+    setCustomerEnquiries([]);
     setIsSubmitting(true);
     setIsFormModalOpen(true);
 
     try {
-      const [fullRecord, existingGalleryItems] = await Promise.all([
+      const [fullRecord, existingGalleryItems, enquiriesRes] = await Promise.all([
         getAdminCustomerDetails(customer.id),
         getAdminGalleryItems(customer.id),
+        supabase
+          .from("customer_enquiries")
+          .select("*")
+          .eq("customer_id", customer.id)
+          .order("created_at", { ascending: false }),
       ]);
 
       if (fullRecord?.profile_slug) {
@@ -215,12 +228,17 @@ export default function AdminCustomersDashboard() {
         drive_url: fullRecord.drive_url || fullRecord.google_drive_url || "",
         photo_url: fullRecord.photo_url || "",
         banner_url: fullRecord.banner_url || "",
+        enquiry_enabled: Boolean(fullRecord.enquiry_enabled),
+        enquiry_delivery_dashboard: fullRecord.enquiry_delivery_dashboard !== undefined ? Boolean(fullRecord.enquiry_delivery_dashboard) : true,
+        enquiry_delivery_email: Boolean(fullRecord.enquiry_delivery_email),
+        enquiry_delivery_whatsapp: Boolean(fullRecord.enquiry_delivery_whatsapp),
         profile_slug: fullRecord.profile_slug || "",
         is_active: fullRecord.is_active !== undefined ? fullRecord.is_active : true,
       });
       setPhotoPreview(fullRecord.photo_url || null);
       setBannerPreview(fullRecord.banner_url || null);
       setGalleryItems(existingGalleryItems || []);
+      setCustomerEnquiries(enquiriesRes?.data || []);
     } catch (err) {
       console.error("Failed to load customer details:", err);
       setFormErrors({ general: "Failed to load full customer details." });
@@ -1781,6 +1799,107 @@ export default function AdminCustomersDashboard() {
                 setItems={setGalleryItems}
                 customerWhatsApp={formData.whatsapp}
               />
+
+              {/* Section: Enquiry Form & Delivery Settings */}
+              <div className="space-y-4 pt-4 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-primary">mail</span>
+                    <h3 className="text-label-sm font-bold uppercase tracking-wider text-on-surface">
+                      Enquiry Form &amp; Delivery Settings
+                    </h3>
+                  </div>
+
+                  {/* Master Toggle */}
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(formData.enquiry_enabled)}
+                      onChange={(e) =>
+                        setFormData({ ...formData, enquiry_enabled: e.target.checked })
+                      }
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
+                  </label>
+                </div>
+
+                {formData.enquiry_enabled ? (
+                  <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-200/60">
+                    <span className="text-xs font-bold text-on-surface block">
+                      Enquiry Delivery Destinations
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                      <label className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(formData.enquiry_delivery_dashboard)}
+                          onChange={(e) =>
+                            setFormData({ ...formData, enquiry_delivery_dashboard: e.target.checked })
+                          }
+                          className="rounded text-primary focus:ring-primary"
+                        />
+                        <span className="font-medium text-slate-800">Dashboard</span>
+                      </label>
+
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-100/80 border border-slate-200/60 text-slate-400 cursor-not-allowed">
+                        <span className="font-medium">Email</span>
+                        <span className="text-[9px] bg-slate-200 text-slate-600 px-1 rounded">Soon</span>
+                      </div>
+
+                      <label className={`flex items-center gap-2 p-2.5 rounded-xl border transition-colors ${
+                        !formData.whatsapp?.trim()
+                          ? "bg-slate-100/60 border-slate-200 text-slate-400 cursor-not-allowed"
+                          : "bg-white border-slate-200 cursor-pointer"
+                      }`}>
+                        <input
+                          type="checkbox"
+                          disabled={!formData.whatsapp?.trim()}
+                          checked={Boolean(formData.enquiry_delivery_whatsapp)}
+                          onChange={(e) =>
+                            setFormData({ ...formData, enquiry_delivery_whatsapp: e.target.checked })
+                          }
+                          className="rounded text-[#25D366] focus:ring-[#25D366] disabled:opacity-50"
+                        />
+                        <span className="font-medium text-slate-800">WhatsApp Follow-up</span>
+                      </label>
+                    </div>
+
+                    {/* Customer Enquiries viewer if editing existing customer */}
+                    {editingId && (
+                      <div className="pt-3 border-t border-slate-200/60 mt-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-bold text-on-surface">
+                            Received Enquiries ({customerEnquiries.length})
+                          </span>
+                        </div>
+                        {customerEnquiries.length === 0 ? (
+                          <p className="text-[11px] text-slate-500 italic">No enquiries received for this customer yet.</p>
+                        ) : (
+                          <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                            {customerEnquiries.map((enq) => (
+                              <div key={enq.id} className="p-2.5 bg-white rounded-xl border border-slate-200 text-xs space-y-1">
+                                <div className="flex items-center justify-between font-semibold text-slate-900">
+                                  <span>{enq.visitor_name} ({enq.visitor_phone})</span>
+                                  <span className="text-[10px] text-slate-400 font-normal">
+                                    {new Date(enq.created_at).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                {enq.visitor_email && (
+                                  <div className="text-[11px] text-slate-500">{enq.visitor_email}</div>
+                                )}
+                                <div className="text-[11px] text-slate-700 bg-slate-50 p-1.5 rounded">{enq.message}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-slate-500 italic">Enquiry Form is currently disabled for this customer.</p>
+                )}
+              </div>
 
               {/* ------------------------------------------------------------ */}
               {/* 6. Customer Approval (Only for Add New Customer)             */}

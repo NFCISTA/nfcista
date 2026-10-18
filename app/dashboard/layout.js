@@ -98,6 +98,7 @@ export default function CustomerDashboardLayout({ children }) {
   const navLinks = [
     { href: "/dashboard", label: "My Profile", icon: "badge" },
     { href: "/dashboard/profile", label: "Edit Details", icon: "edit_note" },
+    { href: "/dashboard/enquiries", label: "Enquiries", icon: "mail" },
   ];
 
   return (

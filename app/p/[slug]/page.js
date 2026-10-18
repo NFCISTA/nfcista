@@ -15,6 +15,7 @@ import ProfileQuickActions from "@/components/profile/ProfileQuickActions";
 import ProfileIntro from "@/components/profile/ProfileIntro";
 import ProfileGallery from "@/components/profile/ProfileGallery";
 import ProfileIcon from "@/components/profile/ProfileIcon";
+import ProfileEnquiryButton from "@/components/profile/ProfileEnquiryButton";
 
 import { unstable_cache } from "next/cache";
 
@@ -526,6 +527,14 @@ export default async function CustomerPublicProfilePage({ params }) {
                 address:     customer.address?.trim(),
               }}
             />
+
+            {/* ── Optional Enquiry CTA ───────────────────────────────── */}
+            {customer.enquiry_enabled && (
+              <ProfileEnquiryButton
+                name={customer.full_name}
+                slug={customer.profile_slug}
+              />
+            )}
           </div>
 
           {/* Spacer — pushes desktop footer to bottom of left col */}
