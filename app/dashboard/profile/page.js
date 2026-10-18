@@ -43,6 +43,8 @@ export default function CustomerProfileEditorPage() {
     google_review_url: "",
     facebook_url: "",
     linkedin_url: "",
+    twitter_url: "",
+    drive_url: "",
     photo_url: "",
     banner_url: "",
   });
@@ -79,6 +81,8 @@ export default function CustomerProfileEditorPage() {
             google_review_url: data.customer.google_review_url || "",
             facebook_url: data.customer.facebook_url || data.customer.facebook || "",
             linkedin_url: data.customer.linkedin_url || data.customer.linkedin || "",
+            twitter_url: data.customer.twitter_url || data.customer.x_url || "",
+            drive_url: data.customer.drive_url || data.customer.google_drive_url || "",
             photo_url: data.customer.photo_url || "",
             banner_url: data.customer.banner_url || "",
           });
@@ -804,6 +808,35 @@ export default function CustomerProfileEditorPage() {
                 placeholder="https://linkedin.com/in/yourprofile"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/50 bg-surface-container-low/30 text-sm font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-on-surface mb-1">
+                X / Twitter URL <span className="text-[10px] text-on-surface-variant font-normal">(HTTPS or @handle)</span>
+              </label>
+              <input
+                type="text"
+                value={formData.twitter_url || formData.x_url || ""}
+                onChange={(e) => setFormData({ ...formData, twitter_url: e.target.value })}
+                placeholder="https://x.com/yourhandle or @yourhandle"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/50 bg-surface-container-low/30 text-sm font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-on-surface mb-1">
+                Google Drive URL <span className="text-[10px] text-on-surface-variant font-normal">(HTTPS share link)</span>
+              </label>
+              <input
+                type="url"
+                value={formData.drive_url || formData.google_drive_url || ""}
+                onChange={(e) => setFormData({ ...formData, drive_url: e.target.value })}
+                placeholder="https://drive.google.com/..."
+                className="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/50 bg-surface-container-low/30 text-sm font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+              <p className="text-[10px] text-on-surface-variant mt-1">
+                Direct link for portfolio, brochure, catalog, or menu. Set sharing to &quot;Anyone with the link can view&quot;.
+              </p>
             </div>
           </div>
         </div>

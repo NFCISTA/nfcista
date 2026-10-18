@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { authenticateCustomer } from "@/lib/customerAuth";
 import { revalidateCustomerProfile } from "@/lib/revalidateProfile";
-import { isValidHttpUrl, cleanInstagramHandle, getSafeExternalHttpsUrl, isValidHttpsUrl } from "@/lib/customers";
+import {
+  isValidHttpUrl,
+  cleanInstagramHandle,
+  getSafeExternalHttpsUrl,
+  isValidHttpsUrl,
+  getSafeTwitterUrl,
+  getSafeGoogleDriveUrl,
+} from "@/lib/customers";
 
 export const dynamic = "force-dynamic";
 
@@ -178,6 +185,42 @@ export async function PUT(request) {
         );
       }
       updates.banner_url = cleanBanner;
+    }
+
+    // 17. X / Twitter URL (Optional, strictly HTTPS)
+    const rawTwitterInput = body.twitter_url !== undefined ? body.twitter_url : body.x_url;
+    if (rawTwitterInput !== undefined) {
+      const rawTwitter = rawTwitterInput ? String(rawTwitterInput).trim() : null;
+      if (rawTwitter) {
+        const safeTwitter = getSafeTwitterUrl(rawTwitter);
+        if (!safeTwitter) {
+          return NextResponse.json(
+            { error: "X / Twitter URL must be a valid HTTPS link (e.g. https://x.com/yourhandle or @yourhandle)." },
+            { status: 400 }
+          );
+        }
+        updates.twitter_url = safeTwitter;
+      } else {
+        updates.twitter_url = null;
+      }
+    }
+
+    // 18. Google Drive URL (Optional, strictly HTTPS drive.google.com or docs.google.com)
+    const rawDriveInput = body.drive_url !== undefined ? body.drive_url : body.google_drive_url;
+    if (rawDriveInput !== undefined) {
+      const rawDrive = rawDriveInput ? String(rawDriveInput).trim() : null;
+      if (rawDrive) {
+        const safeDrive = getSafeGoogleDriveUrl(rawDrive);
+        if (!safeDrive) {
+          return NextResponse.json(
+            { error: "Google Drive URL must be a valid shareable link starting with https://drive.google.com/ or https://docs.google.com/." },
+            { status: 400 }
+          );
+        }
+        updates.drive_url = safeDrive;
+      } else {
+        updates.drive_url = null;
+      }
     }
 
     // Ensure we are updating only where id = customer.id AND auth_user_id = user.id

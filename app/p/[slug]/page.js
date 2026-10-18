@@ -4,6 +4,8 @@ import {
   getCustomerBySlug,
   getSafeExternalUrl,
   getSafeExternalHttpsUrl,
+  getSafeTwitterUrl,
+  getSafeGoogleDriveUrl,
 } from "@/lib/customers";
 import { getCustomerGallery } from "@/lib/gallery";
 import SaveContactButtonLazy from "@/components/SaveContactButtonLazy";
@@ -177,6 +179,12 @@ export default async function CustomerPublicProfilePage({ params }) {
   const hasFacebook      = Boolean(safeFacebook);
   const hasLinkedin      = Boolean(safeLinkedin);
 
+  // Social & Document Links: X / Twitter & Google Drive
+  const safeTwitter      = getSafeTwitterUrl(customer.twitter_url || customer.x_url);
+  const safeDrive        = getSafeGoogleDriveUrl(customer.drive_url || customer.google_drive_url);
+  const hasTwitter       = Boolean(safeTwitter);
+  const hasDrive         = Boolean(safeDrive);
+
   // Normalize Instagram handle — strip leading @ characters
   const rawInstagram   = customer.instagram?.trim() || "";
   const cleanInstagram = rawInstagram.replace(/^@+/, "");
@@ -250,6 +258,26 @@ export default async function CustomerPublicProfilePage({ params }) {
       iconColor: "text-[#0A66C2]",
     });
   }
+  if (hasTwitter) {
+    quickConnectItems.push({
+      id: "qc-x",
+      label: "X (Twitter)",
+      icon: "x",
+      href: safeTwitter,
+      iconBg: "bg-black",
+      iconColor: "text-white",
+    });
+  }
+  if (hasDrive) {
+    quickConnectItems.push({
+      id: "qc-drive",
+      label: "Google Drive",
+      icon: "google_drive",
+      href: safeDrive,
+      iconBg: "bg-[#0F9D58]/10",
+      iconColor: "text-[#0F9D58]",
+    });
+  }
   if (hasWebsite) {
     quickConnectItems.push({
       id: "qc-web",
@@ -315,6 +343,28 @@ export default async function CustomerPublicProfilePage({ params }) {
       icon: "linkedin",
       iconBg: "bg-sky-50",
       iconColor: "text-[#0A66C2]",
+    });
+  }
+  if (hasTwitter) {
+    presenceLinks.push({
+      id: "pl-x",
+      label: "X (Twitter)",
+      secondary: safeTwitter.replace(/^https?:\/\//i, "").replace(/\/$/, ""),
+      href: safeTwitter,
+      icon: "x",
+      iconBg: "bg-black/5",
+      iconColor: "text-black",
+    });
+  }
+  if (hasDrive) {
+    presenceLinks.push({
+      id: "pl-drive",
+      label: "Google Drive",
+      secondary: "Portfolio, catalog & documents",
+      href: safeDrive,
+      icon: "google_drive",
+      iconBg: "bg-emerald-50",
+      iconColor: "text-emerald-700",
     });
   }
   if (hasWebsite) {

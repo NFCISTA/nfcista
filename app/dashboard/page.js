@@ -319,6 +319,30 @@ export default function CustomerDashboardPage() {
             </div>
 
             <div className="flex items-start gap-2.5 p-2 rounded-xl bg-surface-container-low/40">
+              <span className="material-symbols-outlined text-[18px] text-black shrink-0 mt-0.5">
+                alternate_email
+              </span>
+              <div className="min-w-0">
+                <span className="text-[10px] text-on-surface-variant block uppercase font-bold">X / Twitter</span>
+                <span className="font-medium text-on-surface truncate block">
+                  {customer.twitter_url || customer.x_url || <span className="text-on-surface-variant/50 italic">Not set</span>}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2.5 p-2 rounded-xl bg-surface-container-low/40">
+              <span className="material-symbols-outlined text-[18px] text-emerald-700 shrink-0 mt-0.5">
+                folder_shared
+              </span>
+              <div className="min-w-0">
+                <span className="text-[10px] text-on-surface-variant block uppercase font-bold">Google Drive</span>
+                <span className="font-medium text-on-surface truncate block">
+                  {customer.drive_url || customer.google_drive_url || <span className="text-on-surface-variant/50 italic">Not set</span>}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2.5 p-2 rounded-xl bg-surface-container-low/40">
               <span className="material-symbols-outlined text-[18px] text-primary shrink-0 mt-0.5">
                 tag
               </span>

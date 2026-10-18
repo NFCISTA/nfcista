@@ -20,6 +20,8 @@ import {
   isValidHttpUrl,
   isValidHttpsUrl,
   getSafeExternalHttpsUrl,
+  getSafeTwitterUrl,
+  getSafeGoogleDriveUrl,
 } from "@/lib/customers";
 import CustomerGallerySection from "@/components/admin/CustomerGallerySection";
 import { getAdminGalleryItems, savePendingGalleryItems } from "@/lib/gallery";
@@ -41,6 +43,8 @@ const initialFormData = {
   google_review_url: "",
   facebook_url: "",
   linkedin_url: "",
+  twitter_url: "",
+  drive_url: "",
   photo_url: "",
   banner_url: "",
   profile_slug: "",
@@ -207,6 +211,8 @@ export default function AdminCustomersDashboard() {
         google_review_url: fullRecord.google_review_url || "",
         facebook_url: fullRecord.facebook_url || fullRecord.facebook || "",
         linkedin_url: fullRecord.linkedin_url || fullRecord.linkedin || "",
+        twitter_url: fullRecord.twitter_url || fullRecord.x_url || "",
+        drive_url: fullRecord.drive_url || fullRecord.google_drive_url || "",
         photo_url: fullRecord.photo_url || "",
         banner_url: fullRecord.banner_url || "",
         profile_slug: fullRecord.profile_slug || "",
@@ -509,6 +515,14 @@ export default function AdminCustomersDashboard() {
     const liVal = formData.linkedin_url || formData.linkedin;
     if (liVal?.trim() && !getSafeExternalHttpsUrl(liVal)) {
       errors.linkedin_url = "LinkedIn URL must be a valid HTTPS link (e.g. https://linkedin.com/in/yourprofile)";
+    }
+    const twVal = formData.twitter_url || formData.x_url;
+    if (twVal?.trim() && !getSafeTwitterUrl(twVal)) {
+      errors.twitter_url = "X / Twitter URL must be a valid link or handle (e.g. https://x.com/yourhandle or @yourhandle)";
+    }
+    const drVal = formData.drive_url || formData.google_drive_url;
+    if (drVal?.trim() && !getSafeGoogleDriveUrl(drVal)) {
+      errors.drive_url = "Google Drive URL must be a shareable link starting with https://drive.google.com/ or https://docs.google.com/";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -1588,6 +1602,70 @@ export default function AdminCustomersDashboard() {
                     {formErrors.linkedin_url && (
                       <p className="mt-1 text-[12px] text-error font-medium">
                         {formErrors.linkedin_url}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                      X / Twitter URL
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.twitter_url || formData.x_url || ""}
+                      onChange={(e) => {
+                        setFormData({
+                          ...formData,
+                          twitter_url: e.target.value,
+                        });
+                        if (formErrors.twitter_url) {
+                          setFormErrors((prev) => {
+                            const copy = { ...prev };
+                            delete copy.twitter_url;
+                            return copy;
+                          });
+                        }
+                      }}
+                      placeholder="https://x.com/yourhandle or @yourhandle"
+                      className={`w-full h-11 px-3.5 rounded-xl border bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                        formErrors.twitter_url ? "border-error" : "border-outline-variant/40"
+                      }`}
+                    />
+                    {formErrors.twitter_url && (
+                      <p className="mt-1 text-[12px] text-error font-medium">
+                        {formErrors.twitter_url}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                      Google Drive URL
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.drive_url || formData.google_drive_url || ""}
+                      onChange={(e) => {
+                        setFormData({
+                          ...formData,
+                          drive_url: e.target.value,
+                        });
+                        if (formErrors.drive_url) {
+                          setFormErrors((prev) => {
+                            const copy = { ...prev };
+                            delete copy.drive_url;
+                            return copy;
+                          });
+                        }
+                      }}
+                      placeholder="https://drive.google.com/..."
+                      className={`w-full h-11 px-3.5 rounded-xl border bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                        formErrors.drive_url ? "border-error" : "border-outline-variant/40"
+                      }`}
+                    />
+                    {formErrors.drive_url && (
+                      <p className="mt-1 text-[12px] text-error font-medium">
+                        {formErrors.drive_url}
                       </p>
                     )}
                   </div>
