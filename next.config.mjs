@@ -1,15 +1,17 @@
 /** @type {import('next').NextConfig} */
-const cspReportOnlyHeader = [
+const cspHeader = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https://*.supabase.co",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  "img-src 'self' data: blob: https://xajdjydcurfaznqpidla.supabase.co",
+  "connect-src 'self' https://xajdjydcurfaznqpidla.supabase.co wss://xajdjydcurfaznqpidla.supabase.co",
+  "frame-src 'none'",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
+  "upgrade-insecure-requests",
 ].join("; ");
 
 const nextConfig = {
@@ -45,8 +47,8 @@ const nextConfig = {
             value: "camera=(), microphone=(), geolocation=()",
           },
           {
-            key: "Content-Security-Policy-Report-Only",
-            value: cspReportOnlyHeader,
+            key: "Content-Security-Policy",
+            value: cspHeader,
           },
         ],
       },
