@@ -43,6 +43,15 @@ function hashIp(ip) {
  * - email (optional, valid email format)
  * - message (required, 3-2000 chars)
  * - website_hp (honeypot, must be empty)
+ *
+ * Security architecture:
+ * - All customer lookup and enquiry insertion is performed by the SECURITY DEFINER
+ *   PostgreSQL function submit_customer_enquiry() which runs with elevated database
+ *   privileges. The anon Supabase client has no direct SELECT on public.customers
+ *   and no direct INSERT on public.customer_enquiries (correctly blocked by RLS).
+ * - The profile_slug is the only customer-identity value trusted from the visitor.
+ * - customer_id, auth_user_id, WhatsApp number, and delivery settings are NEVER
+ *   read from the request; they come exclusively from the trusted RPC response.
  */
 export async function POST(request) {
   try {
@@ -142,79 +151,74 @@ export async function POST(request) {
       return NextResponse.json({ error: "Message must be 2000 characters or less." }, { status: 400 });
     }
 
-    // 8. Server-Side Customer Lookup by Slug
-    // Only active customers with enquiry_enabled = true are accepted.
-    const { data: customer, error: lookupErr } = await supabase
-      .from("customers")
-      .select("id, full_name, profile_slug, is_active, whatsapp, enquiry_enabled, enquiry_delivery_dashboard, enquiry_delivery_email, enquiry_delivery_whatsapp")
-      .ilike("profile_slug", cleanSlug)
-      .eq("is_active", true)
-      .maybeSingle();
-
-    if (lookupErr || !customer) {
-      return NextResponse.json(
-        { error: "Enquiries are currently disabled for this profile." },
-        { status: 400 }
-      );
-    }
-
-    if (!customer.enquiry_enabled) {
-      return NextResponse.json(
-        { error: "Enquiries are currently disabled for this profile." },
-        { status: 400 }
-      );
-    }
-
-    // 9. Snapshot Delivery Settings at Submission Time
-    const deliveryDashboard = Boolean(customer.enquiry_delivery_dashboard);
-    const deliveryEmail = Boolean(customer.enquiry_delivery_email);
-    const deliveryWhatsapp = Boolean(customer.enquiry_delivery_whatsapp);
-
+    // 8. Compute server-side values before calling the RPC.
     const userAgent = request.headers.get("user-agent")?.slice(0, 500) || null;
     const ipHash = hashIp(clientIp);
 
-    // Determine WhatsApp status
-    const canDoWhatsapp = deliveryWhatsapp && Boolean(customer.whatsapp && String(customer.whatsapp).trim());
-    const whatsappStatus = canDoWhatsapp ? "ready" : "skipped";
+    // 9. Atomically validate the customer, snapshot delivery settings, and insert the
+    //    enquiry record via the SECURITY DEFINER RPC submit_customer_enquiry.
+    //
+    //    This single RPC call replaces the previous broken approach of querying
+    //    public.customers and inserting into public.customer_enquiries directly
+    //    with the anon client (which is correctly blocked by RLS with code 42501).
+    //
+    //    The RPC:
+    //    - Verifies is_active = TRUE AND enquiry_enabled = TRUE.
+    //    - Snapshots delivery settings at the moment of submission.
+    //    - Inserts the record atomically.
+    //    - Returns ONLY: status, enquiry_id, customer_name, wa_number (if WhatsApp
+    //      delivery is enabled), delivery_whatsapp.
+    //    - Never returns customer_id, auth_user_id, customer email, address,
+    //      social URLs, photo_url, or any other private customer data.
+    const { data: rpcRows, error: rpcErr } = await supabase.rpc("submit_customer_enquiry", {
+      slug_input:       cleanSlug,
+      visitor_name:     cleanName,
+      visitor_phone:    cleanPhone,
+      visitor_email:    cleanEmail,
+      message:          cleanMessage,
+      ip_hash_input:    ipHash,
+      user_agent_input: userAgent,
+    });
 
-    // 10. Store Enquiry in public.customer_enquiries
-    // Always store valid enquiry regardless of whether dashboard checkbox is currently checked.
-    const enquiryRecord = {
-      customer_id: customer.id,
-      visitor_name: cleanName,
-      visitor_phone: cleanPhone,
-      visitor_email: cleanEmail,
-      message: cleanMessage,
-      delivery_dashboard: deliveryDashboard,
-      delivery_email: deliveryEmail,
-      delivery_whatsapp: deliveryWhatsapp,
-      is_read: false,
-      email_status: "not_configured",
-      whatsapp_status: whatsappStatus,
-      source_slug: customer.profile_slug,
-      ip_hash: ipHash,
-      user_agent: userAgent,
-    };
-
-    const { error: insertErr } = await supabase
-      .from("customer_enquiries")
-      .insert([enquiryRecord]);
-
-    if (insertErr) {
-      console.error("[enquiry] Failed to insert enquiry:", insertErr.message);
+    if (rpcErr) {
+      // Log the technical detail server-side; never expose raw database errors to visitors.
+      console.error("[enquiry] RPC submit_customer_enquiry error:", rpcErr.message, rpcErr.code);
       return NextResponse.json(
         { error: "Failed to submit enquiry. Please try again later." },
         { status: 500 }
       );
     }
 
-    // 11. WhatsApp Follow-Up URL Generation
+    // The RPC returns a single row (SETOF TABLE with LIMIT 1 semantics via RETURN).
+    const result = Array.isArray(rpcRows) && rpcRows.length > 0 ? rpcRows[0] : null;
+
+    if (!result || result.status === "DISABLED") {
+      // Customer not found, inactive, or enquiry disabled — use same controlled message.
+      return NextResponse.json(
+        { error: "Enquiries are currently disabled for this profile." },
+        { status: 400 }
+      );
+    }
+
+    if (result.status !== "OK") {
+      // Unexpected RPC status — treat as server error.
+      console.error("[enquiry] Unexpected RPC status:", result.status);
+      return NextResponse.json(
+        { error: "Failed to submit enquiry. Please try again later." },
+        { status: 500 }
+      );
+    }
+
+    // 10. WhatsApp Follow-Up URL Generation.
+    //     The WhatsApp recipient number comes exclusively from the trusted RPC response
+    //     (result.wa_number). It is never read from the visitor's request.
     let whatsappUrl = null;
-    if (canDoWhatsapp) {
-      const waDigits = customer.whatsapp.replace(/\D/g, "");
-      if (waDigits) {
+    if (result.delivery_whatsapp && result.wa_number) {
+      const waDigits = String(result.wa_number).replace(/\D/g, "");
+      if (waDigits && waDigits.length >= 7) {
         const emailLine = cleanEmail ? `\nEmail: ${cleanEmail}` : "";
-        const prefilledText = `Hi ${customer.full_name},\n\nI just submitted an enquiry through your NFCISTA digital card.\n\nName: ${cleanName}\nPhone: ${cleanPhone}${emailLine}\nMessage: ${cleanMessage}`;
+        const customerName = result.customer_name || "there";
+        const prefilledText = `Hi ${customerName},\n\nI just submitted an enquiry through your NFCISTA digital card.\n\nName: ${cleanName}\nPhone: ${cleanPhone}${emailLine}\nMessage: ${cleanMessage}`;
         whatsappUrl = `https://wa.me/${waDigits}?text=${encodeURIComponent(prefilledText)}`;
       }
     }

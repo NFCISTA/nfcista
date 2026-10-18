@@ -300,13 +300,21 @@ runTest("Section C", "Public API: Visitor cannot supply customer_id, auth_user_i
   assert.ok(!content.includes("delivery_dashboard: body.delivery_dashboard"), "Must NEVER accept delivery_dashboard from body");
   assert.ok(!content.includes("delivery_whatsapp: body.delivery_whatsapp"), "Must NEVER accept delivery_whatsapp from body");
 
-  // Verify server-side lookup
+  // Verify RPC-based server-side lookup (fix for RLS bug: anon cannot directly access tables)
   assert.ok(
-    content.includes('.from("customers")') && content.includes('.ilike("profile_slug", cleanSlug)'),
-    "Must look up customer exclusively on server by profile_slug"
+    content.includes('supabase.rpc("submit_customer_enquiry"'),
+    "Must use SECURITY DEFINER RPC to look up customer and insert enquiry atomically"
   );
-  assert.ok(content.includes('.eq("is_active", true)'), "Must require is_active = true");
-  assert.ok(content.includes("customer.enquiry_enabled"), "Must require customer.enquiry_enabled = true");
+  assert.ok(
+    !content.includes('.from("customers").select'),
+    "Must NOT directly SELECT from customers with anon client (blocked by RLS)"
+  );
+  assert.ok(
+    !content.includes('.from("customer_enquiries").insert'),
+    "Must NOT directly INSERT into customer_enquiries with anon client (blocked by RLS)"
+  );
+  // Verify disabled/inactive check is still enforced via RPC status
+  assert.ok(content.includes('result.status === "DISABLED"'), "Must handle DISABLED status from RPC");
 });
 
 runTest("Section C", "Customer API PATCH: Customer cannot modify disallowed fields", () => {
@@ -392,7 +400,182 @@ runTest("Section C", "RPC get_customer_by_slug: Appends 21st column enquiry_enab
 });
 
 // ==============================================================================
-// Section D: Rate Limiting
+// Section C-RPC: submit_customer_enquiry Security Tests (Bug-Fix Validation)
+// ==============================================================================
+console.log("\n--- Section C-RPC: submit_customer_enquiry RPC Security ---");
+
+runTest("Section C-RPC", "Migration: submit_customer_enquiry RPC exists with SECURITY DEFINER and correct search_path", () => {
+  const migPath = path.join(rootDir, "supabase/migrations/20261021000000_add_submit_enquiry_rpc.sql");
+  assert.ok(fs.existsSync(migPath), "Bug-fix migration 20261021000000_add_submit_enquiry_rpc.sql must exist");
+  const content = fs.readFileSync(migPath, "utf-8");
+
+  assert.ok(content.includes("CREATE FUNCTION public.submit_customer_enquiry"), "RPC function must be created");
+  assert.ok(content.includes("SECURITY DEFINER"), "RPC must be SECURITY DEFINER");
+  assert.ok(content.includes("SET search_path = public"), "RPC must pin search_path to prevent injection");
+  assert.ok(content.includes("LANGUAGE plpgsql"), "Must be plpgsql for VOLATILE and procedural logic");
+  assert.ok(content.includes("GRANT EXECUTE ON FUNCTION public.submit_customer_enquiry"), "Must GRANT EXECUTE to anon/authenticated");
+  assert.ok(content.includes("TO anon, authenticated"), "Grant must include anon and authenticated roles");
+});
+
+runTest("Section C-RPC", "Migration: submit_customer_enquiry accepts exactly the required visitor inputs", () => {
+  const migPath = path.join(rootDir, "supabase/migrations/20261021000000_add_submit_enquiry_rpc.sql");
+  const content = fs.readFileSync(migPath, "utf-8");
+
+  assert.ok(content.includes("slug_input    text"), "Must accept slug_input");
+  assert.ok(content.includes("visitor_name  text"), "Must accept visitor_name");
+  assert.ok(content.includes("visitor_phone text"), "Must accept visitor_phone");
+  assert.ok(content.includes("visitor_email text"), "Must accept visitor_email (nullable)");
+  assert.ok(content.includes("message       text"), "Must accept message");
+  assert.ok(content.includes("ip_hash_input text"), "Must accept ip_hash_input");
+  assert.ok(content.includes("user_agent_input text"), "Must accept user_agent_input (nullable)");
+});
+
+runTest("Section C-RPC", "Migration: submit_customer_enquiry returns ONLY minimum required fields", () => {
+  const migPath = path.join(rootDir, "supabase/migrations/20261021000000_add_submit_enquiry_rpc.sql");
+  const content = fs.readFileSync(migPath, "utf-8");
+
+  // Returned fields that ARE required
+  assert.ok(content.includes("status           text"), "Must return status");
+  assert.ok(content.includes("enquiry_id       uuid"), "Must return enquiry_id");
+  assert.ok(content.includes("customer_name    text"), "Must return customer_name");
+  assert.ok(content.includes("wa_number        text"), "Must return wa_number (nullable when WhatsApp off)");
+  assert.ok(content.includes("delivery_whatsapp boolean"), "Must return delivery_whatsapp");
+
+  // Private fields that must NEVER appear in the RETURNS TABLE definition
+  const returnsStart = content.indexOf("RETURNS TABLE");
+  const returnsEnd = content.indexOf("LANGUAGE plpgsql");
+  const returnsDef = content.slice(returnsStart, returnsEnd);
+  assert.ok(!returnsDef.includes("customer_id"), "Must NOT return customer_id");
+  assert.ok(!returnsDef.includes("auth_user_id"), "Must NOT return auth_user_id");
+  assert.ok(!returnsDef.includes("email"), "Must NOT return customer email");
+  assert.ok(!returnsDef.includes("address"), "Must NOT return address");
+  assert.ok(!returnsDef.includes("photo_url"), "Must NOT return photo_url");
+  assert.ok(!returnsDef.includes("facebook"), "Must NOT return social URLs");
+  assert.ok(!returnsDef.includes("delivery_dashboard"), "Must NOT return delivery_dashboard");
+  assert.ok(!returnsDef.includes("delivery_email"), "Must NOT return delivery_email");
+});
+
+runTest("Section C-RPC", "Migration: RPC enforces is_active AND enquiry_enabled before inserting", () => {
+  const migPath = path.join(rootDir, "supabase/migrations/20261021000000_add_submit_enquiry_rpc.sql");
+  const content = fs.readFileSync(migPath, "utf-8");
+
+  assert.ok(content.includes("AND c.is_active = TRUE"), "RPC must require is_active = TRUE");
+  assert.ok(content.includes("AND c.enquiry_enabled = TRUE"), "RPC must require enquiry_enabled = TRUE");
+  assert.ok(content.includes("IF NOT FOUND THEN"), "RPC must handle the NOT FOUND case");
+  assert.ok(content.includes("'DISABLED'::text"), "RPC must return status=DISABLED when customer not eligible");
+});
+
+runTest("Section C-RPC", "Migration: RPC snapshots delivery settings atomically — not from visitor input", () => {
+  const migPath = path.join(rootDir, "supabase/migrations/20261021000000_add_submit_enquiry_rpc.sql");
+  const content = fs.readFileSync(migPath, "utf-8");
+
+  // Settings must come from v_customer (server) not from function arguments (visitor)
+  assert.ok(content.includes("v_customer.enquiry_delivery_dashboard"), "delivery_dashboard must come from v_customer");
+  assert.ok(content.includes("v_customer.enquiry_delivery_email"), "delivery_email must come from v_customer");
+  assert.ok(content.includes("v_customer.enquiry_delivery_whatsapp"), "delivery_whatsapp must come from v_customer");
+});
+
+runTest("Section C-RPC", "Migration: WhatsApp number returned only when delivery_whatsapp is TRUE", () => {
+  const migPath = path.join(rootDir, "supabase/migrations/20261021000000_add_submit_enquiry_rpc.sql");
+  const content = fs.readFileSync(migPath, "utf-8");
+
+  // WhatsApp capability must be determined server-side from v_customer
+  assert.ok(
+    content.includes("v_can_whatsapp := v_customer.enquiry_delivery_whatsapp") ||
+    content.includes("v_can_whatsapp :=") && content.includes("v_customer.enquiry_delivery_whatsapp"),
+    "Can-whatsapp flag must be derived from server-side customer data"
+  );
+  assert.ok(
+    content.includes("CASE WHEN v_can_whatsapp") || content.includes("WHEN v_can_whatsapp"),
+    "wa_number must be conditionally returned based on server-side flag"
+  );
+  // wa_number must be NULL when WhatsApp is not enabled
+  assert.ok(content.includes("ELSE NULL"), "wa_number must be NULL when WhatsApp delivery is off");
+});
+
+runTest("Section C-RPC", "Migration: No anon table-level privileges granted (RLS unchanged)", () => {
+  const migPath = path.join(rootDir, "supabase/migrations/20261021000000_add_submit_enquiry_rpc.sql");
+  const content = fs.readFileSync(migPath, "utf-8");
+
+  // Only EXECUTE is granted; no table grants
+  assert.ok(!content.includes("GRANT SELECT ON"), "Must NOT grant SELECT on any table");
+  assert.ok(!content.includes("GRANT INSERT ON"), "Must NOT grant INSERT on any table");
+  assert.ok(!content.includes("GRANT UPDATE ON"), "Must NOT grant UPDATE on any table");
+  assert.ok(!content.includes("GRANT ALL ON"), "Must NOT grant ALL on any table");
+});
+
+runTest("Section C-RPC", "API: RPC call uses server-computed ip_hash and user_agent — not visitor-supplied values", () => {
+  const apiPath = path.join(rootDir, "app/api/enquiry/route.js");
+  const content = fs.readFileSync(apiPath, "utf-8");
+
+  assert.ok(content.includes("const ipHash = hashIp(clientIp)"), "IP hash must be computed server-side");
+  assert.ok(content.includes('request.headers.get("user-agent")'), "User-agent must be taken from request headers");
+  assert.ok(content.includes("ip_hash_input:    ipHash"), "ip_hash_input must be the server-computed hash");
+  assert.ok(content.includes("user_agent_input: userAgent"), "user_agent_input must be the server-extracted string");
+  assert.ok(!content.includes("ip_hash_input:    body."), "ip_hash_input must NEVER come from request body");
+  assert.ok(!content.includes("user_agent_input: body."), "user_agent_input must NEVER come from request body");
+});
+
+runTest("Section C-RPC", "API: Raw database errors are never exposed to visitors", () => {
+  const apiPath = path.join(rootDir, "app/api/enquiry/route.js");
+  const content = fs.readFileSync(apiPath, "utf-8");
+
+  // The rpcErr is logged server-side only
+  assert.ok(content.includes('console.error("[enquiry] RPC submit_customer_enquiry error:'), "Must log RPC error server-side");
+  assert.ok(content.includes('"Failed to submit enquiry. Please try again later."'), "Must return generic error to visitor");
+  // Make sure we don't forward rpcErr.message to the client response
+  assert.ok(!content.includes("error: rpcErr.message"), "Must NOT forward raw rpcErr.message to visitor");
+  assert.ok(!content.includes("error: rpcErr.code"), "Must NOT forward raw rpcErr.code to visitor");
+});
+
+runTest("Section C-RPC", "API: WhatsApp URL is built from RPC response wa_number, not from request body", () => {
+  const apiPath = path.join(rootDir, "app/api/enquiry/route.js");
+  const content = fs.readFileSync(apiPath, "utf-8");
+
+  assert.ok(content.includes("result.wa_number"), "WhatsApp number must come from RPC result");
+  assert.ok(content.includes("result.delivery_whatsapp"), "WhatsApp flag must come from RPC result");
+  assert.ok(!content.includes("body.whatsapp"), "WhatsApp number must NEVER come from visitor body");
+  assert.ok(!content.includes("customer.whatsapp"), "WhatsApp number must not reference old direct-table customer object");
+});
+
+runTest("Section C-RPC", "API: Honeypot, rate limit, and all validation still run BEFORE RPC call", () => {
+  const apiPath = path.join(rootDir, "app/api/enquiry/route.js");
+  const content = fs.readFileSync(apiPath, "utf-8");
+
+  // Verify order: honeypot check, rate limit, all validation, then RPC
+  const honeypotIdx = content.indexOf("body.website_hp");
+  const rateLimitIdx = content.indexOf("checkRateLimit(rateLimitKey");
+  const nameIdx = content.indexOf("const rawName = body.name;");
+  const phoneIdx = content.indexOf("const rawPhone = body.phone;");
+  const messageIdx = content.indexOf("const rawMessage = body.message;");
+  const rpcIdx = content.indexOf('supabase.rpc("submit_customer_enquiry"');
+
+  assert.ok(honeypotIdx < rpcIdx, "Honeypot check must run before RPC");
+  assert.ok(rateLimitIdx < rpcIdx, "Rate limiting must run before RPC");
+  assert.ok(nameIdx < rpcIdx, "Name validation must run before RPC");
+  assert.ok(phoneIdx < rpcIdx, "Phone validation must run before RPC");
+  assert.ok(messageIdx < rpcIdx, "Message validation must run before RPC");
+});
+
+runTest("Section C-RPC", "Existing RLS policies on customers and customer_enquiries are unchanged", () => {
+  // Verify the original migration still has the correct policies (not loosened by the bug fix)
+  const origMigPath = path.join(rootDir, "supabase/migrations/20261020000000_create_customer_enquiries.sql");
+  const origContent = fs.readFileSync(origMigPath, "utf-8");
+
+  assert.ok(origContent.includes("ALTER TABLE public.customer_enquiries ENABLE ROW LEVEL SECURITY;"), "Original RLS must remain enabled");
+  assert.ok(origContent.includes('CREATE POLICY "Customers can view their own enquiries"'), "Customer SELECT policy must be intact");
+  assert.ok(origContent.includes('CREATE POLICY "Customers can update their own enquiries"'), "Customer UPDATE policy must be intact");
+  assert.ok(origContent.includes('CREATE POLICY "Admin can manage all enquiries"'), "Admin policy must be intact");
+  assert.ok(!origContent.includes("GRANT SELECT ON public.customers TO anon"), "Must NOT grant anon SELECT on customers");
+  assert.ok(!origContent.includes("GRANT INSERT ON public.customer_enquiries TO anon"), "Must NOT grant anon INSERT on customer_enquiries");
+
+  // Verify the bug-fix migration also doesn't loosen RLS
+  const fixMigPath = path.join(rootDir, "supabase/migrations/20261021000000_add_submit_enquiry_rpc.sql");
+  const fixContent = fs.readFileSync(fixMigPath, "utf-8");
+  assert.ok(!fixContent.includes("GRANT SELECT ON"), "Bug-fix migration must NOT grant table SELECT");
+  assert.ok(!fixContent.includes("GRANT INSERT ON"), "Bug-fix migration must NOT grant table INSERT");
+});
+
 // ==============================================================================
 console.log("\n--- Section D: Rate Limiting ---");
 
