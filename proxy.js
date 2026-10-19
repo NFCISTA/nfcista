@@ -48,7 +48,7 @@ export async function proxy(request) {
       return NextResponse.next();
     }
 
-    const token = request.cookies.get("sb-access-token")?.value;
+    const token = request.cookies.get("sb-admin-token")?.value;
     if (!token) {
       const loginUrl = new URL("/admin/login", request.url);
       return NextResponse.redirect(loginUrl);
@@ -64,7 +64,7 @@ export async function proxy(request) {
       if (error || !data?.user) {
         const loginUrl = new URL("/admin/login", request.url);
         const response = NextResponse.redirect(loginUrl);
-        response.cookies.delete("sb-access-token");
+        response.cookies.delete("sb-admin-token");
         return response;
       }
 
@@ -72,7 +72,7 @@ export async function proxy(request) {
       if (data.user.email?.toLowerCase() !== "hellonfcista@gmail.com") {
         const loginUrl = new URL("/admin/login?error=unauthorized", request.url);
         const response = NextResponse.redirect(loginUrl);
-        response.cookies.delete("sb-access-token");
+        response.cookies.delete("sb-admin-token");
         return response;
       }
 
@@ -85,7 +85,7 @@ export async function proxy(request) {
 
   // 2. Server-side session gating for customer /dashboard/*
   if (pathname.startsWith("/dashboard")) {
-    const token = request.cookies.get("sb-access-token")?.value;
+    const token = request.cookies.get("sb-customer-token")?.value;
     if (!token) {
       const loginUrl = new URL("/login", request.url);
       return NextResponse.redirect(loginUrl);
@@ -101,7 +101,7 @@ export async function proxy(request) {
       if (error || !data?.user) {
         const loginUrl = new URL("/login", request.url);
         const response = NextResponse.redirect(loginUrl);
-        response.cookies.delete("sb-access-token");
+        response.cookies.delete("sb-customer-token");
         return response;
       }
 

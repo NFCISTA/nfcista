@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 /**
  * Shared Session Cookie Route
  *
- * Manages the HttpOnly `sb-access-token` cookie for the customer portal.
+ * Manages the HttpOnly `sb-customer-token` cookie for the customer portal.
  * This endpoint is used by:
  *   - POST: /login page (customer sign-in) — sets the cookie after auth
  *   - DELETE: /dashboard layout (customer sign-out) — clears the cookie
@@ -43,7 +43,7 @@ export async function POST(request) {
     const maxAge = typeof expires_in === "number" && expires_in > 0 ? expires_in : 3600;
 
     response.cookies.set({
-      name: "sb-access-token",
+      name: "sb-customer-token",
       value: access_token,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -64,6 +64,6 @@ export async function POST(request) {
  */
 export async function DELETE() {
   const response = NextResponse.json({ success: true });
-  response.cookies.delete("sb-access-token");
+  response.cookies.delete("sb-customer-token");
   return response;
 }

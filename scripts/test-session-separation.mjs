@@ -95,8 +95,8 @@ try {
   });
   const setCookie = r3.headers.get("set-cookie") || "";
   const b3 = await r3.json().catch(() => ({}));
-  if (r3.status === 200 && b3.success && (setCookie.includes("sb-access-token=;") || setCookie.includes("Max-Age=0"))) {
-    ok("/api/session DELETE -> 200 and deletes sb-access-token cookie");
+  if (r3.status === 200 && b3.success && (setCookie.includes("sb-customer-token=;") || setCookie.includes("Max-Age=0"))) {
+    ok("/api/session DELETE -> 200 and deletes sb-customer-token cookie");
   } else {
     err("/api/session DELETE", `status=${r3.status}, cookie=${setCookie}`);
   }
@@ -138,8 +138,8 @@ try {
   });
   const setCookie = r3.headers.get("set-cookie") || "";
   const b3 = await r3.json().catch(() => ({}));
-  if (r3.status === 200 && b3.success && (setCookie.includes("sb-access-token=;") || setCookie.includes("Max-Age=0"))) {
-    ok("/api/admin/session DELETE -> 200 and deletes sb-access-token cookie");
+  if (r3.status === 200 && b3.success && (setCookie.includes("sb-admin-token=;") || setCookie.includes("Max-Age=0"))) {
+    ok("/api/admin/session DELETE -> 200 and deletes sb-admin-token cookie");
   } else {
     err("/api/admin/session DELETE", `status=${r3.status}, cookie=${setCookie}`);
   }

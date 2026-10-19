@@ -38,7 +38,7 @@ export async function POST(request) {
     const maxAge = typeof expires_in === "number" && expires_in > 0 ? expires_in : 3600;
 
     response.cookies.set({
-      name: "sb-access-token",
+      name: "sb-admin-token",
       value: access_token,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -55,6 +55,6 @@ export async function POST(request) {
 
 export async function DELETE() {
   const response = NextResponse.json({ success: true });
-  response.cookies.delete("sb-access-token");
+  response.cookies.delete("sb-admin-token");
   return response;
 }

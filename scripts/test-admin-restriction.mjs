@@ -37,8 +37,8 @@ section("2. Static Code Audit: proxy.js");
     err("proxy.js missing email check for /admin");
   }
 
-  if (code.includes('redirect') && code.includes('cookies.delete("sb-access-token")')) {
-    ok("proxy.js deletes sb-access-token cookie on unauthorized admin access attempt");
+  if (code.includes('redirect') && code.includes('cookies.delete("sb-admin-token")')) {
+    ok("proxy.js deletes sb-admin-token cookie on unauthorized admin access attempt");
   } else {
     err("proxy.js does not clear cookie on unauthorized access");
   }
