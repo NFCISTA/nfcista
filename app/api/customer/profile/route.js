@@ -13,6 +13,42 @@ import {
 export const dynamic = "force-dynamic";
 
 /**
+ * Serializes customer profile for dashboard consumption.
+ * Explicit allowlist: returns only fields required by the customer dashboard.
+ * Internal fields (auth_user_id, created_at, updated_at) are excluded.
+ */
+function serializeCustomerProfile(customer) {
+  if (!customer) return null;
+  return {
+    id: customer.id,
+    full_name: customer.full_name,
+    job_title: customer.job_title,
+    company_name: customer.company_name,
+    category: customer.category,
+    description: customer.description,
+    phone: customer.phone,
+    whatsapp: customer.whatsapp,
+    email: customer.email,
+    instagram: customer.instagram,
+    website: customer.website,
+    address: customer.address,
+    google_review_url: customer.google_review_url,
+    facebook_url: customer.facebook_url || customer.facebook || null,
+    linkedin_url: customer.linkedin_url || customer.linkedin || null,
+    twitter_url: customer.twitter_url || customer.x_url || null,
+    drive_url: customer.drive_url || customer.google_drive_url || null,
+    photo_url: customer.photo_url || null,
+    banner_url: customer.banner_url || null,
+    profile_slug: customer.profile_slug,
+    is_active: customer.is_active,
+    enquiry_enabled: customer.enquiry_enabled,
+    enquiry_delivery_dashboard: customer.enquiry_delivery_dashboard,
+    enquiry_delivery_email: customer.enquiry_delivery_email,
+    enquiry_delivery_whatsapp: customer.enquiry_delivery_whatsapp,
+  };
+}
+
+/**
  * GET /api/customer/profile
  * Returns the currently authenticated customer's own profile.
  */
@@ -20,7 +56,7 @@ export async function GET(request) {
   const { errorResponse, customer } = await authenticateCustomer(request);
   if (errorResponse) return errorResponse;
 
-  return NextResponse.json({ customer });
+  return NextResponse.json({ customer: serializeCustomerProfile(customer) });
 }
 
 /**
@@ -274,7 +310,7 @@ export async function PUT(request) {
     if (updateErr) {
       console.error("Error updating customer profile:", updateErr.message);
       return NextResponse.json(
-        { error: "Failed to update profile: " + updateErr.message },
+        { error: "Failed to update profile. Please try again." },
         { status: 500 }
       );
     }
@@ -286,7 +322,7 @@ export async function PUT(request) {
 
     return NextResponse.json({
       success: true,
-      customer: updatedCustomer,
+      customer: serializeCustomerProfile(updatedCustomer),
     });
   } catch (err) {
     console.error("Unexpected error in PUT /api/customer/profile:", err);

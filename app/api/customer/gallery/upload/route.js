@@ -98,7 +98,7 @@ export async function POST(request) {
 
     if (uploadErr) {
       console.error("[customer/gallery/upload] Storage upload error:", uploadErr.message);
-      return NextResponse.json({ error: "Failed to upload image to storage: " + uploadErr.message }, { status: 500 });
+      return NextResponse.json({ error: "Failed to upload image. Please try again." }, { status: 500 });
     }
 
     // 7. Get public URL
@@ -108,7 +108,8 @@ export async function POST(request) {
 
     const publicUrl = publicUrlData?.publicUrl;
     if (!publicUrl) {
-      return NextResponse.json({ error: "Could not generate public URL for uploaded image." }, { status: 500 });
+      console.error("[customer/gallery/upload] Could not generate public URL for uploaded image.");
+      return NextResponse.json({ error: "Failed to process uploaded image. Please try again." }, { status: 500 });
     }
 
     // 8. Determine next display_order for this item's images
@@ -136,7 +137,7 @@ export async function POST(request) {
       console.error("[customer/gallery/upload] Error creating image record:", insertImgErr.message);
       // Rollback storage file
       serviceClient.storage.from(BUCKET).remove([storagePath]).catch(() => {});
-      return NextResponse.json({ error: "Failed to save image record in database." }, { status: 500 });
+      return NextResponse.json({ error: "Failed to save image. Please try again." }, { status: 500 });
     }
 
     // Revalidate public profile cache

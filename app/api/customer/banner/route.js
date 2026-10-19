@@ -106,7 +106,7 @@ export async function POST(request) {
     if (uploadErr) {
       console.error("[customer/banner] Storage upload error:", uploadErr.message);
       return NextResponse.json(
-        { error: "Failed to upload banner: " + uploadErr.message },
+        { error: "Failed to upload banner. Please try again." },
         { status: 500 }
       );
     }
@@ -118,8 +118,9 @@ export async function POST(request) {
 
     const publicUrl = urlData?.publicUrl;
     if (!publicUrl) {
+      console.error("[customer/banner] Could not get public URL for uploaded banner.");
       return NextResponse.json(
-        { error: "Banner uploaded but could not get public URL." },
+        { error: "Failed to upload banner. Please try again." },
         { status: 500 }
       );
     }
@@ -137,7 +138,7 @@ export async function POST(request) {
       console.error("[customer/banner] Failed to update banner_url:", updateErr.message);
       await serviceClient.storage.from(BUCKET).remove([storagePath]).catch(() => {});
       return NextResponse.json(
-        { error: "Banner uploaded but failed to save URL: " + updateErr.message },
+        { error: "Failed to update profile banner. Please try again." },
         { status: 500 }
       );
     }
@@ -183,8 +184,9 @@ export async function DELETE(request) {
       .single();
 
     if (updateErr) {
+      console.error("[customer/banner] Failed to clear banner_url:", updateErr.message);
       return NextResponse.json(
-        { error: "Failed to remove custom banner: " + updateErr.message },
+        { error: "Failed to remove custom banner. Please try again." },
         { status: 500 }
       );
     }

@@ -188,7 +188,7 @@ export async function POST(request) {
 
     if (insertErr) {
       console.error("[customer/gallery] Error creating item:", insertErr.message);
-      return NextResponse.json({ error: "Failed to create item: " + insertErr.message }, { status: 500 });
+      return NextResponse.json({ error: "Failed to create gallery item. Please try again." }, { status: 500 });
     }
 
     // 3. Insert optional initial image URLs
@@ -356,7 +356,7 @@ export async function PUT(request) {
 
     if (updateErr) {
       console.error("[customer/gallery] Error updating item:", updateErr.message);
-      return NextResponse.json({ error: "Failed to update item: " + updateErr.message }, { status: 500 });
+      return NextResponse.json({ error: "Failed to update gallery item. Please try again." }, { status: 500 });
     }
 
     // Revalidate public profile cache
@@ -414,7 +414,7 @@ export async function DELETE(request) {
 
     if (delErr) {
       console.error("[customer/gallery] Error deleting item:", delErr.message);
-      return NextResponse.json({ error: "Failed to delete item: " + delErr.message }, { status: 500 });
+      return NextResponse.json({ error: "Failed to delete gallery item. Please try again." }, { status: 500 });
     }
 
     // 4. Clean up storage files asynchronously using service-role client if configured

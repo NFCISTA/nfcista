@@ -62,7 +62,7 @@ export async function DELETE(request) {
 
     if (delErr) {
       console.error("[customer/gallery/image] Error deleting image:", delErr.message);
-      return NextResponse.json({ error: "Failed to delete image." }, { status: 500 });
+      return NextResponse.json({ error: "Failed to delete image. Please try again." }, { status: 500 });
     }
 
     // 4. Clean up storage file if in bucket

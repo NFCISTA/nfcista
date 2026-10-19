@@ -106,7 +106,7 @@ export async function POST(request) {
     if (uploadErr) {
       console.error("[customer/photo] Storage upload error:", uploadErr.message);
       return NextResponse.json(
-        { error: "Failed to upload photo: " + uploadErr.message },
+        { error: "Failed to upload photo. Please try again." },
         { status: 500 }
       );
     }
@@ -118,8 +118,9 @@ export async function POST(request) {
 
     const publicUrl = urlData?.publicUrl;
     if (!publicUrl) {
+      console.error("[customer/photo] Could not get public URL for uploaded photo.");
       return NextResponse.json(
-        { error: "Photo uploaded but could not get public URL." },
+        { error: "Failed to upload photo. Please try again." },
         { status: 500 }
       );
     }
@@ -138,7 +139,7 @@ export async function POST(request) {
       // Attempt to clean up the just-uploaded file
       await serviceClient.storage.from(BUCKET).remove([storagePath]).catch(() => {});
       return NextResponse.json(
-        { error: "Photo uploaded but failed to save URL: " + updateErr.message },
+        { error: "Failed to update profile photo. Please try again." },
         { status: 500 }
       );
     }
@@ -184,8 +185,9 @@ export async function DELETE(request) {
       .single();
 
     if (updateErr) {
+      console.error("[customer/photo] Failed to clear photo_url:", updateErr.message);
       return NextResponse.json(
-        { error: "Failed to remove photo: " + updateErr.message },
+        { error: "Failed to remove photo. Please try again." },
         { status: 500 }
       );
     }

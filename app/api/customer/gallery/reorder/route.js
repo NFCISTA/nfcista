@@ -35,7 +35,7 @@ export async function POST(request) {
 
     if (fetchErr) {
       console.error("[customer/gallery/reorder] Error verifying items:", fetchErr.message);
-      return NextResponse.json({ error: "Failed to verify items." }, { status: 500 });
+      return NextResponse.json({ error: "Failed to update gallery order. Please try again." }, { status: 500 });
     }
 
     const validIds = new Set((existing || []).map((i) => i.id));
