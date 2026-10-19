@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { authenticateCustomer } from "@/lib/customerAuth";
 import { revalidateCustomerProfile } from "@/lib/revalidateProfile";
+import { getClientIp, checkRateLimit } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,23 @@ function isValidUuid(id) {
 export async function POST(request) {
   const { errorResponse, customer, authClient } = await authenticateCustomer(request);
   if (errorResponse) return errorResponse;
+
+  // Rate limit: 30 uploads per 10 minutes per customer+IP (LOW-06)
+  const clientIp = getClientIp(request);
+  const rateLimitKey = `upload:gallery:${customer.id}:${clientIp}`;
+  const rateCheck = await checkRateLimit(rateLimitKey, {
+    limit: 30,
+    windowMs: 10 * 60 * 1000, // 10 minutes
+  });
+  if (!rateCheck.success) {
+    return NextResponse.json(
+      { error: "Too many upload attempts. Please wait before trying again." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateCheck.reset) },
+      }
+    );
+  }
 
   try {
     const formData = await request.formData();
