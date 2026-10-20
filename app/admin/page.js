@@ -79,6 +79,8 @@ export default function AdminCustomersDashboard() {
   const [galleryItems, setGalleryItems] = useState([]);
   // Customer enquiries for modal
   const [customerEnquiries, setCustomerEnquiries] = useState([]);
+  // Active tab in Add/Edit customer modal: 'profile' | 'review_assistant'
+  const [activeFormTab, setActiveFormTab] = useState("profile");
 
   // Photo management state
   const [photoFile, setPhotoFile] = useState(null);
@@ -173,6 +175,7 @@ export default function AdminCustomersDashboard() {
     setConsentConfirmed(false); // DPDP: always start unchecked
     setGalleryItems([]);
     setCustomerEnquiries([]);
+    setActiveFormTab("profile");
     setIsFormModalOpen(true);
   }
 
@@ -192,6 +195,7 @@ export default function AdminCustomersDashboard() {
     setConsentConfirmed(false); // DPDP: not required on edit, but always start unchecked
     setGalleryItems([]);
     setCustomerEnquiries([]);
+    setActiveFormTab("profile");
     setIsSubmitting(true);
     setIsFormModalOpen(true);
 
@@ -1179,6 +1183,38 @@ export default function AdminCustomersDashboard() {
               </button>
             </div>
 
+            {/* Modal Navigation Tabs */}
+            <div className="px-4 sm:px-6 pt-2.5 border-b border-outline-variant/20 bg-surface-container-low/20 flex items-center gap-1 sm:gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setActiveFormTab("profile")}
+                className={`pb-2.5 px-3 text-label-md font-bold transition-all flex items-center gap-1.5 cursor-pointer border-b-2 ${
+                  activeFormTab === "profile"
+                    ? "text-primary border-primary"
+                    : "text-on-surface-variant hover:text-on-surface border-transparent"
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">badge</span>
+                <span>Business Profile</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveFormTab("review_assistant")}
+                className={`pb-2.5 px-3 text-label-md font-bold transition-all flex items-center gap-1.5 cursor-pointer border-b-2 ${
+                  activeFormTab === "review_assistant"
+                    ? "text-primary border-primary"
+                    : "text-on-surface-variant hover:text-on-surface border-transparent"
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">reviews</span>
+                <span>Review Assistant</span>
+                {formData.review_assistant_enabled && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" title="Active" />
+                )}
+              </button>
+            </div>
+
             {/* Modal Form Body */}
             <form onSubmit={handleFormSubmit} className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5">
               {formErrors.general && (
@@ -1190,6 +1226,9 @@ export default function AdminCustomersDashboard() {
                 </div>
               )}
 
+              {/* TAB 1: BUSINESS PROFILE */}
+              {activeFormTab === "profile" && (
+                <div className="space-y-4 sm:space-y-5">
               {/* 1. Basic Information */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-label-sm font-bold uppercase tracking-wider text-primary">
@@ -1903,44 +1942,7 @@ export default function AdminCustomersDashboard() {
                 )}
               </div>
 
-              {/* Section: Google Review AI Assistant */}
-              <div className="space-y-4 pt-4 border-t border-slate-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[18px] text-amber-500">reviews</span>
-                      <h3 className="text-label-sm font-bold uppercase tracking-wider text-on-surface">
-                        Google Review AI Assistant
-                      </h3>
-                    </div>
-                    <p className="text-[11px] text-on-surface-variant mt-0.5">
-                      Provides visitors with an optional AI writing assistant on the dedicated review hub.
-                    </p>
-                  </div>
 
-                  <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(formData.review_assistant_enabled)}
-                      onChange={(e) =>
-                        setFormData({ ...formData, review_assistant_enabled: e.target.checked })
-                      }
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
-                  </label>
-                </div>
-                {!formData.google_review_url?.trim() && formData.review_assistant_enabled && (
-                  <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200/60 p-2.5 rounded-xl">
-                    ⚠️ Google Review URL is not configured yet. Make sure to enter a valid Google Review URL above so visitors can paste and submit their reviews on Google.
-                  </p>
-                )}
-                {formData.review_assistant_enabled && (
-                  <p className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200/60 p-2.5 rounded-xl">
-                    ✅ AI Assistant enabled. Review hub available at: <span className="font-mono font-semibold">/review/{formData.profile_slug || "..."}</span>
-                  </p>
-                )}
-              </div>
 
               {/* ------------------------------------------------------------ */}
               {/* 6. Customer Approval (Only for Add New Customer)             */}
@@ -1992,6 +1994,133 @@ export default function AdminCustomersDashboard() {
                         <span>{formErrors.consent}</span>
                       </p>
                     )}
+                  </div>
+                </div>
+              )}
+
+                </div>
+              )}
+
+              {/* TAB 2: REVIEW ASSISTANT */}
+              {activeFormTab === "review_assistant" && (
+                <div className="space-y-4 sm:space-y-5">
+                  {/* Master Toggle Card */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30 space-y-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[22px] text-amber-500">reviews</span>
+                          <h3 className="text-label-md font-bold text-on-surface">
+                            Google Review AI Assistant
+                          </h3>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                              formData.review_assistant_enabled
+                                ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                : "bg-slate-100 text-slate-600 border border-slate-200"
+                            }`}
+                          >
+                            {formData.review_assistant_enabled ? "Enabled" : "Disabled"}
+                          </span>
+                        </div>
+                        <p className="text-body-sm text-on-surface-variant leading-relaxed">
+                          Enable this to let this customer offer a guided review-writing experience using NFCISTA's template-based Review Assistant. Customers remain in control of their rating, review text, and Google submission.
+                        </p>
+                      </div>
+
+                      {/* Master Toggle */}
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(formData.review_assistant_enabled)}
+                          onChange={(e) =>
+                            setFormData({ ...formData, review_assistant_enabled: e.target.checked })
+                          }
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
+                      </label>
+                    </div>
+
+                    {/* Review Hub URL Banner */}
+                    <div className="pt-3 border-t border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-1.5 text-on-surface-variant">
+                        <span className="material-symbols-outlined text-[16px] text-primary">link</span>
+                        <span>Dedicated Review Hub:</span>
+                        <span className="font-mono font-semibold text-primary">
+                          /review/{formData.profile_slug || "..."}
+                        </span>
+                      </div>
+                      {formData.profile_slug && (
+                        <a
+                          href={`/review/${formData.profile_slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] font-semibold text-primary hover:underline inline-flex items-center gap-1"
+                        >
+                          <span>Preview Review Hub</span>
+                          <span className="material-symbols-outlined text-[12px]">open_in_new</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Status of Google Review URL */}
+                  {!formData.google_review_url?.trim() ? (
+                    <div className="p-4 bg-amber-50 border border-amber-200/70 rounded-2xl text-xs space-y-1.5 text-amber-900">
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <span className="material-symbols-outlined text-[18px] text-amber-600">warning</span>
+                        <span>Google Review URL is not configured yet</span>
+                      </div>
+                      <p className="text-[11px] text-amber-800 leading-relaxed">
+                        The Review Assistant needs the merchant&apos;s Google Review URL so visitors can paste and submit their reviews on Google. Please add their Google Review URL in the{" "}
+                        <button
+                          type="button"
+                          onClick={() => setActiveFormTab("profile")}
+                          className="underline font-bold text-amber-950 cursor-pointer"
+                        >
+                          Business Profile
+                        </button>{" "}
+                        tab.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-3.5 bg-emerald-50 border border-emerald-200/60 rounded-2xl text-xs space-y-1 text-emerald-900">
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <span className="material-symbols-outlined text-[16px] text-emerald-600">check_circle</span>
+                        <span>Linked Google Review URL</span>
+                      </div>
+                      <p className="text-[11px] text-emerald-800 font-mono truncate">
+                        {formData.google_review_url}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Feature Explanation & Architecture */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-surface-container-low/30 border border-outline-variant/30 space-y-3">
+                    <h4 className="text-label-sm font-bold uppercase tracking-wider text-on-surface">
+                      Review Assistant Details
+                    </h4>
+                    <div className="space-y-2.5 text-xs text-on-surface-variant">
+                      <div className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">1</span>
+                        <p className="leading-relaxed">
+                          <strong className="text-on-surface">Dedicated Route:</strong> When enabled, visitors opening <span className="font-mono text-primary">/review/{formData.profile_slug || "..."}</span> can use quick tags to draft a review. When disabled, visitors see only the standard Google Review button.
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">2</span>
+                        <p className="leading-relaxed">
+                          <strong className="text-on-surface">100% In-Browser:</strong> Runs locally with preset industry templates (Salon, Restaurant, Clinic, Retail, Generic). Zero external AI APIs, zero per-review charges.
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">3</span>
+                        <p className="leading-relaxed">
+                          <strong className="text-on-surface">Digital Profile Untouched:</strong> The primary NFC card profile at <span className="font-mono text-primary">/p/{formData.profile_slug || "..."}</span> remains completely untouched.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
