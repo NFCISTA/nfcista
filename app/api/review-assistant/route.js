@@ -117,19 +117,18 @@ export async function POST(request) {
 
     // 3. Sliding Window Rate Limiting (5 requests per 10 minutes per IP/slug)
     const rateLimitKey = `review_assistant:${slug}:${clientIp}`;
-    const rateCheck = checkRateLimit(rateLimitKey, {
+    const rateCheck = await checkRateLimit(rateLimitKey, {
       limit: 5,
       windowMs: 10 * 60 * 1000,
     });
 
-    if (!rateCheck.allowed) {
-      const retryAfterSeconds = Math.max(1, Math.ceil((rateCheck.reset - Date.now()) / 1000));
+    if (!rateCheck.success) {
       return NextResponse.json(
         { error: "Too many review assistant requests. Please write your review directly on Google or try again shortly." },
         {
           status: 429,
           headers: {
-            "Retry-After": String(retryAfterSeconds),
+            "Retry-After": String(rateCheck.reset),
           },
         }
       );

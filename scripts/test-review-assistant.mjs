@@ -345,7 +345,7 @@ async function runTests() {
   }
 
   // Rate limit 429 response & Retry-After header
-  if (apiRouteSrc.includes("status: 429") && apiRouteSrc.includes('"Retry-After": String(retryAfterSeconds)')) {
+  if (apiRouteSrc.includes("status: 429") && apiRouteSrc.includes('"Retry-After": String(rateCheck.reset)')) {
     pass("6.4: HTTP 429 and Retry-After header returned on rate limit exhaustion");
   } else {
     fail("6.4: HTTP 429 or Retry-After header missing on rate limit rejection");
