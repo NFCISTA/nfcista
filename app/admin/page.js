@@ -51,6 +51,7 @@ const initialFormData = {
   enquiry_delivery_dashboard: true,
   enquiry_delivery_email: false,
   enquiry_delivery_whatsapp: false,
+  review_assistant_enabled: false,
   profile_slug: "",
   is_active: true,
 };
@@ -232,6 +233,7 @@ export default function AdminCustomersDashboard() {
         enquiry_delivery_dashboard: fullRecord.enquiry_delivery_dashboard !== undefined ? Boolean(fullRecord.enquiry_delivery_dashboard) : true,
         enquiry_delivery_email: Boolean(fullRecord.enquiry_delivery_email),
         enquiry_delivery_whatsapp: Boolean(fullRecord.enquiry_delivery_whatsapp),
+        review_assistant_enabled: Boolean(fullRecord.review_assistant_enabled),
         profile_slug: fullRecord.profile_slug || "",
         is_active: fullRecord.is_active !== undefined ? fullRecord.is_active : true,
       });
@@ -1898,6 +1900,45 @@ export default function AdminCustomersDashboard() {
                   </div>
                 ) : (
                   <p className="text-[11px] text-slate-500 italic">Enquiry Form is currently disabled for this customer.</p>
+                )}
+              </div>
+
+              {/* Section: Google Review AI Assistant */}
+              <div className="space-y-4 pt-4 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[18px] text-amber-500">reviews</span>
+                      <h3 className="text-label-sm font-bold uppercase tracking-wider text-on-surface">
+                        Google Review AI Assistant
+                      </h3>
+                    </div>
+                    <p className="text-[11px] text-on-surface-variant mt-0.5">
+                      Provides visitors with an optional AI writing assistant on the dedicated review hub.
+                    </p>
+                  </div>
+
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(formData.review_assistant_enabled)}
+                      onChange={(e) =>
+                        setFormData({ ...formData, review_assistant_enabled: e.target.checked })
+                      }
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
+                  </label>
+                </div>
+                {!formData.google_review_url?.trim() && formData.review_assistant_enabled && (
+                  <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200/60 p-2.5 rounded-xl">
+                    ⚠️ Google Review URL is not configured yet. Make sure to enter a valid Google Review URL above so visitors can paste and submit their reviews on Google.
+                  </p>
+                )}
+                {formData.review_assistant_enabled && (
+                  <p className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200/60 p-2.5 rounded-xl">
+                    ✅ AI Assistant enabled. Review hub available at: <span className="font-mono font-semibold">/review/{formData.profile_slug || "..."}</span>
+                  </p>
                 )}
               </div>
 
