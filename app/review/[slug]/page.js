@@ -32,10 +32,13 @@ export default async function CustomerReviewPage({ params }) {
     full_name: customer.full_name,
     company_name: customer.company_name,
     category: customer.category,
+    description: customer.description || null,
     photo_url: customer.photo_url || null,
     google_review_url: customer.google_review_url || null,
     review_assistant_enabled: Boolean(customer.review_assistant_enabled),
     profile_slug: customer.profile_slug,
+    phone: customer.phone || null,
+    whatsapp: customer.whatsapp || null,
   };
 
   return <ReviewHubClient customer={safeCustomer} />;

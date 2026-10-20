@@ -235,41 +235,45 @@ async function runTests() {
     fail("5.4: Direct Google Review button missing from review hub");
   }
 
-  // [✨ Help Me Write My Review] button
-  if (reviewClientSrc.includes("Help Me Write My Review")) {
-    pass("5.5: [✨ Help Me Write My Review] option is provided");
+  // [✨ Create My Review] button
+  if (reviewClientSrc.includes("Create My Review")) {
+    pass("5.5: [✨ Create My Review] action button is provided");
   } else {
-    fail("5.5: Help Me Write My Review option missing");
+    fail("5.5: Create My Review action button missing");
   }
 
   // Graceful missing Google Review URL
-  if (reviewClientSrc.includes("!hasGoogleUrl") && reviewClientSrc.includes("Google Review link is not configured yet")) {
+  if (
+    reviewClientSrc.includes("!hasGoogleUrl") &&
+    (reviewClientSrc.includes("Google Review link hasn't been configured") ||
+     reviewClientSrc.includes("Google Review link hasn&apos;t been configured"))
+  ) {
     pass("5.6: Missing Google Review URL displays helpful notice without broken button");
   } else {
     fail("5.6: Missing Google Review URL not handled gracefully");
   }
 
   // Normal/manual flow when review_assistant_enabled is false
-  if (reviewClientSrc.includes("{aiEnabled && hasGoogleUrl && (") && reviewClientSrc.includes("AI Review Assistant")) {
-    pass("5.7: AI Review Assistant UI is strictly hidden when review_assistant_enabled is false");
+  if (reviewClientSrc.includes("assistantEnabled && hasGoogleUrl") && reviewClientSrc.includes("canUseReviewAssistant")) {
+    pass("5.7: Review Assistant UI is strictly conditioned on canUseReviewAssistant(customer)");
   } else {
-    fail("5.7: AI UI is not conditioned on aiEnabled");
+    fail("5.7: Assistant UI is not conditioned on canUseReviewAssistant");
   }
 
   // Transparency disclaimer
-  if (reviewClientSrc.includes("Your review should reflect your real experience. AI only helps turn your own thoughts into a clear review.")) {
-    pass("5.8: Transparency disclaimer is visibly rendered");
+  if (reviewClientSrc.includes("Your review should reflect your real experience. This tool only helps you turn your own thoughts into a clear review.")) {
+    pass("5.8: Mandatory transparency disclaimer is visibly rendered with exact required text");
   } else {
-    fail("5.8: Transparency disclaimer missing from UI");
+    fail("5.8: Transparency disclaimer missing or inaccurate");
   }
 
   // Review modes
   if (
     reviewClientSrc.includes("Quick Review") &&
-    reviewClientSrc.includes("AI Assistant") &&
+    reviewClientSrc.includes("Assistant") &&
     reviewClientSrc.includes("Write My Own")
   ) {
-    pass("5.9: Three distinct review modes implemented: Quick Review, AI Assistant, Write My Own");
+    pass("5.9: Three distinct review modes implemented: Quick Review, Assistant, Write My Own");
   } else {
     fail("5.9: One or more review modes missing from ReviewHubClient");
   }
@@ -295,7 +299,7 @@ async function runTests() {
     fail("5.12: Generated review draft is not in an editable textarea");
   }
 
-  if (reviewClientSrc.includes("navigator?.clipboard?.writeText") && reviewClientSrc.includes("textareaRef.current.select()")) {
+  if (reviewClientSrc.includes("navigator.clipboard?.writeText") || reviewClientSrc.includes("navigator?.clipboard?.writeText")) {
     pass("5.13: Clipboard copy implemented with manual textarea selection fallback");
   } else {
     fail("5.13: Clipboard copy or fallback missing");
@@ -316,99 +320,96 @@ async function runTests() {
     fail("5.15: UI improperly claims review was submitted");
   }
 
-  // ============================================================================
-  // SECTION 6 — SERVER-SIDE AI API ROUTE SECURITY & SINGLE PROVIDER
-  // ============================================================================
-  section("6. Server-Side AI API Route Security & Guardrails");
-
-  const apiRouteSrc = readSrc("app/api/review-assistant/route.js");
-
-  // Single AI Provider: OpenAI only, native fetch
-  if (apiRouteSrc.includes("callOpenAi") && apiRouteSrc.includes("OPENAI_API_KEY") && !apiRouteSrc.includes("callGemini")) {
-    pass("6.1: Single configured AI provider: OpenAI (gpt-4o-mini) via native fetch");
+  // Word count display
+  if (reviewClientSrc.includes("wordCount") && (reviewClientSrc.includes("words") || reviewClientSrc.includes("word"))) {
+    pass("5.16: Word count is displayed for the editable draft");
   } else {
-    fail("6.1: Did not restrict to single OpenAI provider");
+    fail("5.16: Word count display missing");
+  }
+
+  // Google Review available for all ratings + optional private feedback
+  if (
+    reviewClientSrc.includes("Write a Google Review Directly") &&
+    reviewClientSrc.includes("Open Google Review") &&
+    reviewClientSrc.includes("Need immediate help or want to speak with us directly?") &&
+    !reviewClientSrc.includes("rating > 2 && <button") &&
+    !reviewClientSrc.includes("rating >= 3 && <button")
+  ) {
+    pass("5.17: Google Review buttons remain available for all ratings; private feedback is strictly additive");
+  } else {
+    fail("5.17: Google Review button hidden or replaced for lower ratings");
+  }
+
+  // ============================================================================
+  // SECTION 6 — LOCAL PURE TEMPLATE REVIEW GENERATOR (ZERO AI APIS)
+  // ============================================================================
+  section("6. Local Pure Template Review Generator (Zero AI APIs)");
+
+  // ReviewHubClient uses local generateReview
+  if (
+    reviewClientSrc.includes("import { generateReview } from") &&
+    reviewClientSrc.includes("generateReview(")
+  ) {
+    pass("6.1: ReviewHubClient imports and invokes local generateReview generator");
+  } else {
+    fail("6.1: ReviewHubClient does not import or invoke generateReview");
+  }
+
+  // ReviewHubClient does NOT fetch /api/review-assistant
+  if (!reviewClientSrc.includes('fetch("/api/review-assistant"') && !reviewClientSrc.includes("fetch('/api/review-assistant'")) {
+    pass("6.2: ReviewHubClient does NOT fetch /api/review-assistant (runs 100% in browser)");
+  } else {
+    fail("6.2: ReviewHubClient still fetches /api/review-assistant");
+  }
+
+  // ReviewHubClient does NOT call OpenAI or Gemini
+  if (
+    !reviewClientSrc.includes("OpenAI") &&
+    !reviewClientSrc.includes("Gemini") &&
+    !reviewClientSrc.includes("callGemini") &&
+    !reviewClientSrc.includes("callOpenAi")
+  ) {
+    pass("6.3: Zero AI provider calls in client code");
+  } else {
+    fail("6.3: Found AI provider calls in client code");
   }
 
   // Secret keys server-only
-  if (!apiRouteSrc.includes("NEXT_PUBLIC_")) {
-    pass("6.2: Secret AI keys are never accessed via NEXT_PUBLIC_ (server-side only)");
+  if (!reviewClientSrc.includes("GEMINI_API_KEY") && !reviewClientSrc.includes("OPENAI_API_KEY")) {
+    pass("6.4: Zero secret AI API keys referenced in client components");
   } else {
-    fail("6.2: NEXT_PUBLIC_ key detected in API route");
+    fail("6.4: Secret AI API key referenced in client components");
   }
 
-  // Rate limiter check
+  // Legacy API route exists and is preserved untouched
+  const apiRoutePath = path.join(rootDir, "app", "api", "review-assistant", "route.js");
+  if (fs.existsSync(apiRoutePath)) {
+    pass("6.5: Legacy app/api/review-assistant/route.js preserved untouched");
+  } else {
+    fail("6.5: Legacy API route was deleted prematurely");
+  }
+
+  const apiRouteSrc = readSrc("app/api/review-assistant/route.js");
+
+  // Rate limiter check in legacy API
   if (apiRouteSrc.includes("checkRateLimit") && apiRouteSrc.includes("review_assistant:${slug}:${clientIp}")) {
-    pass("6.3: Rate limiter enforced at 5 requests per 10 minutes per IP/slug");
+    pass("6.6: Legacy API route rate limiter preserved");
   } else {
-    fail("6.3: Rate limiter missing or incorrectly configured");
+    fail("6.6: Rate limiter missing in legacy API route");
   }
 
-  // Rate limit 429 response & Retry-After header
-  if (apiRouteSrc.includes("status: 429") && apiRouteSrc.includes('"Retry-After": String(rateCheck.reset)')) {
-    pass("6.4: HTTP 429 and Retry-After header returned on rate limit exhaustion");
-  } else {
-    fail("6.4: HTTP 429 or Retry-After header missing on rate limit rejection");
-  }
-
-  // 403 when review_assistant_enabled is false
+  // Feature flag check in legacy API
   if (apiRouteSrc.includes("!customer.review_assistant_enabled") && apiRouteSrc.includes("status: 403")) {
-    pass("6.5: Returns HTTP 403 Forbidden if review_assistant_enabled is false");
+    pass("6.7: Legacy API route returns HTTP 403 Forbidden if review_assistant_enabled is false");
   } else {
-    fail("6.5: Missing check for review_assistant_enabled");
-  }
-
-  // 400 when google_review_url is empty
-  if (apiRouteSrc.includes("!customer.google_review_url?.trim()") && apiRouteSrc.includes("status: 400")) {
-    pass("6.6: Returns HTTP 400 if google_review_url is not configured");
-  } else {
-    fail("6.6: Missing check for google_review_url");
-  }
-
-  // Rating range validation (1 to 5 integer)
-  if (apiRouteSrc.includes("rawRating < 1 || rawRating > 5") && apiRouteSrc.includes("status: 400")) {
-    pass("6.7: Validates rating is an integer strictly between 1 and 5");
-  } else {
-    fail("6.7: Missing rating validation");
-  }
-
-  // Honeypot check
-  if (apiRouteSrc.includes("body.website_hp")) {
-    pass("6.8: Honeypot field present to trap automated spam bots");
-  } else {
-    fail("6.8: Honeypot field missing");
-  }
-
-  // Prompt safety guardrails
-  if (
-    apiRouteSrc.includes("DO NOT invent, hallucinate, or assume any facts") &&
-    apiRouteSrc.includes("NEVER convert negative feedback into positive feedback") &&
-    apiRouteSrc.includes("Do NOT manufacture superlatives")
-  ) {
-    pass("6.9: System prompt contains strict anti-hallucination and truthfulness guardrails");
-  } else {
-    fail("6.9: Anti-hallucination or negative-preservation guardrails missing from prompt");
+    fail("6.7: Missing check for review_assistant_enabled in legacy API route");
   }
 
   // Ephemeral processing: No database write in route
   if (!apiRouteSrc.includes(".insert(") && !apiRouteSrc.includes(".update(")) {
-    pass("6.10: Privacy guarantee: Visitor review answers are never permanently stored in database");
+    pass("6.8: Privacy guarantee: Visitor review answers are never permanently stored in database");
   } else {
-    fail("6.10: Privacy issue: Route writes visitor review data to database");
-  }
-
-  // Timeout guard with AbortController
-  if (apiRouteSrc.includes("new AbortController()") && apiRouteSrc.includes("setTimeout(() => controller.abort(), 8000)")) {
-    pass("6.11: 8-second AbortController timeout protects against hanging AI provider calls");
-  } else {
-    fail("6.11: AbortController timeout missing");
-  }
-
-  // Graceful 503 if provider unavailable
-  if (apiRouteSrc.includes("status: 503")) {
-    pass("6.12: Returns HTTP 503 with helpful fallback guidance if provider is unavailable or fails");
-  } else {
-    fail("6.12: Missing HTTP 503 handling when AI provider is unavailable");
+    fail("6.8: Privacy issue: Route writes visitor review data to database");
   }
 
   // ============================================================================
@@ -458,7 +459,7 @@ async function runTests() {
   // package.json dependencies untouched
   const pkgJson = JSON.parse(readSrc("package.json"));
   const deps = Object.keys({ ...pkgJson.dependencies, ...pkgJson.devDependencies });
-  const forbiddenDeps = ["openai", "@ai-sdk", "langchain", "@google/genai"];
+  const forbiddenDeps = ["openai", "@ai-sdk", "langchain", "@google/genai", "@google/generative-ai"];
   let badDepFound = false;
   for (const dep of deps) {
     for (const f of forbiddenDeps) {

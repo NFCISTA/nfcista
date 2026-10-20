@@ -1,102 +1,127 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ProfileIcon from "@/components/profile/ProfileIcon";
+import { generateReview } from "@/lib/reviewGenerator";
+import { getCategoryChips } from "@/lib/reviewChips";
+import { canUseReviewAssistant } from "@/lib/reviewAssistant";
 
 export default function ReviewHubClient({ customer }) {
   const businessName = customer.company_name?.trim() || customer.full_name?.trim() || "Business";
   const hasGoogleUrl = Boolean(customer.google_review_url?.trim());
-  const aiEnabled = Boolean(customer.review_assistant_enabled);
+  const assistantEnabled = canUseReviewAssistant(customer);
 
-  // State
-  const [rating, setRating] = useState(null); // No default 5-stars
-  const [mode, setMode] = useState("quick"); // "quick" | "assistant" | "custom"
+  // Industry chips based on business category
+  const { industry, chips: categoryChips } = useMemo(
+    () => getCategoryChips(customer.category),
+    [customer.category]
+  );
 
-  // Quick mode fields
+  // ── State ───────────────────────────────────────────────────────────────
+  const [rating, setRating] = useState(null); // Must start unselected (null)
+  const [mode, setMode] = useState("assistant"); // "quick" | "assistant" | "custom"
+  const [lang, setLang] = useState("en"); // "en" | "hi"
+
+  // Quick Review state
   const [sentiment, setSentiment] = useState("");
   const [quickNotes, setQuickNotes] = useState("");
 
-  // Assistant mode fields
-  const [experience, setExperience] = useState("");
-  const [highlight, setHighlight] = useState("");
-  const [serviceUsed, setServiceUsed] = useState("");
-  const [staff, setStaff] = useState("");
+  // Assistant state
+  const [selectedChipIds, setSelectedChipIds] = useState([]);
+  const [product, setProduct] = useState("");
+  const [note, setNote] = useState("");
   const [recommend, setRecommend] = useState("");
-  const [freeform, setFreeform] = useState("");
 
-  // Custom / Draft editor
+  // Draft & feedback state
   const [draft, setDraft] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [apiError, setApiError] = useState("");
+  const [validationError, setValidationError] = useState("");
   const [copyStatus, setCopyStatus] = useState(""); // "" | "copied" | "fallback"
   const [googleOpened, setGoogleOpened] = useState(false);
 
   const textareaRef = useRef(null);
 
-  // Handle AI generation call
-  async function handleGenerate(e) {
-    if (e) e.preventDefault();
-    setApiError("");
+  // ── Word Count ──────────────────────────────────────────────────────────
+  const wordCount = useMemo(() => {
+    if (!draft || !draft.trim()) return 0;
+    return draft.trim().split(/\s+/).filter(Boolean).length;
+  }, [draft]);
+
+  // ── Chip Toggle ─────────────────────────────────────────────────────────
+  function toggleChip(chipId) {
+    setSelectedChipIds((prev) =>
+      prev.includes(chipId) ? prev.filter((id) => id !== chipId) : [...prev, chipId]
+    );
+    setValidationError("");
+  }
+
+  // ── Generate Review (100% Local Browser Execution) ──────────────────────
+  function handleGenerate(customSeed = null) {
+    setValidationError("");
     setCopyStatus("");
     setGoogleOpened(false);
 
-    if (!rating) {
-      setApiError("Please select a star rating between 1 and 5.");
+    const seed = customSeed !== null ? customSeed : Date.now();
+
+    let generated = null;
+
+    if (mode === "quick") {
+      // Map quick review inputs
+      const combinedNotes = [
+        sentiment ? `Overall feeling: ${sentiment}` : "",
+        quickNotes.trim(),
+      ]
+        .filter(Boolean)
+        .join(". ");
+
+      generated = generateReview({
+        rating,
+        chipIds: [],
+        product: "",
+        note: combinedNotes,
+        recommend: "",
+        lang,
+        seed,
+      });
+    } else if (mode === "assistant") {
+      generated = generateReview({
+        rating,
+        chipIds: selectedChipIds,
+        product: product.trim(),
+        note: note.trim(),
+        recommend,
+        lang,
+        seed,
+      });
+    }
+
+    if (!generated) {
+      setValidationError("Add at least one detail about your experience.");
       return;
     }
 
-    setIsGenerating(true);
-
-    try {
-      const payload = {
-        profile_slug: customer.profile_slug,
-        rating,
-        mode,
-        sentiment,
-        quick_notes: quickNotes,
-        experience,
-        highlight,
-        service_used: serviceUsed,
-        staff,
-        recommend,
-        freeform,
-      };
-
-      const res = await fetch("/api/review-assistant", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setApiError(data.error || "Failed to generate draft. Please try again.");
-      } else if (data.draft) {
-        setDraft(data.draft);
-      }
-    } catch {
-      setApiError("A network error occurred. Please try again or write your review directly.");
-    } finally {
-      setIsGenerating(false);
-    }
+    setDraft(generated);
   }
 
-  // Handle Clipboard Copy
+  // ── Regenerate ──────────────────────────────────────────────────────────
+  function handleRegenerate() {
+    handleGenerate(Date.now());
+  }
+
+  // ── Clipboard Copy Flow ─────────────────────────────────────────────────
   async function handleCopy() {
-    if (!draft.trim()) return;
+    if (!draft || !draft.trim()) return;
 
     try {
-      if (navigator?.clipboard?.writeText) {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(draft.trim());
         setCopyStatus("copied");
       } else {
-        throw new Error("Clipboard API not available");
+        throw new Error("Clipboard API unavailable");
       }
     } catch {
-      // Fallback: select text in textarea for manual copy
+      // Fallback: focus and select textarea for manual long-press/Ctrl+C
       if (textareaRef.current) {
         textareaRef.current.focus();
         textareaRef.current.select();
@@ -105,7 +130,7 @@ export default function ReviewHubClient({ customer }) {
     }
   }
 
-  // Handle Open Google Review
+  // ── Open Google Review ──────────────────────────────────────────────────
   function handleOpenGoogle() {
     if (!customer.google_review_url) return;
     window.open(customer.google_review_url, "_blank", "noopener,noreferrer");
@@ -165,21 +190,29 @@ export default function ReviewHubClient({ customer }) {
             )}
           </div>
 
-          <p className="text-xs text-slate-600 max-w-xs mx-auto leading-relaxed">
-            Thank you for visiting! We value your genuine feedback on Google Reviews.
+          <p className="text-xs font-medium text-slate-700">
+            Share your experience with {businessName}
           </p>
+
+          {customer.description && (
+            <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+              {customer.description}
+            </p>
+          )}
 
           {/* Missing Google Review URL Notice */}
           {!hasGoogleUrl && (
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-800 text-left space-y-1">
-              <span className="font-bold block">Google Review link is not configured yet</span>
+              <span className="font-bold block">
+                Google Review link hasn&apos;t been configured for this business yet.
+              </span>
               <p className="text-amber-700">
-                Please contact the business owner to update their Google Review link in their NFCISTA dashboard.
+                Please contact the business owner to add their Google Review link in their NFCISTA dashboard.
               </p>
             </div>
           )}
 
-          {/* Direct Write a Google Review Button (Always accessible if URL present) */}
+          {/* Direct Google Review Button (Always accessible for all rating levels) */}
           {hasGoogleUrl && (
             <div className="pt-2">
               <a
@@ -195,24 +228,24 @@ export default function ReviewHubClient({ customer }) {
           )}
         </div>
 
-        {/* AI REVIEW ASSISTANT SECTION (Only rendered when review_assistant_enabled is TRUE) */}
-        {aiEnabled && hasGoogleUrl && (
+        {/* REVIEW ASSISTANT SECTION (Only rendered when assistant is enabled and Google URL is present) */}
+        {assistantEnabled && hasGoogleUrl && (
           <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-5">
-            {/* AI Disclaimer & Transparency Banner */}
+            {/* Mandatory Transparency Disclaimer */}
             <div className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-2xl text-xs text-indigo-900 space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-indigo-950">
                 <span className="material-symbols-outlined text-[16px] text-indigo-600">auto_awesome</span>
-                <span>AI Review Assistant</span>
+                <span>Review Assistant</span>
               </div>
               <p className="text-indigo-800/90 leading-relaxed text-[11px]">
-                Your review should reflect your real experience. AI only helps turn your own thoughts into a clear review.
+                Your review should reflect your real experience. This tool only helps you turn your own thoughts into a clear review.
               </p>
             </div>
 
-            {/* Independent Star Rating Selector (No default rating) */}
+            {/* Independent Star Rating Selector (No default 5 stars) */}
             <div className="space-y-1.5 text-center">
               <label className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
-                How would you rate your experience? <span className="text-rose-500">*</span>
+                How would you rate your experience?
               </label>
               <div className="flex items-center justify-center gap-2 pt-1" role="radiogroup" aria-label="Rating">
                 {[1, 2, 3, 4, 5].map((starValue) => {
@@ -233,15 +266,53 @@ export default function ReviewHubClient({ customer }) {
                 })}
               </div>
               <p className="text-[11px] text-slate-500">
-                {rating ? `${rating} star${rating > 1 ? "s" : ""} selected` : "Select 1 to 5 stars"}
+                {rating ? `${rating} star${rating > 1 ? "s" : ""} selected` : "Select 1 to 5 stars (optional)"}
               </p>
             </div>
+
+            {/* Optional Direct Contact Assistance for 1–2 Star Experiences (Additive only, Google Review remains fully available) */}
+            {rating && rating <= 2 && (customer.whatsapp || customer.phone) && (
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs space-y-2 text-slate-700">
+                <div className="flex items-center gap-1.5 font-bold text-slate-800">
+                  <span className="material-symbols-outlined text-[16px] text-amber-600">contact_support</span>
+                  <span>Need immediate help or want to speak with us directly?</span>
+                </div>
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  We appreciate your honest feedback. You can reach out directly to help us resolve any issue immediately, or continue below to write and post your review on Google.
+                </p>
+                <div className="flex flex-wrap gap-2 pt-0.5">
+                  {customer.whatsapp && (
+                    <a
+                      href={`https://wa.me/${customer.whatsapp.replace(/[^0-9]/g, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-[11px] inline-flex items-center gap-1.5 transition-colors"
+                    >
+                      <ProfileIcon name="whatsapp" className="text-[14px]" aria-hidden={true} />
+                      <span>Chat on WhatsApp</span>
+                    </a>
+                  )}
+                  {customer.phone && (
+                    <a
+                      href={`tel:${customer.phone.replace(/[^0-9+]/g, "")}`}
+                      className="py-1.5 px-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-semibold text-[11px] inline-flex items-center gap-1.5 transition-colors"
+                    >
+                      <ProfileIcon name="phone" className="text-[14px]" aria-hidden={true} />
+                      <span>Call Directly</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Review Mode Tabs */}
             <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-2xl text-xs font-semibold">
               <button
                 type="button"
-                onClick={() => setMode("quick")}
+                onClick={() => {
+                  setMode("quick");
+                  setValidationError("");
+                }}
                 className={`py-2 px-1 rounded-xl transition-all cursor-pointer ${
                   mode === "quick" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-500 hover:text-slate-700"
                 }`}
@@ -250,16 +321,22 @@ export default function ReviewHubClient({ customer }) {
               </button>
               <button
                 type="button"
-                onClick={() => setMode("assistant")}
+                onClick={() => {
+                  setMode("assistant");
+                  setValidationError("");
+                }}
                 className={`py-2 px-1 rounded-xl transition-all cursor-pointer ${
                   mode === "assistant" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-500 hover:text-slate-700"
                 }`}
               >
-                AI Assistant
+                Assistant
               </button>
               <button
                 type="button"
-                onClick={() => setMode("custom")}
+                onClick={() => {
+                  setMode("custom");
+                  setValidationError("");
+                }}
                 className={`py-2 px-1 rounded-xl transition-all cursor-pointer ${
                   mode === "custom" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-500 hover:text-slate-700"
                 }`}
@@ -268,18 +345,45 @@ export default function ReviewHubClient({ customer }) {
               </button>
             </div>
 
-            {/* MODE 1: QUICK REVIEW */}
+            {/* Language Toggle for Assistant & Quick Modes */}
+            {mode !== "custom" && (
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-xs font-bold text-slate-700">Language:</span>
+                <div className="inline-flex rounded-xl bg-slate-100 p-0.5 text-xs font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => setLang("en")}
+                    className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                      lang === "en" ? "bg-white text-slate-900 shadow-2xs font-bold" : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    English
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLang("hi")}
+                    className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                      lang === "hi" ? "bg-white text-slate-900 shadow-2xs font-bold" : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    Hinglish
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── MODE 1: QUICK REVIEW ───────────────────────────────── */}
             {mode === "quick" && (
               <div className="space-y-3">
                 <span className="text-xs font-bold text-slate-700 block">
                   Overall feeling:
                 </span>
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  {["Great", "Good", "Average", "Needs Improvement"].map((opt) => (
+                  {["Great", "Good", "Average", "Needs improvement"].map((opt) => (
                     <button
                       key={opt}
                       type="button"
-                      onClick={() => setSentiment(opt)}
+                      onClick={() => setSentiment(opt === sentiment ? "" : opt)}
                       className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
                         sentiment === opt
                           ? "border-primary bg-primary/5 text-primary font-bold shadow-2xs"
@@ -299,7 +403,7 @@ export default function ReviewHubClient({ customer }) {
                     type="text"
                     value={quickNotes}
                     onChange={(e) => setQuickNotes(e.target.value)}
-                    placeholder="e.g. fast turnaround, friendly staff, clean ambiance..."
+                    placeholder="e.g. fast turnaround, polite staff, clean ambiance..."
                     maxLength={300}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                   />
@@ -307,92 +411,114 @@ export default function ReviewHubClient({ customer }) {
               </div>
             )}
 
-            {/* MODE 2: AI REVIEW ASSISTANT */}
+            {/* ── MODE 2: ASSISTANT WITH CHIPS ────────────────────────── */}
             {mode === "assistant" && (
-              <div className="space-y-3 text-xs">
+              <div className="space-y-4 text-xs">
+                {/* Category Chips */}
                 <div>
-                  <label htmlFor="experience" className="font-semibold text-slate-700 block mb-1">
-                    How was your overall experience?
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="font-bold text-slate-700 block">
+                      Choose details that describe your visit:
+                    </label>
+                    <span className="text-[10px] text-slate-400 font-normal">
+                      {industry !== "generic" ? `${industry} chips` : "popular chips"}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5 pt-0.5">
+                    {categoryChips.map((chip) => {
+                      const isSelected = selectedChipIds.includes(chip.id);
+                      const isNegative = chip.sentiment === "negative";
+
+                      return (
+                        <button
+                          key={chip.id}
+                          type="button"
+                          onClick={() => toggleChip(chip.id)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer border ${
+                            isSelected
+                              ? isNegative
+                                ? "bg-rose-50 border-rose-300 text-rose-700 font-bold shadow-2xs"
+                                : "bg-primary/10 border-primary text-primary font-bold shadow-2xs"
+                              : isNegative
+                              ? "bg-white border-slate-200 text-slate-600 hover:border-rose-200 hover:text-rose-600"
+                              : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300"
+                          }`}
+                        >
+                          {isSelected ? "✓ " : ""}
+                          {chip.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Optional Product / Service */}
+                <div>
+                  <label htmlFor="product" className="font-semibold text-slate-700 block mb-1">
+                    Product or service used (optional):
                   </label>
                   <input
-                    id="experience"
+                    id="product"
                     type="text"
-                    value={experience}
-                    onChange={(e) => setExperience(e.target.value)}
-                    placeholder="e.g. very smooth and pleasant..."
-                    maxLength={300}
+                    value={product}
+                    onChange={(e) => setProduct(e.target.value)}
+                    placeholder="e.g. Haircut, Dinner, Dental cleaning, Sneakers..."
+                    maxLength={150}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                   />
                 </div>
 
+                {/* Optional Short Note */}
                 <div>
-                  <label htmlFor="highlight" className="font-semibold text-slate-700 block mb-1">
-                    What did you like or what stood out?
-                  </label>
-                  <input
-                    id="highlight"
-                    type="text"
-                    value={highlight}
-                    onChange={(e) => setHighlight(e.target.value)}
-                    placeholder="e.g. attention to detail, quality of work..."
-                    maxLength={300}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label htmlFor="serviceUsed" className="font-semibold text-slate-700 block mb-1">
-                      Product or service used:
-                    </label>
-                    <input
-                      id="serviceUsed"
-                      type="text"
-                      value={serviceUsed}
-                      onChange={(e) => setServiceUsed(e.target.value)}
-                      placeholder="e.g. consulting, haircut..."
-                      maxLength={150}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="staff" className="font-semibold text-slate-700 block mb-1">
-                      Staff / customer service:
-                    </label>
-                    <input
-                      id="staff"
-                      type="text"
-                      value={staff}
-                      onChange={(e) => setStaff(e.target.value)}
-                      placeholder="e.g. polite and helpful..."
-                      maxLength={150}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="freeform" className="font-semibold text-slate-700 block mb-1">
-                    Anything else in your own words? (optional)
+                  <label htmlFor="note" className="font-semibold text-slate-700 block mb-1">
+                    Short note in your own words (optional):
                   </label>
                   <textarea
-                    id="freeform"
+                    id="note"
                     rows={2}
-                    value={freeform}
-                    onChange={(e) => setFreeform(e.target.value)}
-                    placeholder="Add any additional genuine feedback..."
-                    maxLength={500}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="e.g. Loved the attention to detail and ambiance..."
+                    maxLength={400}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
                   />
+                </div>
+
+                {/* Optional Recommendation Choice */}
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1.5">
+                    Would you recommend this business? (optional)
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { key: "yes", label: "Yes, definitely" },
+                      { key: "maybe", label: "Not sure" },
+                      { key: "no", label: "No" },
+                    ].map((opt) => (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => setRecommend(recommend === opt.key ? "" : opt.key)}
+                        className={`p-2 rounded-xl border text-center transition-all cursor-pointer text-xs ${
+                          recommend === opt.key
+                            ? "border-primary bg-primary/5 text-primary font-bold shadow-2xs"
+                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* MODE 3: WRITE MY OWN */}
+            {/* ── MODE 3: WRITE MY OWN ───────────────────────────────── */}
             {mode === "custom" && (
               <div className="space-y-2 text-xs">
                 <label htmlFor="customText" className="font-semibold text-slate-700 block">
-                  Write your review directly (no AI required):
+                  Write your review directly:
                 </label>
                 <textarea
                   id="customText"
@@ -406,49 +532,44 @@ export default function ReviewHubClient({ customer }) {
               </div>
             )}
 
-            {/* Error Display */}
-            {apiError && (
+            {/* Validation / Error Message */}
+            {validationError && (
               <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800">
-                {apiError}
+                {validationError}
               </div>
             )}
 
-            {/* Generate Action Button (Modes 1 and 2) */}
+            {/* Action Button: Create My Review (for Quick and Assistant modes) */}
             {mode !== "custom" && (
               <div>
                 <button
                   type="button"
-                  onClick={handleGenerate}
-                  disabled={isGenerating}
-                  className="w-full py-3 px-4 bg-primary hover:bg-[#003ea8] text-white font-semibold rounded-2xl shadow-xs transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2 text-xs cursor-pointer"
+                  onClick={() => handleGenerate()}
+                  className="w-full py-3 px-4 bg-primary hover:bg-[#003ea8] text-white font-semibold rounded-2xl shadow-xs transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-xs cursor-pointer"
                 >
-                  {isGenerating ? (
-                    <>
-                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Drafting your review...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
-                      <span>Help Me Write My Review</span>
-                    </>
-                  )}
+                  <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
+                  <span>Create My Review</span>
                 </button>
               </div>
             )}
 
-            {/* REVIEW EDITOR & COPY SECTION (Visible when draft is populated) */}
+            {/* ── REVIEW DRAFT EDITOR & COPY SECTION ─────────────────── */}
             {draft && (
               <div className="space-y-3 pt-3 border-t border-slate-100">
                 <div className="flex items-center justify-between">
-                  <label htmlFor="draftTextarea" className="text-xs font-bold text-slate-800">
-                    Your Review Draft (editable):
-                  </label>
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="draftTextarea" className="text-xs font-bold text-slate-800">
+                      Your Review Draft (editable):
+                    </label>
+                    <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                      {wordCount} {wordCount === 1 ? "word" : "words"}
+                    </span>
+                  </div>
+
                   {mode !== "custom" && (
                     <button
                       type="button"
-                      onClick={handleGenerate}
-                      disabled={isGenerating}
+                      onClick={handleRegenerate}
                       className="text-[11px] font-semibold text-primary hover:underline cursor-pointer inline-flex items-center gap-1"
                     >
                       <span className="material-symbols-outlined text-[13px]">refresh</span>
@@ -469,13 +590,13 @@ export default function ReviewHubClient({ customer }) {
 
                 {/* Copy Status Feedback */}
                 {copyStatus === "copied" && (
-                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-medium">
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-medium animate-fadeIn">
                     Review copied! Now open Google Reviews and paste it.
                   </div>
                 )}
                 {copyStatus === "fallback" && (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 font-medium">
-                    📋 Text selected! Long-press or press Ctrl+C to copy, then open Google Reviews.
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 font-medium animate-fadeIn">
+                    Press and hold to copy manually.
                   </div>
                 )}
                 {googleOpened && (
@@ -484,7 +605,7 @@ export default function ReviewHubClient({ customer }) {
                   </div>
                 )}
 
-                {/* Copy & Open Google Action Buttons */}
+                {/* Copy Review & Open Google Review Buttons */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                   <button
                     type="button"
@@ -498,7 +619,11 @@ export default function ReviewHubClient({ customer }) {
                   <button
                     type="button"
                     onClick={handleOpenGoogle}
-                    className="py-3 px-4 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-2xl shadow-xs transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-xs cursor-pointer"
+                    className={`py-3 px-4 rounded-2xl shadow-xs transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-xs cursor-pointer font-semibold ${
+                      copyStatus === "copied"
+                        ? "bg-amber-500 hover:bg-amber-600 text-white ring-2 ring-amber-400 ring-offset-2"
+                        : "bg-amber-500 hover:bg-amber-600 text-white"
+                    }`}
                   >
                     <ProfileIcon name="star" className="text-[16px]" aria-hidden={true} />
                     <span>Open Google Review</span>
