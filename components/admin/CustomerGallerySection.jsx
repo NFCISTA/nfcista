@@ -414,7 +414,22 @@ export default function CustomerGallerySection({
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="space-y-4 pt-3 border-t border-outline-variant/20">
+    <div
+      className="space-y-4 pt-3 border-t border-outline-variant/20"
+      onKeyDown={(e) => {
+        // Isolate portfolio operations: prevent Enter key inside portfolio section from triggering outer customer form submission
+        if (e.key === "Enter") {
+          e.stopPropagation();
+          if (e.target.tagName === "INPUT") {
+            e.preventDefault();
+            // If in the item editor, Enter key can safely trigger item save instead of outer customer submit
+            if (isEditorOpen && !isSaving) {
+              handleSaveItem();
+            }
+          }
+        }
+      }}
+    >
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
         <div className="flex items-center gap-2 text-label-sm font-bold uppercase tracking-wider text-primary">
@@ -734,10 +749,10 @@ export default function CustomerGallerySection({
           <div className="flex items-center justify-between p-3.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30">
             <div>
               <span className="text-label-sm font-semibold text-on-surface">
-                Show Publicly on Profile
+                Individual Item Visibility
               </span>
               <p className="text-[11.5px] text-on-surface-variant">
-                When active, this item appears in the Portfolio &amp; Products section of the public card.
+                Controls whether this specific item appears on the card. Independent of customer account active status.
               </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer shrink-0">

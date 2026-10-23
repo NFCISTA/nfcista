@@ -604,6 +604,7 @@ export default function AdminCustomersDashboard() {
 
       const payload = {
         ...formData,
+        profile_slug: editingId ? (originalSlug || formData.profile_slug) : formData.profile_slug,
         photo_url: finalPhotoUrl,
         banner_url: finalBannerUrl,
       };
@@ -1778,14 +1779,18 @@ export default function AdminCustomersDashboard() {
                       type="text"
                       required
                       value={formData.profile_slug}
-                      onChange={(e) =>
+                      readOnly={Boolean(editingId)}
+                      onChange={(e) => {
+                        if (editingId) return; // Locked in edit mode to preserve NFC card URLs
                         setFormData({
                           ...formData,
                           profile_slug: e.target.value.toLowerCase(),
-                        })
-                      }
+                        });
+                      }}
                       placeholder="sarah-mitchell"
-                      className="w-full h-11 px-3.5 bg-transparent text-on-surface text-body-md font-mono focus:outline-none"
+                      className={`w-full h-11 px-3.5 bg-transparent text-on-surface text-body-md font-mono focus:outline-none ${
+                        editingId ? "opacity-75 cursor-not-allowed select-all" : ""
+                      }`}
                     />
                   </div>
                   {editingId ? (
@@ -1794,7 +1799,7 @@ export default function AdminCustomersDashboard() {
                         lock
                       </span>
                       <span>
-                        NFC Profile Slug remains stable. Only change if deliberately re-encoding physical NFC cards.
+                        NFC Profile Slug is locked in edit mode to preserve physical NFC chips and printed QR codes.
                       </span>
                     </p>
                   ) : (
@@ -1809,27 +1814,40 @@ export default function AdminCustomersDashboard() {
                   )}
                 </div>
 
-                {/* Active Toggle */}
-                <div className="flex items-center justify-between pt-1">
-                  <div>
-                    <span className="text-label-md font-bold text-on-surface">
-                      Active
-                    </span>
-                    <p className="text-body-sm text-on-surface-variant">
-                      When inactive, the public URL (/p/[slug]) will display an inactive card notice.
-                    </p>
+                {/* Customer Profile Active Status (clearly separated from individual item visibility) */}
+                <div className="p-4 rounded-xl bg-surface-container-low/60 border border-outline-variant/30 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-label-md font-bold text-on-surface">
+                          Customer Profile Active Status
+                        </span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            formData.is_active
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-slate-100 text-slate-600 border border-slate-300"
+                          }`}
+                        >
+                          {formData.is_active ? "LIVE" : "INACTIVE"}
+                        </span>
+                      </div>
+                      <p className="text-body-sm text-on-surface-variant">
+                        Controls whether the digital business card at <span className="font-mono text-primary font-semibold">/p/{formData.profile_slug || "..."}</span> is accessible to visitors. Independent from portfolio items.
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
+                      <input
+                        type="checkbox"
+                        checked={formData.is_active}
+                        onChange={(e) =>
+                          setFormData({ ...formData, is_active: e.target.checked })
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
+                    </label>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_active}
-                      onChange={(e) =>
-                        setFormData({ ...formData, is_active: e.target.checked })
-                      }
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
-                  </label>
                 </div>
               </div>{/* end Profile Settings */}
 
