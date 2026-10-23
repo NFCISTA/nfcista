@@ -1,43 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { supabase } from "@/lib/supabaseClient";
+import { useCustomer } from "./layout";
 
 export default function CustomerDashboardPage() {
-  const [customer, setCustomer] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { customer, loading, error } = useCustomer();
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    async function loadCustomer() {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.access_token) return;
-
-        const res = await fetch("/api/customer/profile", {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-          setError(data.error || "Unable to load customer profile.");
-        } else {
-          setCustomer(data.customer);
-        }
-      } catch (err) {
-        setError("Network error while loading your profile.");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadCustomer();
-  }, []);
 
   function handleCopyLink() {
     if (!customer?.profile_slug) return;

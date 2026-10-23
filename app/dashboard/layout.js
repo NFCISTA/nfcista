@@ -1,9 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
+
+export const CustomerContext = createContext({
+  customer: null,
+  user: null,
+  loading: true,
+  error: "",
+  setCustomer: () => {},
+});
+
+export function useCustomer() {
+  return useContext(CustomerContext);
+}
 
 export default function CustomerDashboardLayout({ children }) {
   const router = useRouter();
@@ -11,6 +23,7 @@ export default function CustomerDashboardLayout({ children }) {
   const [user, setUser] = useState(null);
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [profileError, setProfileError] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -43,9 +56,13 @@ export default function CustomerDashboardLayout({ children }) {
         if (res.ok) {
           const data = await res.json();
           setCustomer(data.customer);
+        } else {
+          const data = await res.json().catch(() => ({}));
+          setProfileError(data.error || "Unable to load customer profile.");
         }
       } catch (err) {
         console.error("Dashboard auth check error:", err);
+        setProfileError("Network error while loading your profile.");
       } finally {
         setLoading(false);
       }
@@ -102,8 +119,17 @@ export default function CustomerDashboardLayout({ children }) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col selection:bg-primary selection:text-white">
-      {/* Top Navigation */}
+    <CustomerContext.Provider
+      value={{
+        customer,
+        user,
+        loading,
+        error: profileError,
+        setCustomer,
+      }}
+    >
+      <div className="min-h-screen bg-[#F8FAFC] flex flex-col selection:bg-primary selection:text-white">
+        {/* Top Navigation */}
       <header className="sticky top-0 z-30 bg-surface-container-lowest border-b border-outline-variant/30 shadow-card">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4 sm:gap-6 min-w-0">
@@ -243,5 +269,6 @@ export default function CustomerDashboardLayout({ children }) {
         {children}
       </main>
     </div>
+    </CustomerContext.Provider>
   );
 }
