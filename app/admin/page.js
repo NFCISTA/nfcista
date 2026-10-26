@@ -108,6 +108,13 @@ export default function AdminCustomersDashboard() {
   const [loginModalError, setLoginModalError] = useState("");
   const [loginModalSuccess, setLoginModalSuccess] = useState("");
 
+  // Login status and management state (Wave 1)
+  const [loginAuthStatus, setLoginAuthStatus] = useState(null);
+  const [loginStatusLoading, setLoginStatusLoading] = useState(false);
+  const [loginActionResult, setLoginActionResult] = useState(null);
+  const [copiedActionLink, setCopiedActionLink] = useState(false);
+  const [isTogglingLogin, setIsTogglingLogin] = useState(false);
+
   // Load customer list
   async function loadCustomers() {
     setLoading(true);
@@ -402,8 +409,8 @@ export default function AdminCustomersDashboard() {
     return pwd + "1!";
   }
 
-  // Open Create Login modal
-  function handleOpenLoginModal(customer) {
+  // Open Create Login modal — also fetches auth status for already-linked customers
+  async function handleOpenLoginModal(customer) {
     setLoginModalCustomer(customer);
     setLoginEmail(customer.email || "");
     setLoginPassword(generateTemporaryPassword());
@@ -411,6 +418,35 @@ export default function AdminCustomersDashboard() {
     setCopiedCreds(false);
     setLoginModalError("");
     setLoginModalSuccess("");
+    setLoginAuthStatus(null);
+    setLoginActionResult(null);
+    setCopiedActionLink(false);
+
+    // If customer already has a login, fetch its real auth status
+    if (customer.auth_user_id) {
+      setLoginStatusLoading(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch(
+          `/api/admin/customers/login-status?customer_id=${encodeURIComponent(customer.id)}`,
+          {
+            headers: {
+              ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+            },
+          }
+        );
+        const data = await res.json().catch(() => null);
+        if (res.ok && data) {
+          setLoginAuthStatus(data);
+        } else {
+          setLoginAuthStatus({ error: data?.error || "Failed to load login status." });
+        }
+      } catch {
+        setLoginAuthStatus({ error: "Network error while loading login status." });
+      } finally {
+        setLoginStatusLoading(false);
+      }
+    }
   }
 
   // Submit Create Login
@@ -497,6 +533,98 @@ export default function AdminCustomersDashboard() {
       setLoginModalError(err?.message ? `Error: ${err.message}` : "An unexpected error occurred. Please try again.");
     } finally {
       setIsCreatingLogin(false);
+    }
+  }
+
+  // Resend setup / invitation link to an already-linked customer
+  async function handleResendSetup() {
+    setLoginModalError("");
+    setLoginActionResult(null);
+    setCopiedActionLink(false);
+    setLoginStatusLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/admin/customers/resend-setup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ customer_id: loginModalCustomer.id }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) {
+        setLoginActionResult({ type: "setup_link", link: data.action_link, message: data.message });
+      } else {
+        setLoginModalError(data?.error || `Failed to generate setup link (HTTP ${res.status}).`);
+      }
+    } catch {
+      setLoginModalError("Network error. Please try again.");
+    } finally {
+      setLoginStatusLoading(false);
+    }
+  }
+
+  // Send password reset link to an already-linked customer
+  async function handleSendPasswordReset() {
+    setLoginModalError("");
+    setLoginActionResult(null);
+    setCopiedActionLink(false);
+    setLoginStatusLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/admin/customers/send-password-reset", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ customer_id: loginModalCustomer.id }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) {
+        setLoginActionResult({ type: "reset_link", link: data.action_link, message: data.message });
+      } else {
+        setLoginModalError(data?.error || `Failed to generate reset link (HTTP ${res.status}).`);
+      }
+    } catch {
+      setLoginModalError("Network error. Please try again.");
+    } finally {
+      setLoginStatusLoading(false);
+    }
+  }
+
+  // Disable or enable customer login (does NOT affect public profile is_active)
+  async function handleToggleLogin(action) {
+    setLoginModalError("");
+    setLoginActionResult(null);
+    setIsTogglingLogin(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/admin/customers/toggle-login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ customer_id: loginModalCustomer.id, action }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) {
+        // Update local auth status to reflect the new ban state
+        setLoginAuthStatus((prev) => ({
+          ...(prev || {}),
+          is_banned: data.is_banned,
+          login_status: data.is_banned ? "disabled" : (prev?.setup_complete ? "active" : "setup_pending"),
+        }));
+        setLoginActionResult({ type: "toggle", message: data.message });
+      } else {
+        setLoginModalError(data?.error || `Failed to ${action} login (HTTP ${res.status}).`);
+      }
+    } catch {
+      setLoginModalError("Network error. Please try again.");
+    } finally {
+      setIsTogglingLogin(false);
     }
   }
 
@@ -2229,21 +2357,22 @@ export default function AdminCustomersDashboard() {
         </div>
       )}
 
+
       {/* ============================================================================== */}
-      {/* CREATE CUSTOMER LOGIN MODAL                                                    */}
+      {/* CUSTOMER LOGIN MANAGEMENT MODAL                                                */}
       {/* ============================================================================== */}
       {loginModalCustomer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-float flex flex-col">
+          <div className="w-full max-w-md bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-float flex flex-col max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="px-5 pt-5 pb-4 border-b border-outline-variant/20 flex items-center justify-between">
+            <div className="px-5 pt-5 pb-4 border-b border-outline-variant/20 flex items-center justify-between sticky top-0 bg-surface-container-lowest z-10">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                   <span className="material-symbols-outlined text-[20px]">key</span>
                 </div>
                 <div>
                   <h3 className="text-title-md font-bold text-on-surface">
-                    {loginModalCustomer.auth_user_id ? "Customer Portal Login" : "Create Customer Login"}
+                    {loginModalCustomer.auth_user_id ? "Customer Login Management" : "Create Customer Login"}
                   </h3>
                   <p className="text-[11px] text-on-surface-variant truncate max-w-[220px]">
                     {loginModalCustomer.full_name}
@@ -2259,24 +2388,173 @@ export default function AdminCustomersDashboard() {
             </div>
 
             <div className="p-5 space-y-4">
-              {/* Already linked status */}
-              {loginModalCustomer.auth_user_id && !loginModalSuccess && (
-                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-2 text-sm">
-                  <div className="flex items-center gap-2 font-semibold text-emerald-800">
-                    <span className="material-symbols-outlined text-[20px] text-emerald-600">check_circle</span>
-                    <span>Portal Login Active</span>
-                  </div>
-                  <p className="text-xs text-emerald-700 leading-relaxed">
-                    This customer has an active Supabase Auth account linked to their profile record.
-                  </p>
-                  <div className="pt-1 text-xs">
-                    <span className="font-semibold">Customer Login URL: </span>
-                    <code className="bg-emerald-100/70 px-1.5 py-0.5 rounded text-emerald-800">/login</code>
-                  </div>
-                </div>
+
+              {/* ── EXISTING LOGIN: Status + Management Actions ── */}
+              {loginModalCustomer.auth_user_id && !createdCredentials && (
+                <>
+                  {/* Status card — loading */}
+                  {loginStatusLoading && (
+                    <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/20 flex items-center gap-3">
+                      <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin shrink-0" />
+                      <p className="text-xs text-on-surface-variant">Loading login status...</p>
+                    </div>
+                  )}
+
+                  {/* Status card — loaded */}
+                  {!loginStatusLoading && loginAuthStatus && !loginAuthStatus.error && (
+                    <div className={`p-4 rounded-xl border space-y-2 text-sm ${
+                      loginAuthStatus.login_status === "disabled"
+                        ? "bg-red-50 border-red-200 text-red-900"
+                        : loginAuthStatus.login_status === "setup_pending"
+                        ? "bg-amber-50 border-amber-200 text-amber-900"
+                        : "bg-emerald-50 border-emerald-200 text-emerald-900"
+                    }`}>
+                      <div className="flex items-center gap-2 font-semibold">
+                        <span className={`material-symbols-outlined text-[20px] ${
+                          loginAuthStatus.login_status === "disabled"
+                            ? "text-red-500"
+                            : loginAuthStatus.login_status === "setup_pending"
+                            ? "text-amber-500"
+                            : "text-emerald-600"
+                        }`}>
+                          {loginAuthStatus.login_status === "disabled"
+                            ? "block"
+                            : loginAuthStatus.login_status === "setup_pending"
+                            ? "mail"
+                            : "check_circle"}
+                        </span>
+                        <span>
+                          {loginAuthStatus.login_status === "disabled"
+                            ? "Login Disabled"
+                            : loginAuthStatus.login_status === "setup_pending"
+                            ? "Setup Pending"
+                            : "Active Login"}
+                        </span>
+                      </div>
+                      <div className="text-[11px] space-y-0.5 opacity-80">
+                        <p><span className="font-semibold">Email:</span> {loginAuthStatus.email || "—"}</p>
+                        {loginAuthStatus.last_sign_in_at && (
+                          <p><span className="font-semibold">Last sign-in:</span> {new Date(loginAuthStatus.last_sign_in_at).toLocaleString()}</p>
+                        )}
+                        {!loginAuthStatus.last_sign_in_at && (
+                          <p className="italic">Customer has not signed in yet.</p>
+                        )}
+                        {loginAuthStatus.login_status === "disabled" && loginAuthStatus.banned_until && (
+                          <p><span className="font-semibold">Disabled until:</span> {new Date(loginAuthStatus.banned_until).toLocaleString()}</p>
+                        )}
+                      </div>
+                      <p className="text-[10px] opacity-60 pt-0.5 border-t border-current/10">
+                        Customer login status is independent of their public profile visibility.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Status card — error fetching status */}
+                  {!loginStatusLoading && loginAuthStatus?.error && (
+                    <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/20 space-y-1">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant">
+                        <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                        <span>Portal Login Linked</span>
+                      </div>
+                      <p className="text-[11px] text-on-surface-variant">
+                        Email: {loginModalCustomer.email || "—"}
+                      </p>
+                      <p className="text-[10px] text-on-surface-variant/60 italic">{loginAuthStatus.error}</p>
+                    </div>
+                  )}
+
+                  {/* Management action result (link to copy or toggle confirmation) */}
+                  {loginActionResult && (
+                    <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-2">
+                      <p className="text-xs text-on-surface leading-relaxed">{loginActionResult.message}</p>
+                      {loginActionResult.link && (
+                        <>
+                          <div className="p-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant/20">
+                            <span className="text-[10px] text-on-surface-variant block uppercase font-bold mb-0.5">
+                              {loginActionResult.type === "setup_link" ? "Setup Link" : "Password Reset Link"}
+                            </span>
+                            <p className="font-mono text-[11px] text-primary break-all">{loginActionResult.link}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(loginActionResult.link).then(() => {
+                                setCopiedActionLink(true);
+                                setTimeout(() => setCopiedActionLink(false), 2500);
+                              });
+                            }}
+                            className="w-full py-2 px-3 rounded-lg bg-surface-container-lowest hover:bg-surface-container border border-outline-variant/30 text-on-surface text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-[15px] text-primary">
+                              {copiedActionLink ? "check" : "content_copy"}
+                            </span>
+                            <span>{copiedActionLink ? "Copied!" : "Copy Link"}</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Action buttons */}
+                  {!loginStatusLoading && (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Login Actions</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={handleResendSetup}
+                          disabled={loginStatusLoading || isTogglingLogin}
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-outline-variant/40 bg-surface-container-low hover:bg-surface-container text-on-surface text-xs font-semibold transition-colors disabled:opacity-50"
+                        >
+                          <span className="material-symbols-outlined text-[15px] text-primary">send</span>
+                          <span>Resend Setup Link</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSendPasswordReset}
+                          disabled={loginStatusLoading || isTogglingLogin}
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-outline-variant/40 bg-surface-container-low hover:bg-surface-container text-on-surface text-xs font-semibold transition-colors disabled:opacity-50"
+                        >
+                          <span className="material-symbols-outlined text-[15px] text-amber-600">lock_reset</span>
+                          <span>Password Reset Link</span>
+                        </button>
+                        {loginAuthStatus?.is_banned ? (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleLogin("enable")}
+                            disabled={isTogglingLogin || loginStatusLoading}
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold transition-colors disabled:opacity-50 col-span-2"
+                          >
+                            {isTogglingLogin ? (
+                              <><div className="w-3 h-3 border-2 border-emerald-400/30 border-t-emerald-600 rounded-full animate-spin" /><span>Enabling...</span></>
+                            ) : (
+                              <><span className="material-symbols-outlined text-[15px]">lock_open</span><span>Enable Login</span></>
+                            )}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleLogin("disable")}
+                            disabled={isTogglingLogin || loginStatusLoading}
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-800 text-xs font-semibold transition-colors disabled:opacity-50 col-span-2"
+                          >
+                            {isTogglingLogin ? (
+                              <><div className="w-3 h-3 border-2 border-red-400/30 border-t-red-600 rounded-full animate-spin" /><span>Disabling...</span></>
+                            ) : (
+                              <><span className="material-symbols-outlined text-[15px]">block</span><span>Disable Login</span></>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-on-surface-variant/60 italic">
+                        Disabling login does not affect the customer&apos;s public digital profile.
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
 
-              {/* Success message */}
+              {/* ── SUCCESS MESSAGE (Create Login) ── */}
               {loginModalSuccess && (
                 <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-start gap-2.5 text-sm">
                   <span className="material-symbols-outlined text-[20px] text-emerald-600 shrink-0 mt-0.5">check_circle</span>
@@ -2284,7 +2562,7 @@ export default function AdminCustomersDashboard() {
                 </div>
               )}
 
-              {/* Created credentials handover card */}
+              {/* ── CREATED CREDENTIALS HANDOVER ── */}
               {createdCredentials && (
                 <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-3">
                   <div className="flex items-center justify-between">
@@ -2316,7 +2594,7 @@ export default function AdminCustomersDashboard() {
                     {createdCredentials.actionLink && (
                       <div className="p-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant/20 space-y-1">
                         <span className="text-[10px] text-on-surface-variant block uppercase font-bold">Password Setup Link</span>
-                        <p className="font-mono text-[11px] text-on-surface-variant truncate">{createdCredentials.actionLink}</p>
+                        <p className="font-mono text-[11px] text-on-surface-variant break-all">{createdCredentials.actionLink}</p>
                       </div>
                     )}
                   </div>
@@ -2348,7 +2626,7 @@ export default function AdminCustomersDashboard() {
                 </div>
               )}
 
-              {/* Error message */}
+              {/* ── ERROR MESSAGE ── */}
               {loginModalError && (
                 <div className="p-3.5 rounded-xl bg-error-container/30 border border-error/30 text-error flex items-start gap-2.5 text-sm">
                   <span className="material-symbols-outlined text-[20px] shrink-0 mt-0.5">error</span>
@@ -2356,7 +2634,7 @@ export default function AdminCustomersDashboard() {
                 </div>
               )}
 
-              {/* Form — only show if not already linked OR if we want to retry */}
+              {/* ── CREATE LOGIN FORM (no auth_user_id yet) ── */}
               {!loginModalCustomer.auth_user_id && !createdCredentials && (
                 <form onSubmit={handleCreateLogin} className="space-y-4">
                   <div>
@@ -2439,7 +2717,7 @@ export default function AdminCustomersDashboard() {
                 </form>
               )}
 
-              {/* Close button after success */}
+              {/* ── CLOSE / DONE BUTTON ── */}
               {(loginModalSuccess || loginModalCustomer.auth_user_id || createdCredentials) && (
                 <div className="flex justify-end pt-1">
                   <button
