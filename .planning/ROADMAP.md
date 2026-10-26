@@ -15,6 +15,7 @@ NFCISTA is evolving from an existing Next.js 16 + Supabase digital business card
 ## Phase Details
 
 ### Phase 1: Foundation Baseline & Regulatory Consent
+
 **Goal**: Solidify the existing production baseline, ensuring dynamic QR redirects, public profile rendering, and admin onboarding comply with DPDP consent recording without breaking changes.
 **Mode:** mvp
 **Depends on**: Nothing (first phase)
@@ -23,13 +24,18 @@ NFCISTA is evolving from an existing Next.js 16 + Supabase digital business card
   1. Existing dynamic QR redirects (`/r/[cardCode]`) and public customer profiles (`/p/[slug]`) resolve with zero regressions.
   2. Admin onboarding flow explicitly captures customer DPDP consent and creates corresponding records in `public.customer_consents`.
   3. Dynamic QR code batch generator, vector print PDF builder, and camera scanning remain 100% functional.
+
 **Plans**: 2 plans
 
 Plans:
+**Wave 1**
 - [ ] 01-01: Audit and verify core redirects, profile rendering, and dynamic QR tools
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 01-02: Wire DPDP consent capture and storage into admin customer onboarding
 
 ### Phase 2: Review Assistant & Lead Enquiry Operations
+
 **Goal**: Enhance cardholder value by enabling direct customer lead capture and giving businesses a local, zero-cost Google Review generation hub.
 **Mode:** mvp
 **Depends on**: Phase 1
@@ -38,6 +44,7 @@ Plans:
   1. Profile visitors can submit an enquiry lead with real-time UI feedback and backend rate limiting.
   2. Admin dashboard includes an enquiries inbox to review, filter, and track inbound business leads.
   3. Admin can toggle the Review Assistant per business, and customers can generate multilingual review drafts and jump to Google Reviews.
+
 **Plans**: 2 plans
 
 Plans:
@@ -45,6 +52,7 @@ Plans:
 - [ ] 02-02: Review Assistant admin configuration toggle and public hub integration
 
 ### Phase 3: Customer Self-Service & Account Recovery
+
 **Goal**: Provide cardholders with a complete self-service account portal featuring secure password resets and independent media asset management.
 **Mode:** mvp
 **Depends on**: Phase 1
@@ -53,6 +61,7 @@ Plans:
   1. Cardholders can request a password reset email and establish new credentials through a dedicated recovery screen.
   2. Authenticated customers can update their bio, profile photo, and banner image directly from their dashboard.
   3. Customer gallery manager supports uploading, deleting, and reordering showcase items with proper RLS isolation.
+
 **Plans**: 2 plans
 
 Plans:
@@ -60,6 +69,7 @@ Plans:
 - [ ] 03-02: Self-service profile details, banner upload, and gallery manager hardening
 
 ### Phase 4: Card & Profile Analytics
+
 **Goal**: Measure card usage and engagement by logging scan interactions and presenting actionable metrics to admins and cardholders.
 **Mode:** mvp
 **Depends on**: Phase 1
@@ -68,6 +78,7 @@ Plans:
   1. Dynamic QR redirects log scan events (timestamp, device type, referrer) asynchronously with zero user-perceptible redirect delay.
   2. Admin dashboard displays total scans, unique visits, and top-performing cards.
   3. Customer dashboard presents personal scan activity and monthly engagement counts.
+
 **Plans**: 2 plans
 
 Plans:
@@ -75,6 +86,7 @@ Plans:
 - [ ] 04-02: Analytics dashboards for admin console and customer self-service
 
 ### Phase 5: Platform Reliability, Automated Testing & Compliance
+
 **Goal**: Standardize continuous testing and operational compliance tooling to ensure lasting platform stability and data principal rights management.
 **Mode:** mvp
 **Depends on**: Phase 1, Phase 2, Phase 3, Phase 4
@@ -83,6 +95,7 @@ Plans:
   1. A single unified `npm test` command executes unit math, API authorization, and route security tests.
   2. Admin console provides an interface to review, process, and record DPDP data subject requests (access, correction, erasure).
   3. All critical routes adhere to strict Content Security Policy and IP rate-limiting rules.
+
 **Plans**: 2 plans
 
 Plans:
