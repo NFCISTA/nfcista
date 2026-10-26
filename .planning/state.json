@@ -1,0 +1,38 @@
+{
+  "contract": "1.0.0",
+  "flavor": "core",
+  "milestone": null,
+  "phases": [
+    {
+      "number": "1",
+      "name": "Foundation Baseline & Regulatory Consent",
+      "status": "complete"
+    },
+    {
+      "number": "2",
+      "name": "Review Assistant & Lead Enquiry Operations",
+      "status": "in_progress"
+    },
+    {
+      "number": "3",
+      "name": "Customer Self-Service & Account Recovery",
+      "status": "pending"
+    },
+    {
+      "number": "4",
+      "name": "Card & Profile Analytics",
+      "status": "pending"
+    },
+    {
+      "number": "5",
+      "name": "Platform Reliability, Automated Testing & Compliance",
+      "status": "pending"
+    }
+  ],
+  "next": {
+    "command": "/gsd-progress --next",
+    "label": "Advance to the next step (plan phase 2)",
+    "reason": "Phase 2 of 5 — needs a plan"
+  },
+  "updated_at": "2026-10-26T13:49:03.365Z"
+}
