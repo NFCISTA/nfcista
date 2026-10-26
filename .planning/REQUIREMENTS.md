@@ -10,7 +10,7 @@ Requirements for active roadmap milestones. Each maps directly to roadmap phases
 ### Administration & Concierge Onboarding (ADMIN)
 
 - [ ] **ADMIN-01**: Admin can create and update customer profiles with contact, social, and business details via CMS
-- [ ] **ADMIN-02**: Admin can capture and record explicit DPDP-compliant customer consent during onboarding
+- [x] **ADMIN-02**: Admin can capture and record explicit DPDP-compliant customer consent during onboarding
 - [ ] **ADMIN-03**: Admin can view and manage inbound customer lead enquiries from a centralized dashboard
 - [ ] **ADMIN-04**: Admin can toggle and configure the Review Assistant feature per customer profile
 - [ ] **ADMIN-05**: Admin can manage the hardware product catalog (pricing, inventory status, product images)
@@ -85,7 +85,7 @@ Deferred to subsequent commercial growth milestones.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | ADMIN-01 | Phase 1 | Complete (Existing) |
-| ADMIN-02 | Phase 1 | Pending |
+| ADMIN-02 | Phase 1 | Complete |
 | ADMIN-03 | Phase 2 | Pending |
 | ADMIN-04 | Phase 2 | Pending |
 | ADMIN-05 | Phase 1 | Complete (Existing) |

@@ -6,7 +6,7 @@ NFCISTA is evolving from an existing Next.js 16 + Supabase digital business card
 
 ## Phases
 
-- [ ] **Phase 1: Foundation Baseline & Regulatory Consent** - Maintain 100% stable production routing and wire DPDP consent recording into admin onboarding
+- [x] **Phase 1: Foundation Baseline & Regulatory Consent** - Maintain 100% stable production routing and wire DPDP consent recording into admin onboarding (completed 2026-10-26)
 - [ ] **Phase 2: Review Assistant & Lead Enquiry Operations** - Unify customer lead capture and launch the customer review generation hub
 - [ ] **Phase 3: Customer Self-Service & Account Recovery** - Implement cardholder password reset, account recovery, and dashboard media management
 - [ ] **Phase 4: Card & Profile Analytics** - Track dynamic QR scan events, profile interactions, and expose metrics in dashboards
@@ -25,14 +25,14 @@ NFCISTA is evolving from an existing Next.js 16 + Supabase digital business card
   2. Admin onboarding flow explicitly captures customer DPDP consent and creates corresponding records in `public.customer_consents`.
   3. Dynamic QR code batch generator, vector print PDF builder, and camera scanning remain 100% functional.
 
-**Plans**: 2 plans
+**Plans**: 2/2 plans complete
 
 Plans:
 **Wave 1**
-- [ ] 01-01: Audit and verify core redirects, profile rendering, and dynamic QR tools
+- [x] 01-01: Audit and verify core redirects, profile rendering, and dynamic QR tools
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 01-02: Wire DPDP consent capture and storage into admin customer onboarding
+- [x] 01-02: Wire DPDP consent capture and storage into admin customer onboarding
 
 ### Phase 2: Review Assistant & Lead Enquiry Operations
 
