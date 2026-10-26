@@ -178,6 +178,110 @@ for (const pFile of protectedFiles) {
 }
 
 // ──────────────────────────────────────────────────────────────────
+// 5. Wave 2: Customer Password Recovery Flow & Security Audit
+// ──────────────────────────────────────────────────────────────────
+console.log("\n====================================================================");
+console.log("  5. Wave 2: Customer Password Recovery Verification");
+console.log("====================================================================");
+
+// Forgot Password Page Checks
+const forgotPwdPath = "app/forgot-password/page.js";
+if (!fs.existsSync(forgotPwdPath)) {
+  fail(`File Exists: ${forgotPwdPath}`, "File not found");
+} else {
+  ok(`File Exists: ${forgotPwdPath}`);
+  const forgotContent = fs.readFileSync(forgotPwdPath, "utf8");
+
+  if (forgotContent.includes("supabase.auth.resetPasswordForEmail")) {
+    ok(`${forgotPwdPath}: Uses supabase.auth.resetPasswordForEmail()`);
+  } else {
+    fail(`${forgotPwdPath}: Reset call`, "Missing resetPasswordForEmail call");
+  }
+
+  if (forgotContent.includes("Check your inbox") && forgotContent.includes("If an account exists")) {
+    ok(`${forgotPwdPath}: Anti-enumeration generic response implemented`);
+  } else {
+    fail(`${forgotPwdPath}: Anti-enumeration`, "Missing generic confirmation message");
+  }
+
+  if (forgotContent.includes("/reset-password")) {
+    ok(`${forgotPwdPath}: Targets /reset-password redirect`);
+  } else {
+    fail(`${forgotPwdPath}: Redirect target`, "Missing /reset-password target");
+  }
+}
+
+// Reset Password Page Checks
+const resetPwdPath = "app/reset-password/page.js";
+if (!fs.existsSync(resetPwdPath)) {
+  fail(`File Exists: ${resetPwdPath}`, "File not found");
+} else {
+  ok(`File Exists: ${resetPwdPath}`);
+  const resetContent = fs.readFileSync(resetPwdPath, "utf8");
+
+  if (
+    resetContent.includes("supabase.auth.exchangeCodeForSession") ||
+    resetContent.includes("supabase.auth.verifyOtp")
+  ) {
+    ok(`${resetPwdPath}: Implements recovery token/code exchange`);
+  } else {
+    fail(`${resetPwdPath}: Token exchange`, "Missing exchangeCodeForSession or verifyOtp");
+  }
+
+  if (resetContent.includes("newPassword.length < 6")) {
+    ok(`${resetPwdPath}: Enforces minimum 6-character password constraint`);
+  } else {
+    fail(`${resetPwdPath}: Password length constraint`, "Missing minimum length check");
+  }
+
+  if (resetContent.includes("newPassword !== confirmPassword")) {
+    ok(`${resetPwdPath}: Enforces password confirmation match`);
+  } else {
+    fail(`${resetPwdPath}: Password match`, "Missing match check");
+  }
+
+  if (resetContent.includes("supabase.auth.updateUser")) {
+    ok(`${resetPwdPath}: Uses supabase.auth.updateUser({ password })`);
+  } else {
+    fail(`${resetPwdPath}: Password update`, "Missing updateUser call");
+  }
+
+  if (resetContent.includes("Invalid or Expired Link") && resetContent.includes("/forgot-password")) {
+    ok(`${resetPwdPath}: Gracefully handles expired/invalid tokens with /forgot-password link`);
+  } else {
+    fail(`${resetPwdPath}: Invalid link handler`, "Missing invalid/expired link UI or forgot-password redirect");
+  }
+
+  if (resetContent.includes("<Suspense") && resetContent.includes("useSearchParams")) {
+    ok(`${resetPwdPath}: Wrapped in Suspense boundary for Next.js App Router compliance`);
+  } else {
+    fail(`${resetPwdPath}: Suspense boundary`, "Missing Suspense boundary around searchParams reader");
+  }
+}
+
+// Login Page Check
+const loginPageContent = fs.readFileSync("app/login/page.js", "utf8");
+if (loginPageContent.includes("/forgot-password") && loginPageContent.includes("Forgot your password?")) {
+  ok("app/login/page.js: Contains accessible 'Forgot your password?' link");
+} else {
+  fail("app/login/page.js: Forgot password link", "Missing link to /forgot-password");
+}
+
+// Proxy / Middleware Checks
+const proxyContent = fs.readFileSync("proxy.js", "utf8");
+if (proxyContent.includes("pathname === \"/forgot-password\"") && proxyContent.includes(":forgotpwd")) {
+  ok("proxy.js: Enforces rate limiting on /forgot-password (5 attempts / 15m)");
+} else {
+  fail("proxy.js: Forgot password rate limiting", "Missing /forgot-password rate-limit block");
+}
+
+if (proxyContent.includes("\"/forgot-password\"") && proxyContent.includes("\"/reset-password\"")) {
+  ok("proxy.js: config.matcher includes /forgot-password and /reset-password");
+} else {
+  fail("proxy.js: Matcher config", "Missing routes in config.matcher");
+}
+
+// ──────────────────────────────────────────────────────────────────
 // Final Summary
 // ──────────────────────────────────────────────────────────────────
 console.log("\n====================================================================");

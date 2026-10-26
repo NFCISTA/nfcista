@@ -145,7 +145,45 @@ export async function proxy(request) {
     return NextResponse.next();
   }
 
-  // 4. Defensive path check: Only process /p/* routes
+  // 4. Customer /forgot-password rate-limiting (5 requests per 15 minutes per IP)
+  if (pathname === "/forgot-password") {
+    try {
+      const ip = getClientIp(request);
+      const forgotResult = await checkRateLimit(`${ip}:forgotpwd`, {
+        limit: 5,
+        windowMs: 15 * 60 * 1000,
+      });
+
+      if (!forgotResult.success) {
+        return new Response(
+          JSON.stringify({
+            error: "Too Many Requests",
+            message: "Too many password reset requests. Please wait a few minutes before trying again.",
+          }),
+          {
+            status: 429,
+            headers: {
+              "Content-Type": "application/json",
+              "Retry-After": String(forgotResult.reset || 900),
+              "X-RateLimit-Limit": "5",
+              "X-RateLimit-Remaining": "0",
+              "X-RateLimit-Reset": String(forgotResult.reset || 900),
+            },
+          }
+        );
+      }
+    } catch {
+      // Fail-open
+    }
+    return NextResponse.next();
+  }
+
+  // 5. Allow /reset-password through without rate limiting (token protected)
+  if (pathname === "/reset-password") {
+    return NextResponse.next();
+  }
+
+  // 6. Defensive path check: Only process /p/* routes
   if (!pathname.startsWith("/p/")) {
     return NextResponse.next();
   }
@@ -228,7 +266,7 @@ export async function proxy(request) {
   }
 }
 
-// Match /p/* for rate limiting, /admin for admin gating, /dashboard for customer gating, /login for login rate limiting
+// Match /p/* for rate limiting, /admin for admin gating, /dashboard for customer gating, /login & /forgot-password for rate limiting
 export const config = {
   matcher: [
     "/p/:path*",
@@ -237,5 +275,7 @@ export const config = {
     "/dashboard",
     "/dashboard/:path*",
     "/login",
+    "/forgot-password",
+    "/reset-password",
   ],
 };
