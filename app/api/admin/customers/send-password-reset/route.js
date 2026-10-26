@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { authenticateAdmin } from "@/lib/adminAuth";
+import { getAuthRedirectUrl } from "@/lib/siteConfig";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -114,9 +115,14 @@ export async function POST(request) {
     // password. Supabase will direct the user to the recovery flow.
     // SECURITY: The action_link is returned only to the admin response.
     //           It is never logged here.
+    const redirectTo = getAuthRedirectUrl(request, "/reset-password");
+
     const { data: linkData, error: linkErr } = await serviceClient.auth.admin.generateLink({
       type: "recovery",
       email,
+      options: {
+        redirectTo,
+      },
     });
 
     if (linkErr || !linkData?.properties?.action_link) {

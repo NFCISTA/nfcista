@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { authenticateAdmin } from "@/lib/adminAuth";
+import { getAuthRedirectUrl } from "@/lib/siteConfig";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -187,9 +188,13 @@ export async function POST(request) {
     let actionLink = null;
     if (!cleanPassword) {
       try {
+        const redirectTo = getAuthRedirectUrl(request, "/reset-password");
         const { data: linkData, error: resetErr } = await serviceClient.auth.admin.generateLink({
           type: "recovery",
           email: cleanEmail,
+          options: {
+            redirectTo,
+          },
         });
         if (!resetErr && linkData?.properties?.action_link) {
           actionLink = linkData.properties.action_link;

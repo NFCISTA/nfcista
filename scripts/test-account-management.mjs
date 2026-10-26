@@ -1,5 +1,6 @@
 import fs from "fs";
 import { execSync } from "child_process";
+import { getAuthRedirectUrl, NFCISTA_BASE_URL } from "../lib/siteConfig.js";
 
 console.log("=== NFCISTA ACCOUNT MANAGEMENT & WAVE 1 REGRESSION TEST SUITE ===\n");
 
@@ -279,6 +280,91 @@ if (proxyContent.includes("\"/forgot-password\"") && proxyContent.includes("\"/r
   ok("proxy.js: config.matcher includes /forgot-password and /reset-password");
 } else {
   fail("proxy.js: Matcher config", "Missing routes in config.matcher");
+}
+
+// ──────────────────────────────────────────────────────────────────
+// 6. Setup & Password Reset Link Redirect Destination Audit
+// ──────────────────────────────────────────────────────────────────
+console.log("\n====================================================================");
+console.log("  6. Admin Link Redirect Destination & Host Poisoning Immunity");
+console.log("====================================================================");
+
+const origEnv = process.env.NODE_ENV;
+const origSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+try {
+  // Test 1: Production resolution
+  process.env.NODE_ENV = "production";
+  delete process.env.NEXT_PUBLIC_SITE_URL;
+  delete process.env.SITE_URL;
+
+  const prodUrl = getAuthRedirectUrl("/reset-password");
+  if (prodUrl === "https://nfcista.vercel.app/reset-password") {
+    ok("getAuthRedirectUrl: Resolves strictly to https://nfcista.vercel.app/reset-password in production");
+  } else {
+    fail("getAuthRedirectUrl: Production resolution", `Expected https://nfcista.vercel.app/reset-password, got ${prodUrl}`);
+  }
+
+  // Test 2: Host Header Poisoning Immunity in Production
+  // Even if an attacker supplies spoofed Host or X-Forwarded-Host headers, they MUST be ignored!
+  const maliciousReq = {
+    headers: {
+      get: (k) => {
+        if (k === "host") return "attacker-phishing.com";
+        if (k === "x-forwarded-host") return "evil-site.org";
+        return null;
+      },
+    },
+  };
+  const hardenedProdUrl = getAuthRedirectUrl(maliciousReq, "/reset-password");
+  if (hardenedProdUrl === "https://nfcista.vercel.app/reset-password") {
+    ok("getAuthRedirectUrl: Completely immune to Host Header Poisoning (spoofed Host/X-Forwarded-Host ignored)");
+  } else {
+    fail("getAuthRedirectUrl: Host Poisoning Vulnerability", `Spoofed headers altered redirect: ${hardenedProdUrl}`);
+  }
+
+  // Test 3: Local development resolution
+  process.env.NODE_ENV = "development";
+  const devUrl = getAuthRedirectUrl("/reset-password");
+  if (devUrl === "http://localhost:3000/reset-password") {
+    ok("getAuthRedirectUrl: Resolves strictly to http://localhost:3000/reset-password in development");
+  } else {
+    fail("getAuthRedirectUrl: Local dev resolution", `Expected http://localhost:3000/reset-password, got ${devUrl}`);
+  }
+
+  // Test 4: Explicit SITE_URL environment configuration precedence
+  process.env.SITE_URL = "https://custom-domain.nfcista.com";
+  const customUrl = getAuthRedirectUrl("/reset-password");
+  if (customUrl === "https://custom-domain.nfcista.com/reset-password") {
+    ok("getAuthRedirectUrl: Explicit SITE_URL environment variable takes precedence");
+  } else {
+    fail("getAuthRedirectUrl: Explicit env resolution", `Expected https://custom-domain.nfcista.com/reset-password, got ${customUrl}`);
+  }
+} finally {
+  // Restore environment
+  process.env.NODE_ENV = origEnv;
+  if (origSiteUrl) {
+    process.env.NEXT_PUBLIC_SITE_URL = origSiteUrl;
+  } else {
+    delete process.env.NEXT_PUBLIC_SITE_URL;
+  }
+  delete process.env.SITE_URL;
+}
+
+// Check route files use options: { redirectTo } in generateLink
+const linkRoutes = [
+  "app/api/admin/customers/resend-setup/route.js",
+  "app/api/admin/customers/send-password-reset/route.js",
+  "app/api/admin/customers/create-login/route.js",
+];
+
+for (const rPath of linkRoutes) {
+  const rContent = fs.readFileSync(rPath, "utf8");
+  if (rContent.includes("getAuthRedirectUrl(request") && rContent.includes("redirectTo,")) {
+    ok(`${rPath}: generateLink includes dynamic options.redirectTo`);
+  } else {
+    fail(`${rPath}: generateLink redirectTo`, "Missing getAuthRedirectUrl or redirectTo in generateLink options");
+  }
 }
 
 // ──────────────────────────────────────────────────────────────────
