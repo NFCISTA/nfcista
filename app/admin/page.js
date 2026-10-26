@@ -632,7 +632,10 @@ export default function AdminCustomersDashboard() {
 
         // Customer Approval: record in public.customer_consents for new active customer
         if (payload.is_active && consentConfirmed && created?.id) {
-          await recordConsentForCustomer(created.id);
+          const consentRes = await recordConsentForCustomer(created.id);
+          if (consentRes && consentRes.recorded === false) {
+            console.warn("[Admin Onboarding] Consent recording note:", consentRes.error);
+          }
         }
 
         // Invalidate newly created customer profile cache
