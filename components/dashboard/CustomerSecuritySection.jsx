@@ -1,23 +1,30 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { supabase } from "@/lib/supabaseClient";
 
 /**
  * CustomerSecuritySection
- * 
+ *
  * Wave 3: Customer Account & Login Security Management
  * Allows authenticated customers to view account login details and
  * update their password directly from the dashboard.
- * 
+ *
  * Strict boundary rules:
  * - Completely isolated from customer profile details form.
  * - Zero references to admin routes or service roles.
  * - Submitting password changes never triggers profile updates.
+ *
+ * Architecture note (Wave 3 bug fix):
+ * NFCISTA authenticates customers via an HttpOnly sb-customer-token cookie.
+ * The browser-side Supabase client has no session, so direct client-side
+ * updateUser calls cannot be used here. Password updates are instead routed through the
+ * server-side POST /api/customer/password endpoint, which reads identity
+ * exclusively from the HttpOnly cookie via authenticateCustomer(request).
  */
 export default function CustomerSecuritySection({ customer }) {
-  const [userEmail, setUserEmail] = useState("");
-  const [lastSignIn, setLastSignIn] = useState(null);
+  // Email is sourced directly from the customer prop loaded by the dashboard
+  // layout — no Supabase session is needed for display.
+  const userEmail = customer?.email || "";
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -34,28 +41,6 @@ export default function CustomerSecuritySection({ customer }) {
       }
     };
   }, []);
-
-  useEffect(() => {
-    async function loadAccountInfo() {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          setUserEmail(session.user.email || customer?.email || "");
-          if (session.user.last_sign_in_at) {
-            setLastSignIn(new Date(session.user.last_sign_in_at).toLocaleString());
-          }
-        } else if (customer?.email) {
-          setUserEmail(customer.email);
-        }
-      } catch {
-        if (customer?.email) {
-          setUserEmail(customer.email);
-        }
-      }
-    }
-
-    loadAccountInfo();
-  }, [customer?.email]);
 
   async function handlePasswordUpdate(e) {
     e.preventDefault();
@@ -75,18 +60,18 @@ export default function CustomerSecuritySection({ customer }) {
     setUpdating(true);
 
     try {
-      // Verify an active customer session exists prior to update
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error("Your session has expired. Please sign in again.");
-      }
-
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
+      // Route through server-side endpoint — identity comes from HttpOnly cookie,
+      // never from the browser. Do NOT send user ID or email in the body.
+      const res = await fetch("/api/customer/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPassword }),
       });
 
-      if (error) {
-        setErrorMsg(error.message || "Failed to update password.");
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorMsg(data.error || "Failed to update password. Please try again.");
         return;
       }
 
@@ -96,8 +81,8 @@ export default function CustomerSecuritySection({ customer }) {
       setSuccessMsg("Password updated successfully! Your account credentials have been saved.");
       if (successTimerRef.current) clearTimeout(successTimerRef.current);
       successTimerRef.current = setTimeout(() => setSuccessMsg(""), 6000);
-    } catch (err) {
-      setErrorMsg(err.message || "An unexpected error occurred while updating your password.");
+    } catch {
+      setErrorMsg("An unexpected error occurred while updating your password.");
     } finally {
       setUpdating(false);
     }
@@ -141,7 +126,7 @@ export default function CustomerSecuritySection({ customer }) {
             Last Sign In
           </span>
           <span className="font-medium text-on-surface text-sm block">
-            {lastSignIn || "Current active session"}
+            Current active session
           </span>
         </div>
       </div>

@@ -377,18 +377,127 @@ console.log("===================================================================
 const secCompPath = "components/dashboard/CustomerSecuritySection.jsx";
 const profilePagePath = "app/dashboard/profile/page.js";
 
+// ── 7a. Server-side password route ──────────────────────────────
+const passwordRoutePath = "app/api/customer/password/route.js";
+if (fs.existsSync(passwordRoutePath)) {
+  ok(`File Exists: ${passwordRoutePath}`);
+  const pwdRouteContent = fs.readFileSync(passwordRoutePath, "utf8");
+
+  // Must use authenticateCustomer — never accept identity from body
+  if (
+    pwdRouteContent.includes("authenticateCustomer(request)") &&
+    pwdRouteContent.includes("if (errorResponse) return errorResponse;")
+  ) {
+    ok(`${passwordRoutePath}: Protected by authenticateCustomer() from HttpOnly cookie`);
+  } else {
+    fail(`${passwordRoutePath}: Auth guard`, "Missing authenticateCustomer guard");
+  }
+
+  // Must use service role + updateUserById scoped to user.id from cookie
+  if (
+    pwdRouteContent.includes("SUPABASE_SERVICE_ROLE_KEY") &&
+    pwdRouteContent.includes("supabaseAdmin.auth.admin.updateUserById(user.id,")
+  ) {
+    ok(`${passwordRoutePath}: Uses service role to update only the authenticated user (user.id from cookie)`);
+  } else {
+    fail(
+      `${passwordRoutePath}: Service role scoping`,
+      "Expected SUPABASE_SERVICE_ROLE_KEY + updateUserById(user.id, ...)"
+    );
+  }
+
+  // Must NOT accept user.id or email from request body
+  if (
+    !pwdRouteContent.includes("body.user_id") &&
+    !pwdRouteContent.includes("body.userId") &&
+    !pwdRouteContent.includes("body.auth_user_id") &&
+    !pwdRouteContent.includes("body.email")
+  ) {
+    ok(`${passwordRoutePath}: Never accepts identity fields (user_id/email) from request body`);
+  } else {
+    fail(`${passwordRoutePath}: Identity from body`, "Found identity field accepted from browser body");
+  }
+
+  // CSRF origin check
+  if (
+    pwdRouteContent.includes("request.headers.get(\"origin\")") &&
+    pwdRouteContent.includes("ALLOWED_ORIGINS") &&
+    pwdRouteContent.includes("status: 403")
+  ) {
+    ok(`${passwordRoutePath}: CSRF origin protection blocks unexpected origins`);
+  } else {
+    fail(`${passwordRoutePath}: CSRF protection`, "Missing Origin header check or 403 response");
+  }
+
+  // force-dynamic
+  if (pwdRouteContent.includes('export const dynamic = "force-dynamic";')) {
+    ok(`${passwordRoutePath}: Configured with force-dynamic`);
+  } else {
+    fail(`${passwordRoutePath}: force-dynamic`, "Missing force-dynamic export");
+  }
+
+  // Password length validation server-side
+  if (pwdRouteContent.includes("newPassword.length < 6")) {
+    ok(`${passwordRoutePath}: Server-side minimum 6-character password validation`);
+  } else {
+    fail(`${passwordRoutePath}: Password validation`, "Missing server-side password length check");
+  }
+
+  // No password logging
+  if (
+    !pwdRouteContent.includes("console.log(newPassword") &&
+    !pwdRouteContent.includes("console.log(password") &&
+    !pwdRouteContent.includes("console.log(body")
+  ) {
+    ok(`${passwordRoutePath}: No password or request body logging`);
+  } else {
+    fail(`${passwordRoutePath}: Secret leakage`, "Found console.log of password or body");
+  }
+} else {
+  fail(`File Exists: ${passwordRoutePath}`, "Missing server-side password route");
+}
+
+// ── 7b. CustomerSecuritySection component ───────────────────────
 if (fs.existsSync(secCompPath)) {
   ok(`File Exists: ${secCompPath}`);
   const secContent = fs.readFileSync(secCompPath, "utf8");
 
-  if (secContent.includes("supabase.auth.updateUser") && secContent.includes("password: newPassword")) {
-    ok(`${secCompPath}: Uses supabase.auth.updateUser({ password: newPassword })`);
+  // Must use server-side fetch — NOT supabase.auth.updateUser
+  if (secContent.includes('fetch("/api/customer/password"') && secContent.includes('"POST"')) {
+    ok(`${secCompPath}: Uses server-side POST /api/customer/password for password update`);
   } else {
-    fail(`${secCompPath}: updateUser API`, "Missing supabase.auth.updateUser call with newPassword");
+    fail(`${secCompPath}: Server-side update`, "Missing fetch('/api/customer/password') with POST");
   }
 
+  // Must NOT use browser-side supabase.auth.updateUser (the bug we fixed)
+  if (!secContent.includes("supabase.auth.updateUser")) {
+    ok(`${secCompPath}: Does NOT use browser-side supabase.auth.updateUser (bug fixed)`);
+  } else {
+    fail(`${secCompPath}: Browser auth leak`, "Found supabase.auth.updateUser — must use server route instead");
+  }
+
+  // Must NOT use supabase.auth.getSession for password update flow
+  if (!secContent.includes("supabase.auth.getSession")) {
+    ok(`${secCompPath}: Does NOT call supabase.auth.getSession (no browser session exists)`);
+  } else {
+    fail(`${secCompPath}: Browser session check`, "Found supabase.auth.getSession — browser session is not available");
+  }
+
+  // Must NOT send user ID or email in body
+  if (
+    !secContent.includes("user.id") &&
+    !secContent.includes("userId:") &&
+    !secContent.includes("auth_user_id:") &&
+    !secContent.includes("email: userEmail")
+  ) {
+    ok(`${secCompPath}: Does NOT send identity fields (user.id/email) to the server`);
+  } else {
+    fail(`${secCompPath}: Identity from body`, "Found identity field sent to server from browser");
+  }
+
+  // Client-side password validation still present
   if (secContent.includes("newPassword.length < 6")) {
-    ok(`${secCompPath}: Enforces minimum 6-character password constraint`);
+    ok(`${secCompPath}: Enforces minimum 6-character password constraint (client-side)`);
   } else {
     fail(`${secCompPath}: Password length constraint`, "Missing minimum length check");
   }
@@ -399,30 +508,32 @@ if (fs.existsSync(secCompPath)) {
     fail(`${secCompPath}: Password match`, "Missing confirmation match check");
   }
 
-  if (secContent.includes("supabase.auth.getSession") && secContent.includes("session")) {
-    ok(`${secCompPath}: Performs authenticated session pre-check before password update`);
-  } else {
-    fail(`${secCompPath}: Session pre-check`, "Missing getSession pre-check before update");
-  }
-
-  if (secContent.includes("setNewPassword(\"\")") && secContent.includes("setConfirmPassword(\"\")")) {
+  // Password fields cleared on success
+  if (secContent.includes('setNewPassword("")') && secContent.includes('setConfirmPassword("")')) {
     ok(`${secCompPath}: Clears credential inputs immediately upon successful update`);
   } else {
     fail(`${secCompPath}: Input cleanup`, "Password inputs are not cleared on success");
   }
 
-  if (secContent.includes("type={showPassword ? \"text\" : \"password\"}")) {
+  // Password masking UI preserved
+  if (secContent.includes('type={showPassword ? "text" : "password"}')) {
     ok(`${secCompPath}: Passwords masked by default with Show/Hide toggle`);
   } else {
     fail(`${secCompPath}: Password masking`, "Missing masked password type or show/hide control");
   }
 
-  if (!secContent.includes("/api/admin") && !secContent.includes("/admin/") && !secContent.includes("SERVICE_ROLE")) {
+  // Admin boundary
+  if (
+    !secContent.includes("/api/admin") &&
+    !secContent.includes("/admin/") &&
+    !secContent.includes("SERVICE_ROLE")
+  ) {
     ok(`${secCompPath}: Zero admin route leakage or service role usage`);
   } else {
     fail(`${secCompPath}: Admin boundary violation`, "Found references to /admin or SERVICE_ROLE in customer component");
   }
 
+  // Decoupled from profile endpoint
   if (!secContent.includes("/api/customer/profile")) {
     ok(`${secCompPath}: Strictly decoupled from /api/customer/profile (independent form boundary)`);
   } else {
