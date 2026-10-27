@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
-import ProfileIcon from "./ProfileIcon";
+import Icon from "@/components/ui/Icon";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -62,16 +62,16 @@ function Lightbox({ images, initialIndex, title, onClose }) {
       role="dialog"
       aria-modal="true"
       aria-label={`${title} — image ${current + 1} of ${images.length}`}
-      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6"
+      className="fixed inset-0 z-50 bg-slate-900/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6"
       onClick={handleOverlayClick}
     >
       {/* Close button */}
       <button
         onClick={onClose}
         aria-label="Close lightbox"
-        className="absolute top-3 right-3 sm:top-4 sm:right-4 w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition-colors z-10"
+        className="absolute top-3 right-3 sm:top-4 sm:right-4 w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors z-10 cursor-pointer"
       >
-        <ProfileIcon name="close" className="text-[20px]" aria-hidden={true} />
+        <Icon name="close" size={20} strokeWidth={2} />
       </button>
 
       {/* Image */}
@@ -94,16 +94,16 @@ function Lightbox({ images, initialIndex, title, onClose }) {
           <button
             onClick={(e) => { e.stopPropagation(); goPrev(); }}
             aria-label="Previous image"
-            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
+            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg bg-white/10 hover:bg-white/25 flex items-center justify-center text-white transition-colors cursor-pointer"
           >
-            <ProfileIcon name="chevron_left" className="text-[22px]" aria-hidden={true} />
+            <Icon name="chevron_left" size={22} strokeWidth={2} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); goNext(); }}
             aria-label="Next image"
-            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
+            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg bg-white/10 hover:bg-white/25 flex items-center justify-center text-white transition-colors cursor-pointer"
           >
-            <ProfileIcon name="chevron_right" className="text-[22px]" aria-hidden={true} />
+            <Icon name="chevron_right" size={22} strokeWidth={2} />
           </button>
 
           {/* Dot indicators */}
@@ -148,12 +148,12 @@ function GalleryCard({ item, whatsapp }) {
 
   return (
     <>
-      <article className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+      <article className="bg-surface-base rounded-xl border border-border-hairline shadow-2xs overflow-hidden flex flex-col hover:border-border-strong transition-all">
         {/* Image thumbnail */}
         {hasImages ? (
           <button
             type="button"
-            className="relative w-full aspect-[4/3] bg-gray-100 overflow-hidden flex-shrink-0 group"
+            className="relative w-full aspect-[4/3] bg-surface-subtle overflow-hidden flex-shrink-0 group cursor-pointer"
             onClick={() => openLightbox(0)}
             aria-label={`View images for ${item.title}`}
           >
@@ -166,17 +166,17 @@ function GalleryCard({ item, whatsapp }) {
             />
             {/* Multi-image badge */}
             {item.images.length > 1 && (
-              <span className="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                <ProfileIcon name="photo_library" className="text-[11px]" aria-hidden={true} />
-                {item.images.length}
+              <span className="absolute top-2 right-2 bg-slate-900/70 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                <Icon name="photo_library" size={11} strokeWidth={2} />
+                <span>{item.images.length}</span>
               </span>
             )}
             {/* Type badge */}
             <span
-              className={`absolute top-2 left-2 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
+              className={`absolute top-2 left-2 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${
                 isPortfolio
-                  ? "bg-purple-100 text-purple-700"
-                  : "bg-blue-100 text-blue-700"
+                  ? "bg-slate-900 text-white"
+                  : "bg-blue-50 text-accent-primary border border-blue-200"
               }`}
             >
               {item.type}
@@ -184,17 +184,18 @@ function GalleryCard({ item, whatsapp }) {
           </button>
         ) : (
           /* Placeholder when no images */
-          <div className="relative w-full aspect-[4/3] bg-gray-100 flex items-center justify-center flex-shrink-0">
-            <ProfileIcon
-              name={isPortfolio ? "collections" : "inventory_2"}
-              className="text-[40px] text-gray-300"
-              aria-hidden={true}
+          <div className="relative w-full aspect-[4/3] bg-surface-subtle flex items-center justify-center flex-shrink-0">
+            <Icon
+              name="image"
+              size={36}
+              strokeWidth={1.5}
+              className="text-slate-300"
             />
             <span
-              className={`absolute top-2 left-2 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
+              className={`absolute top-2 left-2 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${
                 isPortfolio
-                  ? "bg-purple-100 text-purple-700"
-                  : "bg-blue-100 text-blue-700"
+                  ? "bg-slate-900 text-white"
+                  : "bg-blue-50 text-accent-primary border border-blue-200"
               }`}
             >
               {item.type}
@@ -206,27 +207,26 @@ function GalleryCard({ item, whatsapp }) {
         <div className="flex flex-col flex-1 p-3">
           {/* Category — only shown when it adds information beyond the title */}
           {item.category && item.category.trim().toLowerCase() !== item.title.trim().toLowerCase() && (
-            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-0.5 truncate">
+            <p className="text-[10px] text-text-muted font-medium uppercase tracking-wider mb-0.5 truncate">
               {item.category}
             </p>
           )}
 
           {/* Title */}
-          <h3 className="text-[13px] font-bold text-gray-900 leading-snug line-clamp-2">
+          <h3 className="text-xs font-bold text-text-primary leading-snug line-clamp-2">
             {item.title}
           </h3>
 
-
           {/* Price — products only */}
           {isProduct && item.price && (
-            <p className="text-[12px] font-semibold text-primary mt-1">
+            <p className="text-xs font-semibold text-accent-primary mt-1">
               {item.price}
             </p>
           )}
 
           {/* Description */}
           {item.description && (
-            <p className="text-[11.5px] text-gray-500 leading-relaxed mt-1.5 line-clamp-2 flex-1">
+            <p className="text-[11px] text-text-secondary leading-relaxed mt-1.5 line-clamp-2 flex-1">
               {item.description}
             </p>
           )}
@@ -239,10 +239,10 @@ function GalleryCard({ item, whatsapp }) {
                 href={whatsAppUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1.5 py-2 px-3 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-[11.5px] font-semibold rounded-xl transition-colors active:scale-[0.97]"
+                className="flex items-center justify-center gap-1.5 min-h-[36px] py-1.5 px-3 bg-[#059669] hover:bg-[#047857] text-white text-[11px] font-semibold rounded-lg transition-colors active:scale-[0.98]"
               >
-                <ProfileIcon name="chat" className="text-[14px]" aria-hidden={true} />
-                Order on WhatsApp
+                <Icon name="chat" size={13} strokeWidth={2} />
+                <span>Order on WhatsApp</span>
               </a>
             )}
 
@@ -252,10 +252,10 @@ function GalleryCard({ item, whatsapp }) {
                 href={item.external_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1 py-2 px-3 border border-gray-200 text-gray-700 hover:bg-gray-50 text-[11.5px] font-medium rounded-xl transition-colors active:scale-[0.97]"
+                className="flex items-center justify-center gap-1 min-h-[36px] py-1.5 px-3 border border-border-hairline text-text-secondary hover:text-text-primary hover:bg-surface-subtle text-[11px] font-medium rounded-lg transition-colors active:scale-[0.98]"
               >
-                {item.cta_text || "View Details"}
-                <ProfileIcon name="open_in_new" className="text-[13px]" aria-hidden={true} />
+                <span>{item.cta_text || "View Details"}</span>
+                <Icon name="open_in_new" size={12} strokeWidth={2} />
               </a>
             )}
           </div>
@@ -285,8 +285,6 @@ const INITIAL_VISIBLE = 6;
  * ProfileGallery
  *
  * Renders the "Portfolio & Products" section on the public profile.
- * Must be hidden entirely when items is empty — the parent page does this check
- * before rendering this component, but we also guard internally.
  *
  * @param {{ items: object[], customer: object }} props
  */
@@ -307,10 +305,10 @@ export default function ProfileGallery({ items, customer }) {
     >
       {/* Section header */}
       <div className="mb-3">
-        <h2 className="text-[15px] font-bold text-gray-900">
+        <h2 className="text-sm font-bold text-text-primary">
           Portfolio &amp; Products
         </h2>
-        <p className="text-[11.5px] text-gray-400 mt-0.5">
+        <p className="text-[11px] text-text-muted mt-0.5">
           {items.length} item{items.length !== 1 ? "s" : ""}
         </p>
       </div>
@@ -324,14 +322,14 @@ export default function ProfileGallery({ items, customer }) {
 
       {/* View All toggle */}
       {hasMore && !showAll && (
-        <div className="mt-4 text-center">
+        <div className="mt-3 text-center">
           <button
             type="button"
             onClick={() => setShowAll(true)}
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-gray-200 text-[12.5px] font-semibold text-gray-700 hover:bg-gray-50 transition-colors active:scale-[0.97]"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-border-hairline text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-subtle transition-colors active:scale-[0.98] cursor-pointer"
           >
-            View All ({items.length})
-            <ProfileIcon name="expand_more" className="text-[16px]" aria-hidden={true} />
+            <span>View All ({items.length})</span>
+            <Icon name="expand_more" size={14} strokeWidth={2} />
           </button>
         </div>
       )}

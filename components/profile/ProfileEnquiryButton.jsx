@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import ProfileIcon from "./ProfileIcon";
+import Icon from "@/components/ui/Icon";
 import ProfileEnquiryModal from "./ProfileEnquiryModal";
 
 /**
@@ -20,11 +20,11 @@ export default function ProfileEnquiryButton({ name, slug }) {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="w-full py-3.5 px-4 bg-[#071426] hover:bg-[#0c2240] text-white font-semibold rounded-2xl shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm mt-2.5"
+        className="w-full min-h-[44px] py-2.5 px-4 bg-surface-base hover:bg-surface-subtle border border-border-hairline hover:border-border-strong text-text-primary font-semibold rounded-lg shadow-2xs transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm mt-2 select-none"
         aria-label={`Send an enquiry to ${name}`}
       >
-        <ProfileIcon name="mail" className="text-[18px]" aria-hidden={true} />
-        <span>Send Enquiry</span>
+        <Icon name="mail" size={16} strokeWidth={2} className="text-text-secondary" />
+        <span>Send Direct Enquiry</span>
       </button>
 
       <ProfileEnquiryModal

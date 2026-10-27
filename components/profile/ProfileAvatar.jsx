@@ -1,16 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import ProfileIcon from "./ProfileIcon";
+import Icon from "@/components/ui/Icon";
 
 /**
- * ProfileAvatar — renders a resilient customer avatar with verified status.
+ * ProfileAvatar — renders a resilient, executive customer avatar.
  *
- * Features:
- * - Graceful fallback to monogram initials on network/load error (onError).
- * - Premium gradient ring and elevation shadow.
- * - Online activity indicator.
- * - Official "VERIFIED" badge pill.
+ * Restrained physical-tech styling:
+ * - Clean circular profile frame with hairline border and subtle neutral shadow.
+ * - Monogram initials fallback on network error or absent photo.
+ * - Understated verification badge.
+ * - No fake "online" dot or decorative blobs.
  *
  * @param {{ photoUrl?: string|null, fullName?: string|null, initials: string }} props
  */
@@ -21,9 +21,9 @@ export default function ProfileAvatar({ photoUrl, fullName, initials = "NC" }) {
 
   return (
     <div className="relative inline-block">
-      {/* Outer gradient accent ring */}
-      <div className="w-[116px] h-[116px] rounded-full p-[3px] bg-gradient-to-b from-primary/40 via-primary/20 to-white/80 shadow-float">
-        <div className="w-full h-full rounded-full bg-gradient-to-br from-primary-container to-primary flex items-center justify-center overflow-hidden ring-4 ring-white">
+      {/* Precision avatar frame */}
+      <div className="w-28 h-28 rounded-full bg-surface-base p-1 shadow-card border border-border-hairline">
+        <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center overflow-hidden ring-2 ring-surface-base">
           {showPhoto ? (
             <img
               src={cleanPhotoUrl}
@@ -33,28 +33,20 @@ export default function ProfileAvatar({ photoUrl, fullName, initials = "NC" }) {
               loading="eager"
             />
           ) : (
-            <span className="text-white text-3xl font-bold tracking-tight select-none">
+            <span className="text-white text-2xl font-bold tracking-tight select-none">
               {initials}
             </span>
           )}
         </div>
       </div>
 
-      {/* Online indicator dot (top-right so it never collides with VERIFIED badge) */}
+      {/* Subtle Verified indicator */}
       <div
-        className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-emerald-500 ring-2 ring-white shadow-sm"
-        title="Active card"
-        aria-label="Active card"
-      />
-
-      {/* Official Verified badge */}
-      <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-primary text-white text-[9px] font-bold px-2.5 py-0.5 rounded-full shadow-btn-primary whitespace-nowrap tracking-wider">
-        <ProfileIcon
-          name="verified"
-          className="text-[12px]"
-          aria-hidden={true}
-        />
-        <span>VERIFIED</span>
+        className="absolute -bottom-1 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 bg-surface-base border border-border-hairline text-accent-primary text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-2xs whitespace-nowrap"
+        title="Verified NFCISTA Profile"
+      >
+        <Icon name="check_circle" size={11} strokeWidth={2.2} className="text-accent-primary" />
+        <span className="tracking-wide">VERIFIED</span>
       </div>
     </div>
   );

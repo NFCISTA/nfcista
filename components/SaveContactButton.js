@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import ProfileIcon from "./profile/ProfileIcon";
+import Icon from "@/components/ui/Icon";
 
 // ---------------------------------------------------------------------------
 // vCard helpers
@@ -705,12 +706,13 @@ export default function SaveContactButton({ contact }) {
         type="button"
         onClick={openModal}
         aria-label={`Save ${fullName || "contact"} to your phone contacts`}
-        className="w-full min-h-[52px] flex items-center justify-center gap-2.5 py-4 px-6 bg-primary text-white rounded-2xl font-bold text-label-lg shadow-btn-primary hover:bg-[#003ea8] active:scale-[0.98] transition-all cursor-pointer select-none"
+        className="w-full min-h-[48px] flex items-center justify-center gap-2 py-3 px-6 bg-accent-primary hover:bg-accent-hover text-white rounded-lg font-semibold text-sm shadow-btn-primary active:scale-[0.98] transition-all cursor-pointer select-none"
       >
-        <ProfileIcon
+        <Icon
           name="person_add"
-          className="text-[22px]"
-          aria-hidden={true}
+          size={18}
+          strokeWidth={2}
+          className="text-white"
         />
         <span>Save Contact</span>
       </button>

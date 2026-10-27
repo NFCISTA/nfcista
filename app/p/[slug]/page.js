@@ -12,10 +12,9 @@ import SaveContactButtonLazy from "@/components/SaveContactButtonLazy";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
 import ProfileShareModalLazy from "@/components/profile/ProfileShareModalLazy";
 import ProfileQuickActions from "@/components/profile/ProfileQuickActions";
-import ProfileIntro from "@/components/profile/ProfileIntro";
 import ProfileGallery from "@/components/profile/ProfileGallery";
-import ProfileIcon from "@/components/profile/ProfileIcon";
 import ProfileEnquiryButton from "@/components/profile/ProfileEnquiryButton";
+import Icon from "@/components/ui/Icon";
 
 import { unstable_cache } from "next/cache";
 
@@ -99,7 +98,7 @@ export async function generateMetadata({ params }) {
 }
 
 // ---------------------------------------------------------------------------
-// Page Component — V2 Premium Design
+// Page Component — Executive Digital Business Card
 // ---------------------------------------------------------------------------
 export default async function CustomerPublicProfilePage({ params }) {
   const { slug } = await params;
@@ -111,38 +110,30 @@ export default async function CustomerPublicProfilePage({ params }) {
   // ── Profile Unavailable ─────────────────────────────────────────────────
   if (!customer) {
     return (
-      <main className="min-h-screen bg-[#f0f4ff] flex items-center justify-center p-4">
-        <div className="w-full max-w-[390px] bg-white rounded-3xl p-8 text-center shadow-xl">
-          <div className="mb-5 flex items-center justify-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
-              <ProfileIcon
-                name="nfc"
-                className="text-white text-[16px]"
-                aria-hidden={true}
-              />
+      <main className="min-h-screen bg-canvas flex items-center justify-center p-4 antialiased">
+        <div className="w-full max-w-[390px] bg-surface-base rounded-2xl p-8 text-center border border-border-hairline shadow-card">
+          <div className="mb-6 flex items-center justify-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-accent-primary flex items-center justify-center text-white">
+              <Icon name="nfc" size={16} strokeWidth={2} />
             </div>
-            <span className="text-[14px] font-bold tracking-wide text-gray-900">
+            <span className="text-sm font-bold tracking-wider text-text-primary">
               NFCISTA
             </span>
           </div>
-          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-            <ProfileIcon
-              name="person_off"
-              className="text-[32px] text-gray-400"
-              aria-hidden={true}
-            />
+          <div className="w-14 h-14 rounded-xl bg-surface-subtle border border-border-hairline flex items-center justify-center mx-auto mb-4 text-text-muted">
+            <Icon name="person" size={26} strokeWidth={1.5} />
           </div>
-          <h1 className="text-[20px] font-bold text-gray-900">Profile Unavailable</h1>
-          <p className="text-[13px] text-gray-500 mt-2 leading-relaxed">
+          <h1 className="text-lg font-bold text-text-primary">Profile Unavailable</h1>
+          <p className="text-xs text-text-secondary mt-1.5 leading-relaxed">
             This digital business card is currently inactive or does not exist.
           </p>
-          <div className="mt-6 pt-5 border-t border-gray-100">
+          <div className="mt-6 pt-5 border-t border-border-hairline">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-primary text-white text-[13px] font-semibold hover:bg-[#003ea8] transition-colors active:scale-[0.97]"
+              className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg bg-accent-primary hover:bg-accent-hover text-white text-xs font-semibold shadow-btn-primary transition-colors"
             >
               <span>Visit NFCISTA</span>
-              <ProfileIcon name="arrow_forward" className="text-[16px]" aria-hidden={true} />
+              <Icon name="arrow_forward" size={14} strokeWidth={2} />
             </Link>
           </div>
         </div>
@@ -160,17 +151,18 @@ export default async function CustomerPublicProfilePage({ params }) {
         .toUpperCase()
     : "NC";
 
-  const hasPhone      = Boolean(customer.phone?.trim());
-  const hasWhatsApp   = Boolean(customer.whatsapp?.trim());
-  const hasEmail      = Boolean(customer.email?.trim());
-  const hasAddress    = Boolean(customer.address?.trim());
+  const hasPhone       = Boolean(customer.phone?.trim());
+  const hasWhatsApp    = Boolean(customer.whatsapp?.trim());
+  const hasEmail       = Boolean(customer.email?.trim());
+  const hasAddress     = Boolean(customer.address?.trim());
   const hasDescription = Boolean(customer.description?.trim());
 
   // External URL security validation (only http/https pass)
   const safeWebsite      = getSafeExternalUrl(customer.website);
   const safeGoogleReview = getSafeExternalUrl(customer.google_review_url);
   const safePhotoUrl     = getSafeExternalUrl(customer.photo_url);
-  const safeBannerUrl    = getSafeExternalUrl(customer.banner_url) || "/images/hero-mountains.jpg";
+  const hasCustomBanner  = Boolean(customer.banner_url?.trim());
+  const safeBannerUrl    = hasCustomBanner ? getSafeExternalUrl(customer.banner_url) : null;
   const hasWebsite       = Boolean(safeWebsite);
   const hasGoogleReview  = Boolean(safeGoogleReview);
 
@@ -194,7 +186,6 @@ export default async function CustomerPublicProfilePage({ params }) {
   const profileUrl = `https://nfcista.vercel.app/p/${slug}`;
 
   // ── Top Action Row items (WhatsApp, Call, Email) ─────────────────────
-  // "Share" is always appended client-side by ProfileQuickActions
   const topActions = [];
   if (hasWhatsApp) {
     topActions.push({
@@ -202,7 +193,6 @@ export default async function CustomerPublicProfilePage({ params }) {
       label: "WhatsApp",
       icon: "chat",
       href: `https://wa.me/${customer.whatsapp.trim().replace(/\D/g, "")}`,
-      bg: "bg-[#25D366]",
       isExternal: true,
     });
   }
@@ -212,7 +202,6 @@ export default async function CustomerPublicProfilePage({ params }) {
       label: "Call",
       icon: "call",
       href: `tel:${customer.phone.trim().replace(/\s/g, "")}`,
-      bg: "bg-primary",
       isExternal: false,
     });
   }
@@ -222,245 +211,151 @@ export default async function CustomerPublicProfilePage({ params }) {
       label: "Email",
       icon: "mail",
       href: `mailto:${customer.email.trim()}`,
-      bg: "bg-indigo-600",
       isExternal: false,
     });
   }
 
-  // ── Quick Connect 2×2 Grid (social / web presence) ──────────────────
+  // ── Quick Connect / Web Presence ─────────────────────────────────────
   const quickConnectItems = [];
   if (hasInstagram) {
     quickConnectItems.push({
       id: "qc-ig",
       label: "Instagram",
-      icon: "photo_camera",
+      handle: `@${cleanInstagram}`,
+      icon: "camera",
       href: `https://instagram.com/${cleanInstagram}`,
-      iconBg: "bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#dc2743]",
-      iconColor: "text-white",
-    });
-  }
-  if (hasFacebook) {
-    quickConnectItems.push({
-      id: "qc-fb",
-      label: "Facebook",
-      icon: "facebook",
-      href: safeFacebook,
-      iconBg: "bg-[#1877F2]/10",
-      iconColor: "text-[#1877F2]",
+      color: "text-pink-600",
+      bg: "bg-pink-50 border-pink-100",
     });
   }
   if (hasLinkedin) {
     quickConnectItems.push({
       id: "qc-li",
       label: "LinkedIn",
-      icon: "linkedin",
+      handle: "Professional profile",
+      icon: "work",
       href: safeLinkedin,
-      iconBg: "bg-[#0A66C2]/10",
-      iconColor: "text-[#0A66C2]",
+      color: "text-sky-700",
+      bg: "bg-sky-50 border-sky-100",
     });
   }
   if (hasTwitter) {
     quickConnectItems.push({
       id: "qc-x",
       label: "X (Twitter)",
-      icon: "x",
+      handle: safeTwitter.replace(/^https?:\/\/(x\.com|twitter\.com)\//i, "@").replace(/\/$/, ""),
+      icon: "share",
       href: safeTwitter,
-      iconBg: "bg-black",
-      iconColor: "text-white",
+      color: "text-slate-900",
+      bg: "bg-slate-100 border-slate-200",
     });
   }
-  if (hasDrive) {
+  if (hasFacebook) {
     quickConnectItems.push({
-      id: "qc-drive",
-      label: "Google Drive",
-      icon: "google_drive",
-      href: safeDrive,
-      iconBg: "bg-[#0F9D58]/10",
-      iconColor: "text-[#0F9D58]",
+      id: "qc-fb",
+      label: "Facebook",
+      handle: "Facebook page",
+      icon: "share",
+      href: safeFacebook,
+      color: "text-blue-600",
+      bg: "bg-blue-50 border-blue-100",
     });
   }
   if (hasWebsite) {
     quickConnectItems.push({
       id: "qc-web",
       label: "Website",
+      handle: safeWebsite.replace(/^https?:\/\//i, "").replace(/\/$/, ""),
       icon: "language",
       href: safeWebsite,
-      iconBg: "bg-blue-500",
-      iconColor: "text-white",
+      color: "text-accent-primary",
+      bg: "bg-blue-50 border-blue-100",
     });
   }
   if (hasGoogleReview) {
     quickConnectItems.push({
       id: "qc-gr",
       label: "Google Review",
+      handle: "Leave a review",
       icon: "star",
       href: safeGoogleReview,
-      iconBg: "bg-amber-50 border border-amber-100",
-      iconColor: "text-amber-500",
+      color: "text-amber-600",
+      bg: "bg-amber-50 border-amber-100",
     });
   }
-  if (hasWhatsApp) {
+  if (hasDrive) {
     quickConnectItems.push({
-      id: "qc-wa",
-      label: "WhatsApp",
-      icon: "chat",
-      href: `https://wa.me/${customer.whatsapp.trim().replace(/\D/g, "")}`,
-      iconBg: "bg-[#25D366]",
-      iconColor: "text-white",
+      id: "qc-drive",
+      label: "Catalog & Documents",
+      handle: "Google Drive folder",
+      icon: "photo_library",
+      href: safeDrive,
+      color: "text-emerald-700",
+      bg: "bg-emerald-50 border-emerald-100",
     });
   }
   const hasQuickConnect = quickConnectItems.length > 0;
 
-  // ── Links & Presence list ───────────────────────────────────────────
-  const presenceLinks = [];
-  if (hasInstagram) {
-    presenceLinks.push({
-      id: "pl-ig",
-      label: "Instagram",
-      secondary: `@${cleanInstagram}`,
-      href: `https://instagram.com/${cleanInstagram}`,
-      icon: "photo_camera",
-      iconBg: "bg-pink-50",
-      iconColor: "text-[#e1306c]",
-    });
-  }
-  if (hasFacebook) {
-    presenceLinks.push({
-      id: "pl-fb",
-      label: "Facebook",
-      secondary: safeFacebook.replace(/^https?:\/\//i, "").replace(/\/$/, ""),
-      href: safeFacebook,
-      icon: "facebook",
-      iconBg: "bg-blue-50",
-      iconColor: "text-[#1877F2]",
-    });
-  }
-  if (hasLinkedin) {
-    presenceLinks.push({
-      id: "pl-li",
-      label: "LinkedIn",
-      secondary: safeLinkedin.replace(/^https?:\/\//i, "").replace(/\/$/, ""),
-      href: safeLinkedin,
-      icon: "linkedin",
-      iconBg: "bg-sky-50",
-      iconColor: "text-[#0A66C2]",
-    });
-  }
-  if (hasTwitter) {
-    presenceLinks.push({
-      id: "pl-x",
-      label: "X (Twitter)",
-      secondary: safeTwitter.replace(/^https?:\/\//i, "").replace(/\/$/, ""),
-      href: safeTwitter,
-      icon: "x",
-      iconBg: "bg-black/5",
-      iconColor: "text-black",
-    });
-  }
-  if (hasDrive) {
-    presenceLinks.push({
-      id: "pl-drive",
-      label: "Google Drive",
-      secondary: "Portfolio, catalog & documents",
-      href: safeDrive,
-      icon: "google_drive",
-      iconBg: "bg-emerald-50",
-      iconColor: "text-emerald-700",
-    });
-  }
-  if (hasWebsite) {
-    presenceLinks.push({
-      id: "pl-web",
-      label: "Website",
-      secondary: safeWebsite.replace(/^https?:\/\//i, "").replace(/\/$/, ""),
-      href: safeWebsite,
-      icon: "language",
-      iconBg: "bg-blue-50",
-      iconColor: "text-blue-600",
-    });
-  }
-  if (hasGoogleReview) {
-    presenceLinks.push({
-      id: "pl-gr",
-      label: "Google Review",
-      secondary: "Leave a review",
-      href: safeGoogleReview,
-      icon: "star",
-      iconBg: "bg-amber-50",
-      iconColor: "text-amber-500",
-    });
-  }
-  const hasPresenceLinks = presenceLinks.length > 0;
-
   // ── Render ──────────────────────────────────────────────────────────
   return (
-    <main className="min-h-screen bg-[#eef2ff] antialiased overflow-x-hidden">
-      <ProfileIntro name={customer.full_name} />
-
+    <main className="min-h-screen bg-canvas text-text-primary antialiased overflow-x-hidden">
       {/*
-        Profile card:
-        - Mobile: single column, max-w-430, full-height white card
-        - Desktop (lg): two-column grid inside a rounded card
+        Executive profile container:
+        - Mobile: max-w-[430px], clean white surface, seamless edge-to-edge
+        - Desktop (lg): max-w-[1040px], centered 2-column card with hairline border
       */}
       <div
-        className="w-full max-w-[430px] mx-auto bg-white shadow-xl min-h-screen
-                   lg:max-w-[1080px] lg:min-h-0 lg:my-10 lg:rounded-3xl
-                   lg:overflow-hidden lg:shadow-2xl lg:grid lg:grid-cols-[390px_1fr]"
+        className="w-full max-w-[430px] mx-auto bg-surface-base min-h-screen
+                   lg:max-w-[1040px] lg:min-h-0 lg:my-10 lg:rounded-2xl
+                   lg:overflow-hidden lg:border lg:border-border-hairline lg:shadow-card
+                   lg:grid lg:grid-cols-[380px_1fr]"
       >
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* LEFT COLUMN — Hero + Identity + Save Contact                   */}
+        {/* LEFT COLUMN — Identity + Core CTA                               */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="flex flex-col bg-white lg:border-r lg:border-gray-100">
+        <div className="flex flex-col bg-surface-base lg:border-r lg:border-border-hairline">
 
-          {/* ── Premium Hero Banner ─────────────────────────────────── */}
-          <div className="relative overflow-hidden h-44 sm:h-48 lg:h-56 bg-[#071426]">
-            {/* Background banner (custom uploaded or NFCISTA default) */}
-            <Image
-              src={safeBannerUrl}
-              alt=""
-              aria-hidden="true"
-              fill
-              priority
-              sizes="(max-width: 430px) 100vw, (max-width: 1024px) 430px, 390px"
-              className="object-cover object-[center_35%] select-none pointer-events-none"
-            />
+          {/* ── Hardware-Inspired Header Banner ──────────────────────── */}
+          <div className="relative h-36 sm:h-40 bg-slate-950 overflow-hidden flex flex-col justify-between p-4">
+            {safeBannerUrl ? (
+              <>
+                <Image
+                  src={safeBannerUrl}
+                  alt=""
+                  aria-hidden="true"
+                  fill
+                  priority
+                  sizes="(max-width: 430px) 100vw, 380px"
+                  className="object-cover select-none pointer-events-none"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/30 to-slate-950/85" />
+              </>
+            ) : (
+              <div className="absolute inset-0 bg-slate-900 border-b border-slate-800" />
+            )}
 
-            {/* Gradient overlays: balanced for crisp mountain visibility and high text contrast */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#051329]/80 via-[#071426]/20 to-[#071426]/90" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_70%_20%,rgba(255,190,100,0.15),transparent_60%)] pointer-events-none" />
-
-            {/* Top bar: NFCISTA brand + desktop tagline & Tap to Connect indicator */}
-            <div className="relative z-10 flex items-center justify-between px-3.5 sm:px-4 pt-3.5 sm:pt-4">
-              <Link href="/" className="flex items-center gap-1.5 sm:gap-2 group flex-shrink-0">
-                <div className="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center flex-shrink-0 shadow-sm group-hover:bg-white/30 transition-colors">
-                  <ProfileIcon
-                    name="nfc"
-                    className="text-white text-[15px] sm:text-[16px]"
-                    aria-hidden={true}
-                  />
+            {/* Top brand & hardware indicator */}
+            <div className="relative z-10 flex items-center justify-between w-full">
+              <Link href="/" className="flex items-center gap-2 group flex-shrink-0">
+                <div className="w-6 h-6 rounded-md bg-white/10 border border-white/20 flex items-center justify-center text-white group-hover:bg-white/20 transition-colors">
+                  <Icon name="nfc" size={13} strokeWidth={2} />
                 </div>
-                <span className="text-white text-[12.5px] sm:text-[13px] font-bold tracking-wide drop-shadow-md">
+                <span className="text-white text-xs font-bold tracking-wider">
                   NFCISTA
                 </span>
               </Link>
-              <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-                <p className="hidden lg:block text-white/70 text-[11px] italic font-light tracking-wide mr-2 drop-shadow-sm">
-                  Small Tap · Big Connections
-                </p>
-                <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/30 text-white flex-shrink-0 shadow-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                  <span className="text-[9px] sm:text-[10px] font-semibold tracking-wide whitespace-nowrap drop-shadow-sm">
-                    Tap to Connect
-                  </span>
-                </div>
+
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white/10 border border-white/15 rounded-md text-white/90 text-[10px] font-medium tracking-wide">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span>NFC Active</span>
               </div>
             </div>
           </div>
 
           {/* ── Avatar + Identity ───────────────────────────────────── */}
-          <div className="flex flex-col items-center text-center px-5 pb-5">
-            {/* Avatar overlaps the hero via negative margin */}
+          <div className="flex flex-col items-center text-center px-5 pb-4">
+            {/* Avatar overlaps the banner frame */}
             <div className="-mt-14 mb-3 relative z-10">
               <ProfileAvatar
                 photoUrl={safePhotoUrl}
@@ -470,7 +365,7 @@ export default async function CustomerPublicProfilePage({ params }) {
             </div>
 
             {/* Name */}
-            <h1 className="text-[24px] sm:text-[26px] font-bold text-gray-900 tracking-tight leading-tight">
+            <h1 className="text-2xl sm:text-[25px] font-bold text-text-primary tracking-tight leading-tight">
               {customer.full_name}
             </h1>
 
@@ -478,33 +373,33 @@ export default async function CustomerPublicProfilePage({ params }) {
             {(customer.job_title?.trim() || customer.company_name?.trim()) && (
               <div className="mt-1 space-y-0.5">
                 {customer.job_title?.trim() && (
-                  <p className="text-[13px] font-medium text-gray-600 leading-snug">
+                  <p className="text-xs font-medium text-text-secondary">
                     {customer.job_title.trim()}
                   </p>
                 )}
                 {customer.company_name?.trim() && (
-                  <p className="text-[12.5px] font-semibold text-gray-800 leading-snug">
+                  <p className="text-xs font-semibold text-text-primary">
                     {customer.company_name.trim()}
                   </p>
                 )}
               </div>
             )}
 
-            {/* Category + Location badges */}
+            {/* Category + Location tags */}
             {(customer.category?.trim() || hasAddress) && (
-              <div className="mt-3 flex flex-wrap justify-center gap-2">
+              <div className="mt-3 flex flex-wrap justify-center gap-1.5">
                 {customer.category?.trim() && (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
-                    <ProfileIcon name="label" className="text-[12px] text-primary" aria-hidden={true} />
-                    <span className="truncate max-w-[110px]">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-text-secondary bg-surface-subtle border border-border-hairline px-2.5 py-0.5 rounded-md">
+                    <Icon name="tag" size={11} strokeWidth={2} className="text-accent-primary" />
+                    <span className="truncate max-w-[140px]">
                       {customer.category.trim()}
                     </span>
                   </span>
                 )}
                 {hasAddress && (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
-                    <ProfileIcon name="location_on" className="text-[12px] text-rose-400" aria-hidden={true} />
-                    <span className="truncate max-w-[120px]">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-text-secondary bg-surface-subtle border border-border-hairline px-2.5 py-0.5 rounded-md">
+                    <Icon name="location_on" size={11} strokeWidth={2} className="text-rose-600" />
+                    <span className="truncate max-w-[140px]">
                       {customer.address.trim()}
                     </span>
                   </span>
@@ -513,8 +408,8 @@ export default async function CustomerPublicProfilePage({ params }) {
             )}
           </div>
 
-          {/* ── Save Contact CTA ─────────────────────────────────────── */}
-          <div className="px-5 pb-6">
+          {/* ── Primary Action: Save Contact ─────────────────────────── */}
+          <div className="px-5 pb-5">
             <SaveContactButtonLazy
               contact={{
                 fullName:    customer.full_name,
@@ -528,7 +423,7 @@ export default async function CustomerPublicProfilePage({ params }) {
               }}
             />
 
-            {/* ── Optional Enquiry CTA ───────────────────────────────── */}
+            {/* Direct Enquiry Button (if enabled) */}
             {customer.enquiry_enabled && (
               <ProfileEnquiryButton
                 name={customer.full_name}
@@ -537,50 +432,46 @@ export default async function CustomerPublicProfilePage({ params }) {
             )}
           </div>
 
-          {/* Spacer — pushes desktop footer to bottom of left col */}
+          {/* Spacer for desktop layout */}
           <div className="hidden lg:block flex-1" />
 
-          {/* ── Desktop-only footer inside left column ───────────────── */}
-          <footer className="hidden lg:flex flex-col items-center py-5 px-5 border-t border-gray-100">
-            <div className="flex items-center gap-2 mb-0.5">
-              <div className="w-6 h-6 rounded-lg bg-primary flex items-center justify-center">
-                <ProfileIcon
-                  name="nfc"
-                  className="text-white text-[13px]"
-                  aria-hidden={true}
-                />
+          {/* Desktop Footer in Left Column */}
+          <footer className="hidden lg:flex flex-col items-center py-5 px-5 border-t border-border-hairline">
+            <div className="flex items-center gap-1.5 mb-1">
+              <div className="w-5 h-5 rounded-md bg-accent-primary flex items-center justify-center text-white">
+                <Icon name="nfc" size={11} strokeWidth={2} />
               </div>
-              <span className="text-[13px] font-bold text-gray-800">NFCISTA</span>
+              <span className="text-xs font-bold text-text-primary">NFCISTA</span>
             </div>
-            <p className="text-[10px] text-gray-400 font-medium tracking-[0.2em] uppercase">
-              Tap · Connect · Grow
+            <p className="text-[10px] text-text-muted font-medium uppercase tracking-wider">
+              Contactless Physical Identity
             </p>
-            <div className="mt-2.5 flex items-center justify-center gap-2 text-[10px] text-gray-400 flex-wrap">
-              <Link href="/privacy" className="hover:text-primary transition-colors">
-                Privacy Notice
+            <div className="mt-2.5 flex items-center justify-center gap-2 text-[10px] text-text-muted">
+              <Link href="/privacy" className="hover:text-text-primary transition-colors">
+                Privacy
               </Link>
               <span aria-hidden="true">·</span>
-              <Link href="/terms" className="hover:text-primary transition-colors">
+              <Link href="/terms" className="hover:text-text-primary transition-colors">
                 Terms
               </Link>
               <span aria-hidden="true">·</span>
-              <Link href="/privacy/data-request" className="hover:text-primary transition-colors">
+              <Link href="/privacy/data-request" className="hover:text-text-primary transition-colors">
                 Data Rights
               </Link>
             </div>
-            <p className="mt-2 text-[9.5px] text-gray-300">
+            <p className="mt-1.5 text-[9.5px] text-text-muted">
               © 2025 NFCISTA. All rights reserved.
             </p>
           </footer>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* RIGHT COLUMN (mobile: continuation / desktop: sidebar)         */}
+        {/* RIGHT COLUMN — Details, Actions & Content                       */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-border-hairline bg-surface-base">
 
           {/* ── Top Action Row: WhatsApp · Call · Email · Share ──────── */}
-          <section className="px-3.5 sm:px-5 py-4 sm:py-5" aria-label="Quick contact actions">
+          <section className="px-4 sm:px-5 py-4" aria-label="Direct contact actions">
             <ProfileQuickActions
               actions={topActions}
               profileUrl={profileUrl}
@@ -588,18 +479,21 @@ export default async function CustomerPublicProfilePage({ params }) {
             />
           </section>
 
-          {/* ── Quick Connect 2×2 Grid ───────────────────────────────── */}
+          {/* ── Connect & Presence Grid ──────────────────────────────── */}
           {hasQuickConnect && (
-            <section className="px-3.5 sm:px-5 py-4 sm:py-5" aria-label="Quick Connect">
+            <section className="px-4 sm:px-5 py-4" aria-label="Connect and Social Presence">
               <div className="mb-3">
-                <h2 className="text-[15px] font-bold text-gray-900">Quick Connect</h2>
-                <p className="text-[11.5px] text-gray-400 mt-0.5">
-                  Tap to connect instantly
+                <h2 className="text-sm font-bold text-text-primary">
+                  Connect &amp; Presence
+                </h2>
+                <p className="text-[11px] text-text-muted mt-0.5">
+                  Verified web and communication channels
                 </p>
               </div>
+
               <div
-                className={`grid gap-2.5 sm:gap-3 ${
-                  quickConnectItems.length === 1 ? "grid-cols-1" : "grid-cols-2"
+                className={`grid gap-2 ${
+                  quickConnectItems.length === 1 ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"
                 }`}
               >
                 {quickConnectItems.map((item) => (
@@ -608,63 +502,32 @@ export default async function CustomerPublicProfilePage({ params }) {
                     href={item.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={item.label}
-                    className="flex flex-col items-center justify-center py-4 sm:py-6 px-2 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-[0.97] gap-2 min-w-0"
+                    aria-label={`${item.label}: ${item.handle}`}
+                    className="flex items-center gap-3 p-3 bg-surface-base border border-border-hairline hover:border-border-strong hover:bg-surface-subtle/50 rounded-xl transition-all active:scale-[0.98] group min-w-0 shadow-2xs"
                   >
                     <div
-                      className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl ${item.iconBg} flex items-center justify-center flex-shrink-0`}
+                      className={`w-9 h-9 rounded-lg ${item.bg} flex items-center justify-center flex-shrink-0`}
                     >
-                      <ProfileIcon
+                      <Icon
                         name={item.icon}
-                        className={`text-[22px] sm:text-[24px] ${item.iconColor}`}
-                        aria-hidden={true}
-                      />
-                    </div>
-                    <span className="text-[11.5px] sm:text-[12px] font-semibold text-gray-800 truncate max-w-full text-center">
-                      {item.label}
-                    </span>
-                  </a>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* ── Links & Presence list ───────────────────────────────── */}
-          {hasPresenceLinks && (
-            <section className="px-3.5 sm:px-5 py-4 sm:py-5" aria-label="Links and Presence">
-              <h2 className="text-[15px] font-bold text-gray-900 mb-2">
-                Links &amp; Presence
-              </h2>
-              <div className="space-y-0.5">
-                {presenceLinks.map((link) => (
-                  <a
-                    key={link.id}
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-gray-50 transition-colors group"
-                  >
-                    <div
-                      className={`w-9 h-9 rounded-xl ${link.iconBg} flex items-center justify-center flex-shrink-0`}
-                    >
-                      <ProfileIcon
-                        name={link.icon}
-                        className={`text-[18px] ${link.iconColor}`}
-                        aria-hidden={true}
+                        size={17}
+                        strokeWidth={2}
+                        className={item.color}
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-semibold text-gray-900 leading-tight">
-                        {link.label}
+                      <p className="text-xs font-semibold text-text-primary leading-tight">
+                        {item.label}
                       </p>
-                      <p className="text-[11px] text-gray-400 truncate mt-0.5">
-                        {link.secondary}
+                      <p className="text-[11px] text-text-secondary truncate mt-0.5">
+                        {item.handle}
                       </p>
                     </div>
-                    <ProfileIcon
+                    <Icon
                       name="chevron_right"
-                      className="text-[20px] text-gray-300 group-hover:text-primary transition-colors flex-shrink-0"
-                      aria-hidden={true}
+                      size={15}
+                      strokeWidth={2}
+                      className="text-slate-300 group-hover:text-text-primary transition-colors flex-shrink-0"
                     />
                   </a>
                 ))}
@@ -672,35 +535,18 @@ export default async function CustomerPublicProfilePage({ params }) {
             </section>
           )}
 
-          {/* ── About ────────────────────────────────────────────────── */}
+          {/* ── About Section ────────────────────────────────────────── */}
           {hasDescription && (
-            <section className="px-3.5 sm:px-5 py-4 sm:py-5" aria-label="About">
-              <h2 className="text-[15px] font-bold text-gray-900 mb-2">About</h2>
-              <p className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-line">
+            <section className="px-4 sm:px-5 py-4" aria-label="About">
+              <h2 className="text-sm font-bold text-text-primary mb-2">About</h2>
+              <p className="text-xs text-text-secondary leading-relaxed whitespace-pre-line">
                 {customer.description.trim()}
               </p>
-              {/* Inline location + category meta below description */}
-              {(hasAddress || customer.category?.trim()) && (
-                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
-                  {hasAddress && (
-                    <span className="inline-flex items-center gap-1 text-[11.5px] text-gray-400">
-                      <ProfileIcon name="location_on" className="text-[14px]" aria-hidden={true} />
-                      {customer.address.trim()}
-                    </span>
-                  )}
-                  {customer.category?.trim() && (
-                    <span className="inline-flex items-center gap-1 text-[11.5px] text-gray-400">
-                      <ProfileIcon name="label" className="text-[14px]" aria-hidden={true} />
-                      {customer.category.trim()}
-                    </span>
-                  )}
-                </div>
-              )}
             </section>
           )}
 
           {/* ── Share My Card ────────────────────────────────────────── */}
-          <section className="px-3.5 sm:px-5 py-4 sm:py-5" aria-label="Share profile">
+          <section className="px-4 sm:px-5 py-4" aria-label="Share card">
             <ProfileShareModalLazy
               name={customer.full_name}
               slug={customer.profile_slug}
@@ -712,44 +558,31 @@ export default async function CustomerPublicProfilePage({ params }) {
             <ProfileGallery items={galleryItems} customer={customer} />
           )}
 
-          {/* ── Mobile-only Footer ───────────────────────────────────── */}
-          <footer className="lg:hidden px-5 py-6 text-center">
-            <div className="flex items-center justify-center gap-2 mb-0.5">
-              <div className="w-6 h-6 rounded-lg bg-primary flex items-center justify-center">
-                <ProfileIcon
-                  name="nfc"
-                  className="text-white text-[13px]"
-                  aria-hidden={true}
-                />
+          {/* ── Mobile-Only Footer ───────────────────────────────────── */}
+          <footer className="lg:hidden px-5 py-6 text-center border-t border-border-hairline">
+            <div className="flex items-center justify-center gap-1.5 mb-1">
+              <div className="w-5 h-5 rounded-md bg-accent-primary flex items-center justify-center text-white">
+                <Icon name="nfc" size={12} strokeWidth={2} />
               </div>
-              <span className="text-[13px] font-bold text-gray-800">NFCISTA</span>
+              <span className="text-xs font-bold text-text-primary">NFCISTA</span>
             </div>
-            <p className="text-[10px] text-gray-400 font-medium tracking-[0.2em] uppercase mt-0.5">
-              Tap · Connect · Grow
+            <p className="text-[10px] text-text-muted font-medium uppercase tracking-wider">
+              Contactless Physical Identity
             </p>
-            <div className="mt-3 flex items-center justify-center gap-2.5 text-[10.5px] text-gray-400 flex-wrap">
-              <Link
-                href="/privacy"
-                className="hover:text-primary transition-colors"
-              >
+            <div className="mt-2.5 flex items-center justify-center gap-2 text-[10.5px] text-text-muted flex-wrap">
+              <Link href="/privacy" className="hover:text-text-primary transition-colors">
                 Privacy Notice
               </Link>
               <span aria-hidden="true">·</span>
-              <Link
-                href="/terms"
-                className="hover:text-primary transition-colors"
-              >
+              <Link href="/terms" className="hover:text-text-primary transition-colors">
                 Terms
               </Link>
               <span aria-hidden="true">·</span>
-              <Link
-                href="/privacy/data-request"
-                className="hover:text-primary transition-colors"
-              >
+              <Link href="/privacy/data-request" className="hover:text-text-primary transition-colors">
                 Data Rights
               </Link>
             </div>
-            <p className="mt-2 text-[10px] text-gray-300">
+            <p className="mt-2 text-[10px] text-text-muted">
               © 2025 NFCISTA. All rights reserved.
             </p>
           </footer>

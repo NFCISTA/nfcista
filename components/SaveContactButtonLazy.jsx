@@ -12,6 +12,7 @@
  */
 
 import dynamic from "next/dynamic";
+import Icon from "@/components/ui/Icon";
 
 const SaveContactButton = dynamic(
   () => import("./SaveContactButton"),
@@ -21,16 +22,10 @@ const SaveContactButton = dynamic(
       <button
         disabled
         aria-label="Save contact"
-        className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-primary text-white font-bold text-[15px] shadow-md opacity-90 cursor-wait"
+        className="w-full min-h-[48px] flex items-center justify-center gap-2 py-3 px-6 rounded-lg bg-accent-primary text-white font-semibold text-sm shadow-btn-primary opacity-90 cursor-wait select-none"
       >
-        <span
-          className="material-symbols-outlined text-[20px] text-white"
-          aria-hidden="true"
-          style={{ fontVariationSettings: "'FILL' 1" }}
-        >
-          person_add
-        </span>
-        Save Contact
+        <Icon name="person_add" size={18} strokeWidth={2} className="text-white" />
+        <span>Save Contact</span>
       </button>
     ),
   }

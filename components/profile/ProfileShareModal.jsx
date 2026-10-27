@@ -2,15 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import ProfileIcon from "./ProfileIcon";
+import Icon from "@/components/ui/Icon";
 
 /**
- * ProfileShareModal — compact inline share strip + fullscreen QR modal.
- *
- * Inline strip design (V2):
- *   [mini QR] | Share My Card               [share icon]
- *               Scan the QR code or share the link
- *               [Show QR  button]
+ * ProfileShareModal — compact inline share strip + precision QR modal.
  *
  * @param {{ name: string, slug: string }} props
  */
@@ -79,19 +74,19 @@ export default function ProfileShareModal({ name, slug }) {
   return (
     <>
       {/* ── Compact Inline Share Strip ─────────────────────────────────── */}
-      <div className="flex items-center gap-3 sm:gap-4 bg-gray-50 rounded-2xl p-3.5 border border-gray-100">
+      <div className="flex items-center gap-3.5 bg-surface-subtle/70 rounded-xl p-3.5 border border-border-hairline">
         {/* Mini QR Preview */}
         <button
           type="button"
           onClick={() => setIsOpen(true)}
           aria-label="Open full QR code"
-          className="flex-shrink-0 p-1.5 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow active:scale-95"
+          className="flex-shrink-0 p-1.5 bg-surface-base rounded-lg border border-border-hairline shadow-2xs hover:border-border-strong transition-colors active:scale-95 cursor-pointer"
         >
           <QRCodeSVG
             value={url}
-            size={56}
+            size={52}
             bgColor="#ffffff"
-            fgColor="#0b1c30"
+            fgColor="#0F172A"
             level="M"
             includeMargin={false}
           />
@@ -99,21 +94,17 @@ export default function ProfileShareModal({ name, slug }) {
 
         {/* Title + subtitle + Show QR button */}
         <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-bold text-gray-900 leading-tight">Share My Card</p>
-          <p className="text-[11px] text-gray-400 mt-0.5 leading-snug">
-            Scan the QR code or share the link
+          <p className="text-xs font-bold text-text-primary leading-tight">Digital QR Code</p>
+          <p className="text-[11px] text-text-secondary mt-0.5 leading-snug">
+            Scan to view or share profile
           </p>
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="mt-2 inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-white text-[11px] font-bold rounded-lg shadow-sm hover:bg-[#003ea8] transition-colors active:scale-95"
+            className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-base border border-border-hairline hover:border-border-strong text-text-primary text-[11px] font-semibold rounded-md shadow-2xs transition-colors active:scale-95 cursor-pointer"
           >
-            <ProfileIcon
-              name="qr_code_2"
-              className="text-[13px]"
-              aria-hidden={true}
-            />
-            Show QR
+            <Icon name="qr_code" size={13} strokeWidth={2} className="text-text-secondary" />
+            <span>Show QR</span>
           </button>
         </div>
 
@@ -122,12 +113,13 @@ export default function ProfileShareModal({ name, slug }) {
           type="button"
           onClick={handleShare}
           aria-label="Share profile link"
-          className="flex-shrink-0 w-9 h-9 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all"
+          className="flex-shrink-0 w-9 h-9 rounded-lg bg-surface-base border border-border-hairline shadow-2xs flex items-center justify-center hover:border-border-strong active:scale-95 transition-all cursor-pointer"
         >
-          <ProfileIcon
+          <Icon
             name={copied ? "check" : "share"}
-            className="text-[18px] text-primary"
-            aria-hidden={true}
+            size={16}
+            strokeWidth={2}
+            className={copied ? "text-success" : "text-text-primary"}
           />
         </button>
       </div>
@@ -138,50 +130,50 @@ export default function ProfileShareModal({ name, slug }) {
           role="dialog"
           aria-modal="true"
           aria-labelledby="qr-modal-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="relative w-full max-w-[360px] bg-white rounded-3xl p-6 text-center shadow-2xl border border-gray-100"
+            className="relative w-full max-w-[360px] bg-surface-base rounded-xl p-6 text-center shadow-lg border border-border-hairline"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              aria-label="Close QR code"
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors"
+              aria-label="Close QR code modal"
+              className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-surface-subtle text-text-secondary flex items-center justify-center hover:bg-slate-200 transition-colors cursor-pointer"
             >
-              <ProfileIcon name="close" className="text-[18px]" aria-hidden={true} />
+              <Icon name="close" size={16} strokeWidth={2} />
             </button>
 
             {/* Modal header */}
             <div className="mb-4">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 rounded-full mb-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-primary">
-                  NFC Tap · QR Scan
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-blue-50 border border-blue-100 rounded-full mb-2">
+                <Icon name="nfc" size={12} strokeWidth={2} className="text-accent-primary" />
+                <span className="text-[10px] font-bold tracking-wider uppercase text-accent-primary">
+                  Physical Tap · QR Scan
                 </span>
               </div>
               <h2
                 id="qr-modal-title"
-                className="text-[20px] font-bold text-gray-900"
+                className="text-lg font-bold text-text-primary"
               >
                 Scan to Connect
               </h2>
-              <p className="text-[13px] text-gray-500 mt-0.5">
-                {name ? `Connect with ${name}` : "Point your phone camera to open"}
+              <p className="text-xs text-text-secondary mt-0.5">
+                {name ? `Connect with ${name}` : "Point your camera to view card"}
               </p>
             </div>
 
             {/* QR Code */}
-            <div className="flex justify-center my-5">
-              <div className="p-3 bg-white border border-gray-200 rounded-2xl shadow-sm inline-flex">
+            <div className="flex justify-center my-4">
+              <div className="p-3 bg-white border border-border-hairline rounded-xl shadow-2xs inline-flex">
                 <QRCodeSVG
                   value={url}
                   size={180}
                   bgColor="#ffffff"
-                  fgColor="#0b1c30"
+                  fgColor="#0F172A"
                   level="M"
                   includeMargin={false}
                 />
@@ -189,22 +181,22 @@ export default function ProfileShareModal({ name, slug }) {
             </div>
 
             {/* Copy URL bar */}
-            <div className="mt-3 pt-3 border-t border-gray-100">
+            <div className="mt-3 pt-3 border-t border-border-hairline">
               <button
                 type="button"
                 onClick={handleCopyInModal}
-                className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
+                className="w-full flex items-center justify-between px-3 py-2 bg-surface-subtle hover:bg-slate-200/60 rounded-lg transition-colors cursor-pointer"
               >
-                <span className="text-[11px] text-gray-400 truncate max-w-[240px] font-mono">
+                <span className="text-[11px] text-text-secondary truncate max-w-[220px] font-mono">
                   {url}
                 </span>
-                <span className="text-[11px] font-bold text-primary flex items-center gap-1 flex-shrink-0 ml-2">
-                  <ProfileIcon
-                    name={copied ? "check" : "content_copy"}
-                    className="text-[14px]"
-                    aria-hidden={true}
+                <span className="text-[11px] font-bold text-accent-primary flex items-center gap-1 flex-shrink-0 ml-2">
+                  <Icon
+                    name={copied ? "check" : "copy"}
+                    size={13}
+                    strokeWidth={2}
                   />
-                  {copied ? "Copied" : "Copy"}
+                  <span>{copied ? "Copied" : "Copy"}</span>
                 </span>
               </button>
             </div>
