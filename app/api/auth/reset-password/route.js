@@ -30,7 +30,7 @@ const ALLOWED_ORIGINS = [
  *    - Never accepts `user.id`, `customer_id`, or `email` from the client request.
  * 4. Password validation:
  *    - Minimum 6 characters required.
- * 5. Uses service-role client strictly on the server to update password via updateUserById.
+ * 5. Updates password via direct authenticated PUT /auth/v1/user scoped to the verified recovery token.
  * 6. Never logs passwords, tokens, request bodies, or internal secrets.
  * 7. Returns generic error messages without leaking database or internal Auth details.
  */
@@ -121,24 +121,32 @@ export async function POST(request) {
   }
 
   // ── 5. Perform password update scoped to verified recovery token ───────────
-  // Uses server-side client with user's recovery Bearer token to officially complete recovery flow
-  const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
+  // Replaces failing userClient.auth.updateUser with direct authenticated PUT to Supabase Auth /auth/v1/user
+  // using customer's verified Bearer JWT (validAccessToken).
+  // Bypasses GoTrue client's internal session requirement while officially completing recovery flow.
+  let updateRes;
+  try {
+    updateRes = await fetch(`${supabaseUrl.replace(/\/+$/, "")}/auth/v1/user`, {
+      method: "PUT",
       headers: {
+        "Content-Type": "application/json",
+        apikey: supabaseAnonKey,
         Authorization: `Bearer ${validAccessToken}`,
       },
-    },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-
-  const { error: updateError } = await userClient.auth.updateUser({
-    password: newPassword,
-  });
-
-  if (updateError) {
+      body: JSON.stringify({ password: newPassword }),
+    });
+  } catch {
     return NextResponse.json(
-      { error: "Failed to reset password. Please try again." },
-      { status: 500 }
+      { error: "Authentication service temporarily unreachable. Please try again later." },
+      { status: 502 }
+    );
+  }
+
+  if (!updateRes.ok) {
+    const errorBody = await updateRes.json().catch(() => ({}));
+    return NextResponse.json(
+      { error: errorBody.msg || errorBody.message || "Failed to reset password. Please try again." },
+      { status: updateRes.status || 500 }
     );
   }
 
