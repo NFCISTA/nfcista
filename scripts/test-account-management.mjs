@@ -241,10 +241,19 @@ if (!fs.existsSync(resetPwdPath)) {
     fail(`${resetPwdPath}: Password match`, "Missing match check");
   }
 
-  if (resetContent.includes("supabase.auth.updateUser")) {
-    ok(`${resetPwdPath}: Uses supabase.auth.updateUser({ password })`);
+  if (
+    resetContent.includes('fetch("/api/auth/reset-password"') ||
+    resetContent.includes("fetch('/api/auth/reset-password'")
+  ) {
+    ok(`${resetPwdPath}: Uses dedicated server endpoint POST /api/auth/reset-password`);
   } else {
-    fail(`${resetPwdPath}: Password update`, "Missing updateUser call");
+    fail(`${resetPwdPath}: Password update`, "Missing fetch call to /api/auth/reset-password");
+  }
+
+  if (!resetContent.includes("supabase.auth.updateUser")) {
+    ok(`${resetPwdPath}: Does NOT use browser-side supabase.auth.updateUser (fixed)`);
+  } else {
+    fail(`${resetPwdPath}: Browser auth leak`, "Found browser-side supabase.auth.updateUser");
   }
 
   if (resetContent.includes("Invalid or Expired Link") && resetContent.includes("/forgot-password")) {
@@ -554,6 +563,86 @@ if (!profileContent.includes("formData.password") && !profileContent.includes("p
   ok(`${profilePagePath}: Profile form payload strictly excludes password fields`);
 } else {
   fail(`${profilePagePath}: Payload integrity`, "Found password fields attached to main profile formData");
+}
+
+// ──────────────────────────────────────────────────────────────────
+// 8. Dedicated Server Password Reset Endpoint (/api/auth/reset-password)
+// ──────────────────────────────────────────────────────────────────
+console.log("\n====================================================================");
+console.log("  8. Server Password Reset Route Audit (/api/auth/reset-password)");
+console.log("====================================================================");
+
+const resetRoutePath = "app/api/auth/reset-password/route.js";
+if (fs.existsSync(resetRoutePath)) {
+  ok(`File Exists: ${resetRoutePath}`);
+  const rContent = fs.readFileSync(resetRoutePath, "utf8");
+
+  // CSRF Origin verification
+  if (rContent.includes("ALLOWED_ORIGINS") && rContent.includes("request.headers.get(\"origin\")") && rContent.includes("status: 403")) {
+    ok(`${resetRoutePath}: Strict Origin / CSRF validation enforced`);
+  } else {
+    fail(`${resetRoutePath}: Origin check`, "Missing ALLOWED_ORIGINS origin check");
+  }
+
+  // Uses service role server-side only
+  if (rContent.includes("SUPABASE_SERVICE_ROLE_KEY") && rContent.includes("process.env.SUPABASE_SERVICE_ROLE_KEY")) {
+    ok(`${resetRoutePath}: Uses server-side SUPABASE_SERVICE_ROLE_KEY`);
+  } else {
+    fail(`${resetRoutePath}: Service role`, "Missing SUPABASE_SERVICE_ROLE_KEY");
+  }
+
+  // Derives user from recovery credential (never from body user.id or email)
+  if (
+    !rContent.includes("body.user_id") &&
+    !rContent.includes("body.userId") &&
+    !rContent.includes("body.email") &&
+    !rContent.includes("body.customer_id")
+  ) {
+    ok(`${resetRoutePath}: Does NOT accept identity fields (user.id, email, customer_id) from client body`);
+  } else {
+    fail(`${resetRoutePath}: Identity spoofing risk`, "Found identity parameter extracted from request body");
+  }
+
+  // Verifies recovery credentials via getUser or verifyOtp
+  if (
+    (rContent.includes("supabaseAdmin.auth.getUser(accessToken)") || rContent.includes("getUser(accessToken)")) &&
+    (rContent.includes("verifyOtp") || rContent.includes("auth.verifyOtp"))
+  ) {
+    ok(`${resetRoutePath}: Authenticates caller via recovery credential (accessToken / tokenHash verification)`);
+  } else {
+    fail(`${resetRoutePath}: Credential verification`, "Missing legitimate recovery credential verification");
+  }
+
+  // Scoped password update via updateUserById
+  if (
+    rContent.includes("updateUserById(") &&
+    rContent.includes("targetUserId")
+  ) {
+    ok(`${resetRoutePath}: Updates password via service-role updateUserById strictly scoped to validated targetUserId`);
+  } else {
+    fail(`${resetRoutePath}: updateUserById scoping`, "Missing scoped updateUserById call");
+  }
+
+  // Password length enforcement
+  if (rContent.includes("newPassword.length < 6")) {
+    ok(`${resetRoutePath}: Enforces minimum 6-character password constraint`);
+  } else {
+    fail(`${resetRoutePath}: Password constraint`, "Missing minimum length check");
+  }
+
+  // Zero secret logging
+  if (
+    !rContent.includes("console.log(newPassword") &&
+    !rContent.includes("console.log(password") &&
+    !rContent.includes("console.log(body") &&
+    !rContent.includes("console.log(accessToken")
+  ) {
+    ok(`${resetRoutePath}: Zero logging of passwords, tokens, or request bodies`);
+  } else {
+    fail(`${resetRoutePath}: Secret logging`, "Found console.log of sensitive values");
+  }
+} else {
+  fail(`File Exists: ${resetRoutePath}`, "Missing reset password route file");
 }
 
 // ──────────────────────────────────────────────────────────────────

@@ -19,6 +19,7 @@ function ResetPasswordContent() {
   const [isLinkInvalid, setIsLinkInvalid] = useState(false);
   const [isRecoveryAuthorized, setIsRecoveryAuthorized] = useState(false);
   const recoveryGrantedRef = useRef(false);
+  const recoveryCredentialRef = useRef({ accessToken: null, tokenHash: null });
 
   useEffect(() => {
     let isMounted = true;
@@ -37,7 +38,7 @@ function ResetPasswordContent() {
         // 1. Check for PKCE authorization code in query params (?code=...)
         const code = searchParams.get("code");
         if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) {
             console.error("[reset-password] Exchange code error:", error.message);
             if (isMounted) {
@@ -47,6 +48,9 @@ function ResetPasswordContent() {
             return;
           }
           if (isMounted) {
+            if (data?.session?.access_token) {
+              recoveryCredentialRef.current.accessToken = data.session.access_token;
+            }
             recoveryGrantedRef.current = true;
             setIsRecoveryAuthorized(true);
             setIsLinkInvalid(false);
@@ -59,7 +63,8 @@ function ResetPasswordContent() {
         const tokenHash = searchParams.get("token_hash");
         const type = searchParams.get("type");
         if (tokenHash && type === "recovery") {
-          const { error } = await supabase.auth.verifyOtp({
+          recoveryCredentialRef.current.tokenHash = tokenHash;
+          const { data, error } = await supabase.auth.verifyOtp({
             token_hash: tokenHash,
             type: "recovery",
           });
@@ -72,6 +77,9 @@ function ResetPasswordContent() {
             return;
           }
           if (isMounted) {
+            if (data?.session?.access_token) {
+              recoveryCredentialRef.current.accessToken = data.session.access_token;
+            }
             recoveryGrantedRef.current = true;
             setIsRecoveryAuthorized(true);
             setIsLinkInvalid(false);
@@ -81,9 +89,12 @@ function ResetPasswordContent() {
         }
 
         // 3. Listen for auth state change event — accept ONLY PASSWORD_RECOVERY.
-        // Neither normal SIGNED_IN events nor existing active sessions can authorize password reset.
-        const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+        // Captures recovery session token delivered via URL hash fragment or internal event.
+        const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
           if (event === "PASSWORD_RECOVERY") {
+            if (session?.access_token) {
+              recoveryCredentialRef.current.accessToken = session.access_token;
+            }
             recoveryGrantedRef.current = true;
             if (isMounted) {
               setIsRecoveryAuthorized(true);
@@ -145,17 +156,27 @@ function ResetPasswordContent() {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
+      // POST new password plus recovery credentials to dedicated server endpoint
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          newPassword,
+          accessToken: recoveryCredentialRef.current.accessToken,
+          tokenHash: recoveryCredentialRef.current.tokenHash,
+        }),
       });
 
-      if (error) {
-        setErrorMessage(error.message || "Failed to update password. Please try again.");
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorMessage(data.error || "Failed to update password. Please try again.");
         setIsSubmitting(false);
         return;
       }
 
-      // Invalidate the recovery session so clean sign-in is required
+      // Invalidate recovery session and credentials from memory
+      recoveryCredentialRef.current = { accessToken: null, tokenHash: null };
       try {
         await supabase.auth.signOut();
       } catch {
