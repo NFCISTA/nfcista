@@ -2,26 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Stitch base overrides ─────────────────────────────────────────────── */
+/* ── Base overrides ─────────────────────────────────────────────────────── */
 @layer base {
   html,
   body {
     margin: 0;
     padding: 0;
-    /* Prevent pull-to-refresh / overscroll bounce */
-    overscroll-behavior: none;
-  }
-
-  /* Hide scrollbar globally (design calls for scroll-free card feel) */
-  * {
-    scrollbar-width: none;
-  }
-  *::-webkit-scrollbar {
-    display: none;
+    /* Prevent pull-to-refresh / overscroll bounce on mobile app view */
+    overscroll-behavior-y: none;
   }
 }
 
-/* ── Material Symbols helper ────────────────────────────────────────────── */
+/* ── Utility: Optional scrollbar suppression for horizontal swipe carousels only ─ */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Material Symbols helper (Preserved for backward-compatible rendering) ─ */
 .material-symbols-outlined {
   /* Prevent icon text from participating in line-height/baseline shifts */
   font-style: normal;

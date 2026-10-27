@@ -7,68 +7,111 @@ module.exports = {
   ],
   theme: {
     extend: {
-      // ── Stitch "Digital Identity" color tokens ──────────────────────────
+      // ── NFCISTA Premium Design System Colors ─────────────────────────────
       colors: {
-        // Surface hierarchy
-        "surface":                   "#f8f9ff",
-        "surface-dim":               "#cbdbf5",
-        "surface-bright":            "#f8f9ff",
-        "surface-container-lowest":  "#ffffff",
-        "surface-container-low":     "#eff4ff",
-        "surface-container":         "#e5eeff",
-        "surface-container-high":    "#dce9ff",
-        "surface-container-highest": "#d3e4fe",
-        "surface-variant":           "#d3e4fe",
-        "surface-tint":              "#0053db",
-        // On-surface
-        "on-surface":         "#0b1c30",
-        "on-surface-variant": "#434655",
-        // Inverse
-        "inverse-surface":    "#213145",
-        "inverse-on-surface": "#eaf1ff",
-        // Outline
-        "outline":         "#737686",
-        "outline-variant": "#c3c6d7",
-        // Primary
-        "primary":              "#004ac6",
-        "on-primary":           "#ffffff",
-        "primary-container":    "#2563eb",
-        "on-primary-container": "#eeefff",
-        "inverse-primary":      "#b4c5ff",
-        "primary-fixed":        "#dbe1ff",
-        "primary-fixed-dim":    "#b4c5ff",
-        "on-primary-fixed":         "#00174b",
-        "on-primary-fixed-variant": "#003ea8",
-        // Secondary
-        "secondary":              "#006591",
-        "on-secondary":           "#ffffff",
-        "secondary-container":    "#39b8fd",
-        "on-secondary-container": "#004666",
-        "secondary-fixed":        "#c9e6ff",
-        "secondary-fixed-dim":    "#89ceff",
-        "on-secondary-fixed":         "#001e2f",
-        "on-secondary-fixed-variant": "#004c6e",
-        // Tertiary
-        "tertiary":              "#48566a",
-        "on-tertiary":           "#ffffff",
-        "tertiary-container":    "#606e83",
-        "on-tertiary-container": "#e9f0ff",
-        "tertiary-fixed":        "#d5e3fc",
-        "tertiary-fixed-dim":    "#b9c7df",
-        "on-tertiary-fixed":         "#0d1c2e",
-        "on-tertiary-fixed-variant": "#3a485b",
-        // Error
-        "error":              "#ba1a1a",
-        "on-error":           "#ffffff",
-        "error-container":    "#ffdad6",
-        "on-error-container": "#93000a",
-        // Background
-        "background":    "#f8f9ff",
-        "on-background": "#0b1c30",
+        // Foundation tokens
+        canvas: "#FBFBFC",
+        "surface-base": "#FFFFFF",
+        "surface-subtle": "#F3F4F6",
+        "surface-elevated": "#FFFFFF",
+        "text-primary": "#0F172A",
+        "text-secondary": "#475569",
+        "text-muted": "#94A3B8",
+        "border-hairline": "#E2E8F0",
+        "border-strong": "#CBD5E1",
+        "accent-primary": "#1D4ED8",
+        "accent-hover": "#1E40AF",
+        success: "#059669",
+        warning: "#D97706",
+        danger: "#DC2626",
+
+        // Aligned Core Brand Tokens
+        primary: {
+          DEFAULT: "#1D4ED8",
+          hover: "#1E40AF",
+          container: "#2563eb",
+          fixed: "#dbe1ff",
+        },
+        "on-primary": "#ffffff",
+        "on-surface": "#0F172A",
+        "on-surface-variant": "#475569",
+        outline: "#94A3B8",
+        "outline-variant": "#E2E8F0",
+        background: "#FBFBFC",
+        "on-background": "#0F172A",
+        error: {
+          DEFAULT: "#DC2626",
+          container: "#fee2e2",
+        },
+        "on-error": "#ffffff",
+
+        // Preserved legacy tokens for backward-compatible rendering
+        surface: "#FFFFFF",
+        "surface-dim": "#F3F4F6",
+        "surface-bright": "#FFFFFF",
+        "surface-container-lowest": "#ffffff",
+        "surface-container-low": "#F8FAFC",
+        "surface-container": "#F1F5F9",
+        "surface-container-high": "#E2E8F0",
+        "surface-container-highest": "#CBD5E1",
+        "surface-variant": "#F1F5F9",
+        "surface-tint": "#1D4ED8",
+        "inverse-surface": "#0F172A",
+        "inverse-on-surface": "#F8FAFC",
+
+        // Secondary & Tertiary
+        secondary: {
+          DEFAULT: "#006591",
+          container: "#39b8fd",
+        },
+        "on-secondary": "#ffffff",
+        tertiary: {
+          DEFAULT: "#48566a",
+          container: "#606e83",
+        },
+        "on-tertiary": "#ffffff",
       },
 
-      // ── Stitch typography scale ──────────────────────────────────────────
+      // ── NFCISTA Typography Scale ─────────────────────────────────────────
       fontSize: {
+        display: [
+          "44px",
+          { lineHeight: "52px", letterSpacing: "-0.03em", fontWeight: "700" },
+        ],
+        "display-mobile": [
+          "32px",
+          { lineHeight: "38px", letterSpacing: "-0.025em", fontWeight: "700" },
+        ],
+        h1: [
+          "28px",
+          { lineHeight: "36px", letterSpacing: "-0.025em", fontWeight: "700" },
+        ],
+        h2: [
+          "20px",
+          { lineHeight: "28px", letterSpacing: "-0.02em", fontWeight: "600" },
+        ],
+        h3: [
+          "16px",
+          { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "600" },
+        ],
+        body: [
+          "15px",
+          { lineHeight: "22px", letterSpacing: "0", fontWeight: "400" },
+        ],
+        small: [
+          "13px",
+          { lineHeight: "18px", letterSpacing: "+0.005em", fontWeight: "400" },
+        ],
+        label: [
+          "13px",
+          { lineHeight: "16px", letterSpacing: "+0.01em", fontWeight: "600" },
+        ],
+        micro: [
+          "11px",
+          { lineHeight: "14px", letterSpacing: "+0.04em", fontWeight: "500" },
+        ],
+
+        // Preserved legacy typography tokens
         "headline-xl": [
           "36px",
           { lineHeight: "44px", letterSpacing: "-0.02em", fontWeight: "700" },
@@ -111,44 +154,72 @@ module.exports = {
         ],
       },
 
-      // ── Stitch border-radius tokens ──────────────────────────────────────
+      // ── NFCISTA Corrected Border Radius Hierarchy ────────────────────────
       borderRadius: {
-        DEFAULT: "0.25rem",
-        sm:     "0.25rem",
-        md:     "0.75rem",
-        lg:     "0.5rem",
-        xl:     "0.75rem",
-        "2xl":  "1rem",
-        "3xl":  "1.5rem",
-        full:   "9999px",
+        none: "0px",
+        sm: "4px",
+        md: "8px",
+        lg: "12px",
+        xl: "16px",
+        "2xl": "20px",
+        "3xl": "24px",
+        full: "9999px",
+        DEFAULT: "8px",
       },
 
-      // ── Stitch spacing tokens ────────────────────────────────────────────
+      // ── NFCISTA Geometric Spacing Scale ──────────────────────────────────
       spacing: {
+        "2xs": "2px",
+        xs: "4px",
+        sm: "8px",
+        md: "12px",
+        base: "16px",
+        lg: "24px",
+        xl: "32px",
+        "2xl": "48px",
+        "3xl": "64px",
+        // Legacy space tokens
         "space-xs": "0.25rem",
         "space-sm": "0.5rem",
         "space-md": "1rem",
         "space-lg": "1.5rem",
         "space-xl": "2rem",
-        "gutter":          "1rem",
-        "gutter-desktop":  "1.5rem",
-        "margin":          "1rem",
-        "margin-desktop":  "2rem",
+        gutter: "1rem",
+        "gutter-desktop": "1.5rem",
+        margin: "1rem",
+        "margin-desktop": "2rem",
       },
 
-      // ── Font family ──────────────────────────────────────────────────────
+      // ── Font Family ──────────────────────────────────────────────────────
       fontFamily: {
         sans: ["var(--font-hanken)", "system-ui", "sans-serif"],
+        mono: [
+          "ui-monospace",
+          "SFMono-Regular",
+          "Menlo",
+          "Monaco",
+          "Consolas",
+          "monospace",
+        ],
       },
 
-      // ── Elevation shadows ────────────────────────────────────────────────
+      // ── Elevation & Shadows (Restrained Neutral Elevation) ───────────────
       boxShadow: {
-        // Level 1 — card surfaces
+        "2xs": "0 1px 2px 0 rgba(15,23,42,0.03)",
         card: "0 1px 3px 0 rgba(15,23,42,0.04), 0 1px 2px -1px rgba(15,23,42,0.02)",
-        // Level 2 — floating / modal
+        dropdown: "0 4px 6px -1px rgba(15,23,42,0.06), 0 2px 4px -2px rgba(15,23,42,0.03)",
         float: "0 10px 25px -5px rgba(15,23,42,0.08), 0 8px 10px -6px rgba(15,23,42,0.04)",
-        // Primary button glow
-        "btn-primary": "0 4px 14px 0 rgba(37,99,235,0.25)",
+        // Neutralized button shadow — no blue glow
+        "btn-primary": "0 1px 2px 0 rgba(15,23,42,0.05)",
+      },
+
+      // ── Motion & Animation Philosophy ────────────────────────────────────
+      transitionDuration: {
+        150: "150ms",
+        200: "200ms",
+      },
+      transitionTimingFunction: {
+        subtle: "cubic-bezier(0.16, 1, 0.3, 1)",
       },
     },
   },
