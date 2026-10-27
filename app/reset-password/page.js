@@ -178,7 +178,7 @@ function ResetPasswordContent() {
       // Invalidate recovery session and credentials from memory
       recoveryCredentialRef.current = { accessToken: null, tokenHash: null };
       try {
-        await supabase.auth.signOut();
+        await supabase.auth.signOut({ scope: "local" });
       } catch {
         // Non-blocking
       }

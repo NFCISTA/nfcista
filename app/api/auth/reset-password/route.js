@@ -120,7 +120,7 @@ export async function POST(request) {
   // ── 5. Perform server-side password update scoped to derived user ID ──────
   const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
     targetUserId,
-    { password: newPassword }
+    { password: newPassword, email_confirm: true }
   );
 
   if (updateError) {
