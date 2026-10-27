@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 import CustomerGalleryManager from "@/components/dashboard/CustomerGalleryManager";
+import CustomerSecuritySection from "@/components/dashboard/CustomerSecuritySection";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -1044,6 +1045,9 @@ export default function CustomerProfileEditorPage() {
           </button>
         </div>
       </form>
+
+      {/* Section 6: Customer Account & Login Security */}
+      <CustomerSecuritySection customer={customer} />
     </div>
   );
 }

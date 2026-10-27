@@ -368,6 +368,84 @@ for (const rPath of linkRoutes) {
 }
 
 // ──────────────────────────────────────────────────────────────────
+// 7. Wave 3: In-Dashboard Customer Security & Password Management
+// ──────────────────────────────────────────────────────────────────
+console.log("\n====================================================================");
+console.log("  7. Wave 3: In-Dashboard Customer Security & Password Management");
+console.log("====================================================================");
+
+const secCompPath = "components/dashboard/CustomerSecuritySection.jsx";
+const profilePagePath = "app/dashboard/profile/page.js";
+
+if (fs.existsSync(secCompPath)) {
+  ok(`File Exists: ${secCompPath}`);
+  const secContent = fs.readFileSync(secCompPath, "utf8");
+
+  if (secContent.includes("supabase.auth.updateUser") && secContent.includes("password: newPassword")) {
+    ok(`${secCompPath}: Uses supabase.auth.updateUser({ password: newPassword })`);
+  } else {
+    fail(`${secCompPath}: updateUser API`, "Missing supabase.auth.updateUser call with newPassword");
+  }
+
+  if (secContent.includes("newPassword.length < 6")) {
+    ok(`${secCompPath}: Enforces minimum 6-character password constraint`);
+  } else {
+    fail(`${secCompPath}: Password length constraint`, "Missing minimum length check");
+  }
+
+  if (secContent.includes("newPassword !== confirmPassword")) {
+    ok(`${secCompPath}: Enforces password confirmation match`);
+  } else {
+    fail(`${secCompPath}: Password match`, "Missing confirmation match check");
+  }
+
+  if (secContent.includes("supabase.auth.getSession") && secContent.includes("session")) {
+    ok(`${secCompPath}: Performs authenticated session pre-check before password update`);
+  } else {
+    fail(`${secCompPath}: Session pre-check`, "Missing getSession pre-check before update");
+  }
+
+  if (secContent.includes("setNewPassword(\"\")") && secContent.includes("setConfirmPassword(\"\")")) {
+    ok(`${secCompPath}: Clears credential inputs immediately upon successful update`);
+  } else {
+    fail(`${secCompPath}: Input cleanup`, "Password inputs are not cleared on success");
+  }
+
+  if (secContent.includes("type={showPassword ? \"text\" : \"password\"}")) {
+    ok(`${secCompPath}: Passwords masked by default with Show/Hide toggle`);
+  } else {
+    fail(`${secCompPath}: Password masking`, "Missing masked password type or show/hide control");
+  }
+
+  if (!secContent.includes("/api/admin") && !secContent.includes("/admin/") && !secContent.includes("SERVICE_ROLE")) {
+    ok(`${secCompPath}: Zero admin route leakage or service role usage`);
+  } else {
+    fail(`${secCompPath}: Admin boundary violation`, "Found references to /admin or SERVICE_ROLE in customer component");
+  }
+
+  if (!secContent.includes("/api/customer/profile")) {
+    ok(`${secCompPath}: Strictly decoupled from /api/customer/profile (independent form boundary)`);
+  } else {
+    fail(`${secCompPath}: Form coupling`, "Found customer profile API call in security component");
+  }
+} else {
+  fail(`File Exists: ${secCompPath}`, "Missing CustomerSecuritySection component");
+}
+
+const profileContent = fs.readFileSync(profilePagePath, "utf8");
+if (profileContent.includes("CustomerSecuritySection") && profileContent.includes("<CustomerSecuritySection")) {
+  ok(`${profilePagePath}: Embeds <CustomerSecuritySection /> component`);
+} else {
+  fail(`${profilePagePath}: Integration`, "Missing CustomerSecuritySection import or usage");
+}
+
+if (!profileContent.includes("formData.password") && !profileContent.includes("password: formData")) {
+  ok(`${profilePagePath}: Profile form payload strictly excludes password fields`);
+} else {
+  fail(`${profilePagePath}: Payload integrity`, "Found password fields attached to main profile formData");
+}
+
+// ──────────────────────────────────────────────────────────────────
 // Final Summary
 // ──────────────────────────────────────────────────────────────────
 console.log("\n====================================================================");
