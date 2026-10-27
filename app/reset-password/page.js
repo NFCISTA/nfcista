@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
@@ -17,6 +17,8 @@ function ResetPasswordContent() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLinkInvalid, setIsLinkInvalid] = useState(false);
+  const [isRecoveryAuthorized, setIsRecoveryAuthorized] = useState(false);
+  const recoveryGrantedRef = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -45,6 +47,9 @@ function ResetPasswordContent() {
             return;
           }
           if (isMounted) {
+            recoveryGrantedRef.current = true;
+            setIsRecoveryAuthorized(true);
+            setIsLinkInvalid(false);
             setIsVerifying(false);
           }
           return;
@@ -67,41 +72,33 @@ function ResetPasswordContent() {
             return;
           }
           if (isMounted) {
+            recoveryGrantedRef.current = true;
+            setIsRecoveryAuthorized(true);
+            setIsLinkInvalid(false);
             setIsVerifying(false);
           }
           return;
         }
 
-        // 3. Check for implicit hash session or active recovery session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) {
-          console.error("[reset-password] Get session error:", sessionError.message);
-        }
-
-        if (session) {
-          if (isMounted) {
-            setIsVerifying(false);
-          }
-          return;
-        }
-
-        // 4. Listen for auth state change event (e.g. PASSWORD_RECOVERY parsed from URL hash)
-        const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-          if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
+        // 3. Listen for auth state change event — accept ONLY PASSWORD_RECOVERY.
+        // Neither normal SIGNED_IN events nor existing active sessions can authorize password reset.
+        const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+          if (event === "PASSWORD_RECOVERY") {
+            recoveryGrantedRef.current = true;
             if (isMounted) {
+              setIsRecoveryAuthorized(true);
               setIsLinkInvalid(false);
               setIsVerifying(false);
             }
           }
         });
 
-        // If after a short timeout no session was captured, mark as invalid
-        const timeout = setTimeout(async () => {
-          const { data: { session: finalCheck } } = await supabase.auth.getSession();
-          if (isMounted) {
-            if (!finalCheck) {
-              setIsLinkInvalid(true);
-            }
+        // 4. Enforce explicit recovery grant via ref to prevent stale-closure timing issues.
+        // We do NOT check supabase.auth.getSession() here, ensuring normal active sessions
+        // cannot unlock the password reset form.
+        const timeout = setTimeout(() => {
+          if (isMounted && !recoveryGrantedRef.current) {
+            setIsLinkInvalid(true);
             setIsVerifying(false);
           }
         }, 1200);
@@ -129,6 +126,11 @@ function ResetPasswordContent() {
   async function handlePasswordUpdate(e) {
     e.preventDefault();
     setErrorMessage("");
+
+    if (!isRecoveryAuthorized || !recoveryGrantedRef.current) {
+      setErrorMessage("Password recovery session is missing or expired. Please request a new link.");
+      return;
+    }
 
     if (!newPassword || newPassword.length < 6) {
       setErrorMessage("Password must be at least 6 characters long.");
@@ -280,7 +282,7 @@ function ResetPasswordContent() {
           )}
 
           {/* Active password reset form */}
-          {!isVerifying && !isLinkInvalid && !isSuccess && (
+          {!isVerifying && !isLinkInvalid && !isSuccess && isRecoveryAuthorized && (
             <>
               {/* Header */}
               <div className="text-center space-y-2">
