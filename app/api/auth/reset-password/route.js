@@ -44,11 +44,12 @@ export async function POST(request) {
     );
   }
 
-  // ── 2. Service role key verification ─────────────────────────────────────
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // ── 2. Validate environment configuration ────────────────────────────────
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!serviceRoleKey || !supabaseUrl) {
+  if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
     return NextResponse.json(
       { error: "Server configuration error." },
       { status: 500 }
@@ -84,44 +85,55 @@ export async function POST(request) {
     );
   }
 
-  // ── 4. Verify recovery credential & derive target user ID ────────────────
+  // ── 4. Verify recovery credential & obtain verified user token ───────────
+  // We first verify the recovery credential using the admin client.
+  // Never trust user.id or email from client payload.
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  let targetUserId = null;
+  let validAccessToken = null;
 
   // Path A: Authenticated recovery access token (JWT)
   if (accessToken && typeof accessToken === "string") {
     const { data: authUserData, error: tokenError } = await supabaseAdmin.auth.getUser(accessToken);
     if (!tokenError && authUserData?.user?.id) {
-      targetUserId = authUserData.user.id;
+      validAccessToken = accessToken;
     }
   }
 
   // Path B: Direct token_hash verification fallback
-  if (!targetUserId && tokenHash && typeof tokenHash === "string") {
+  if (!validAccessToken && tokenHash && typeof tokenHash === "string") {
     const { data: otpData, error: otpError } = await supabaseAdmin.auth.verifyOtp({
       token_hash: tokenHash,
       type: "recovery",
     });
-    if (!otpError && otpData?.user?.id) {
-      targetUserId = otpData.user.id;
+    if (!otpError && otpData?.session?.access_token) {
+      validAccessToken = otpData.session.access_token;
     }
   }
 
-  if (!targetUserId) {
+  if (!validAccessToken) {
     return NextResponse.json(
       { error: "Invalid or expired password reset link. Please request a new link." },
       { status: 401 }
     );
   }
 
-  // ── 5. Perform server-side password update scoped to derived user ID ──────
-  const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-    targetUserId,
-    { password: newPassword, email_confirm: true }
-  );
+  // ── 5. Perform password update scoped to verified recovery token ───────────
+  // Uses server-side client with user's recovery Bearer token to officially complete recovery flow
+  const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${validAccessToken}`,
+      },
+    },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const { error: updateError } = await userClient.auth.updateUser({
+    password: newPassword,
+  });
 
   if (updateError) {
     return NextResponse.json(

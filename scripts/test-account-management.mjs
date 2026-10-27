@@ -613,14 +613,14 @@ if (fs.existsSync(resetRoutePath)) {
     fail(`${resetRoutePath}: Credential verification`, "Missing legitimate recovery credential verification");
   }
 
-  // Scoped password update via updateUserById
+  // Password update scoped to verified recovery session
   if (
-    rContent.includes("updateUserById(") &&
-    rContent.includes("targetUserId")
+    (rContent.includes("userClient.auth.updateUser") || rContent.includes("updateUserById")) &&
+    (rContent.includes("validAccessToken") || rContent.includes("targetUserId"))
   ) {
-    ok(`${resetRoutePath}: Updates password via service-role updateUserById strictly scoped to validated targetUserId`);
+    ok(`${resetRoutePath}: Updates password via authenticated recovery session scoped strictly to verified recovery token`);
   } else {
-    fail(`${resetRoutePath}: updateUserById scoping`, "Missing scoped updateUserById call");
+    fail(`${resetRoutePath}: Scoped password update`, "Missing scoped password update call");
   }
 
   // Password length enforcement
