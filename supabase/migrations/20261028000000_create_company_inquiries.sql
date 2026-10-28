@@ -4,11 +4,11 @@
 -- Stores homepage sales inquiries and custom branding quote requests.
 -- Strictly isolated from public.customer_enquiries (which is for customer leads).
 --
--- Security:
+-- Security Architecture:
 -- - Row Level Security (RLS) is ENABLED.
 -- - Public anon users may ONLY INSERT valid inquiries.
--- - Public anon and authenticated users CANNOT SELECT, UPDATE, or DELETE records.
--- - Inquiries can only be reviewed by the administrative backend via service-role key.
+-- - Public anon and non-admin authenticated users CANNOT SELECT, UPDATE, or DELETE records.
+-- - Inquiries can only be reviewed by administrators (via public.is_admin() or service-role).
 -- ==============================================================================
 
 BEGIN;
@@ -33,7 +33,7 @@ ON public.company_inquiries (created_at DESC);
 -- Enable RLS
 ALTER TABLE public.company_inquiries ENABLE ROW LEVEL SECURITY;
 
--- 1. Insert Policy: Allow public anon visitors to submit an inquiry
+-- 1. Insert Policy: Allow public visitors to submit an inquiry
 DROP POLICY IF EXISTS "Allow anonymous insert of company inquiries" ON public.company_inquiries;
 CREATE POLICY "Allow anonymous insert of company inquiries"
 ON public.company_inquiries
@@ -41,7 +41,13 @@ FOR INSERT
 TO anon, authenticated
 WITH CHECK (true);
 
--- Explicitly ensure NO select/update/delete policies exist for public roles.
--- Service role client automatically bypasses RLS for admin workflows.
+-- 2. Admin Policy: Allow verified admins full management access
+DROP POLICY IF EXISTS "Allow admins full access to company inquiries" ON public.company_inquiries;
+CREATE POLICY "Allow admins full access to company inquiries"
+ON public.company_inquiries
+FOR ALL
+TO authenticated
+USING (public.is_admin())
+WITH CHECK (public.is_admin());
 
 COMMIT;

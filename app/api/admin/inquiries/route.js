@@ -5,8 +5,8 @@ import { createClient } from "@supabase/supabase-js";
 export const dynamic = "force-dynamic";
 
 /**
- * Build a service-role Supabase client.
- * Server-side only — the service role key is never sent to the browser.
+ * Builds a service-role Supabase client when credentials are present.
+ * Server-side only — never exposed to the browser.
  */
 function getServiceRoleClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -18,19 +18,36 @@ function getServiceRoleClient() {
 }
 
 /**
+ * Helper to identify if an error indicates that the table does not exist.
+ * Catches PostgreSQL 42P01 and PostgREST PGRST205 (missing table in schema cache).
+ */
+function isTableMissingError(error) {
+  if (!error) return false;
+  const code = String(error.code || "").toUpperCase();
+  const msg = String(error.message || "").toLowerCase();
+
+  return (
+    code === "PGRST205" ||
+    code === "42P01" ||
+    msg.includes("schema cache") ||
+    msg.includes("does not exist") ||
+    msg.includes("could not find the table")
+  );
+}
+
+/**
  * GET /api/admin/inquiries
- * Returns company_inquiries ordered newest-first.
- * Requires valid admin session.
- * Handles the case where the migration has not been applied yet.
+ * Retrieves company_inquiries ordered newest-first.
+ * Protected by authenticateAdmin.
  */
 export async function GET(request) {
-  const { errorResponse } = await authenticateAdmin(request);
+  const { errorResponse, authClient } = await authenticateAdmin(request);
   if (errorResponse) return errorResponse;
 
-  const client = getServiceRoleClient();
+  const client = getServiceRoleClient() || authClient;
   if (!client) {
     return NextResponse.json(
-      { error: "Server configuration error: Supabase service credentials are missing." },
+      { error: "Server configuration error: Database client unavailable." },
       { status: 503 }
     );
   }
@@ -42,41 +59,45 @@ export async function GET(request) {
     .limit(200);
 
   if (error) {
-    // Table does not exist yet (migration pending)
-    if (error.message?.includes("does not exist") || error.code === "42P01") {
+    if (isTableMissingError(error)) {
       return NextResponse.json(
         {
           inquiries: [],
           migration_pending: true,
-          note: "The company_inquiries table has not been created yet. Apply the SQL migration to enable this feature.",
+          table_name: "company_inquiries",
+          note: "The company_inquiries table has not been created in Supabase yet. Apply the SQL migration to enable this feature.",
         },
         { status: 200 }
       );
     }
-    console.error("[admin-inquiries] Query error:", error.message);
+
+    console.error("[admin-inquiries] Query error:", error.message || error);
     return NextResponse.json(
-      { error: "Failed to retrieve inquiries. Please try again." },
+      { error: "Failed to retrieve inquiries. Please check database permissions or try again." },
       { status: 500 }
     );
   }
 
-  return NextResponse.json({ inquiries: data || [], migration_pending: false });
+  return NextResponse.json({
+    inquiries: data || [],
+    migration_pending: false,
+  });
 }
 
 /**
  * PATCH /api/admin/inquiries
- * Update the status of a single inquiry.
- * Body: { id: string, status: "new" | "contacted" | "closed" }
+ * Updates the status of an inquiry ('new' | 'contacted' | 'closed').
+ * Protected by authenticateAdmin.
  */
 export async function PATCH(request) {
-  const { errorResponse } = await authenticateAdmin(request);
+  const { errorResponse, authClient } = await authenticateAdmin(request);
   if (errorResponse) return errorResponse;
 
   let body;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON." }, { status: 400 });
+    return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
   }
 
   const { id, status } = body || {};
@@ -92,9 +113,9 @@ export async function PATCH(request) {
     );
   }
 
-  const client = getServiceRoleClient();
+  const client = getServiceRoleClient() || authClient;
   if (!client) {
-    return NextResponse.json({ error: "Server configuration error." }, { status: 503 });
+    return NextResponse.json({ error: "Database client unavailable." }, { status: 503 });
   }
 
   const { error } = await client
@@ -103,9 +124,19 @@ export async function PATCH(request) {
     .eq("id", id);
 
   if (error) {
-    console.error("[admin-inquiries-patch] Error:", error.message);
+    if (isTableMissingError(error)) {
+      return NextResponse.json(
+        {
+          error: "The company_inquiries table does not exist. Please apply the migration first.",
+          migration_pending: true,
+        },
+        { status: 503 }
+      );
+    }
+
+    console.error("[admin-inquiries-patch] Error:", error.message || error);
     return NextResponse.json({ error: "Failed to update inquiry status." }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, id, status });
 }
