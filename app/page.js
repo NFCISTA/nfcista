@@ -1,39 +1,75 @@
-import Navbar from "@/components/home/Navbar";
+import SpecBar from "@/components/home/SpecBar";
+import StickyNav from "@/components/home/StickyNav";
 import Hero from "@/components/home/Hero";
-import HowItWorks from "@/components/home/HowItWorks";
-import ProductsPreview from "@/components/home/ProductsPreview";
-import NfcExplanation from "@/components/home/NfcExplanation";
-import ContactCTA from "@/components/home/ContactCTA";
-import FAQ from "@/components/home/FAQ";
+import FactsStrip from "@/components/home/FactsStrip";
+import ExperienceDemo from "@/components/home/ExperienceDemo";
+import ComparisonTable from "@/components/home/ComparisonTable";
+import ProductList from "@/components/home/ProductList";
+import ProcessTimeline from "@/components/home/ProcessTimeline";
+import FaqSection from "@/components/home/FaqSection";
+import InquirySection from "@/components/home/InquirySection";
 import Footer from "@/components/home/Footer";
+
+export const metadata = {
+  title: "NFCISTA — Smart NFC Tap Systems Built for Shops",
+  description:
+    "Custom-branded, pre-programmed, and tap-tested NFC hardware for shops and counters. Turn one tap into a review, an order, or a follower.",
+  alternates: {
+    canonical: "https://nfcista.vercel.app/",
+  },
+  openGraph: {
+    title: "NFCISTA — Smart NFC Tap Systems Built for Shops",
+    description:
+      "Custom-branded, pre-programmed, and tap-tested NFC hardware. Turn one tap into a review, an order, or a follower.",
+    url: "https://nfcista.vercel.app/",
+    siteName: "NFCISTA",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "NFCISTA — Smart NFC Tap Systems Built for Shops",
+    description:
+      "Custom-branded, pre-programmed, and tap-tested NFC hardware for shops and counters.",
+  },
+};
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col bg-canvas text-text-primary selection:bg-accent-primary selection:text-white">
-      {/* 1. HEADER & NAVIGATION */}
-      <Navbar />
+    <div className="min-h-screen flex flex-col bg-ink text-fg selection:bg-brand selection:text-white font-sans antialiased">
+      {/* 1. Hardware Spec Bar */}
+      <SpecBar />
+
+      {/* 2. Sticky Blurred Navigation */}
+      <StickyNav />
 
       <main className="flex-1">
-        {/* 2. HARDWARE HERO */}
+        {/* 3. Hero Section (with inline SVG stand) */}
         <Hero />
 
-        {/* 3. THE CONTACTLESS FLOW (PRODUCT STORY) */}
-        <HowItWorks />
+        {/* 4. Facts Strip */}
+        <FactsStrip />
 
-        {/* 4. HARDWARE CATALOG */}
-        <ProductsPreview />
+        {/* 5. Experience Interactive Demo */}
+        <ExperienceDemo />
 
-        {/* 5. DUAL-TECH SPECIFICATIONS (NFC + QR + CLOUD PROFILE) */}
-        <NfcExplanation />
+        {/* 6. Comparison Table (Differentiators) */}
+        <ComparisonTable />
 
-        {/* 6. B2B ORDERS & INQUIRIES */}
-        <ContactCTA />
+        {/* 7. Product List (Editorial Rows from Catalog) */}
+        <ProductList />
 
-        {/* 7. TECHNICAL FAQ */}
-        <FAQ />
+        {/* 8. Process Timeline (4-Step Flow) */}
+        <ProcessTimeline />
+
+        {/* 9. Native Details FAQ */}
+        <FaqSection />
+
+        {/* 10. Inquiry Section (Dark Blue-Tinted Panel & Underline Form) */}
+        <InquirySection />
       </main>
 
-      {/* 8. FOOTER & COMPLIANCE */}
+      {/* 11. Minimal Obsidian Footer */}
       <Footer />
     </div>
   );

@@ -1,104 +1,92 @@
 import Link from "next/link";
-import Icon from "@/components/ui/Icon";
 
 export default function Footer() {
   return (
-    <footer className="bg-canvas border-t border-border-hairline py-12 md:py-16 text-text-secondary">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
-          {/* Brand Column */}
-          <div className="md:col-span-1 space-y-3">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-surface-elevated border border-border-hairline flex items-center justify-center text-accent-primary shadow-2xs">
-                <Icon name="Radio" className="w-3.5 h-3.5 text-accent-primary" />
+    <footer className="bg-ink-alt border-t border-line py-16 text-muted">
+      <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 border-b border-line">
+          {/* Brand & Tagline */}
+          <div className="md:col-span-5 space-y-4">
+            <Link href="/" className="flex items-center gap-2.5 text-fg group">
+              <div className="w-8 h-8 rounded-full bg-ink border border-line flex items-center justify-center text-brand">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M6 8a9 9 0 0 1 12 0" />
+                  <path d="M8.5 11.5a5 5 0 0 1 7 0" />
+                  <circle cx="12" cy="15" r="1.5" fill="currentColor" />
+                </svg>
               </div>
-              <span className="text-base font-bold tracking-tight text-text-primary">
+              <span className="font-display font-bold text-lg tracking-tight text-fg">
                 NFCISTA
               </span>
             </Link>
-            <p className="text-xs text-text-secondary leading-relaxed">
-              Physical contactless smart cards and review hardware for modern businesses. Share your business profile with a single tap.
-            </p>
-            <p className="text-xs text-text-secondary">
-              Privacy / Grievance Contact:<br />
-              <a href="mailto:hellonfcista@gmail.com" className="text-accent-primary hover:underline font-medium">
-                hellonfcista@gmail.com
-              </a>
+            <p className="font-sans text-sm text-dim leading-relaxed max-w-sm">
+              Smart NFC products for shops. We design, program and test finished contactless hardware for in-person customer connection.
             </p>
           </div>
 
           {/* Navigation Links */}
-          <div>
-            <h4 className="text-xs font-bold text-text-primary uppercase tracking-wider mb-3">
-              Hardware &amp; Flow
-            </h4>
+          <div className="md:col-span-3 space-y-3">
+            <div className="font-mono text-xs uppercase tracking-wider text-fg font-bold">
+              Navigation
+            </div>
             <ul className="space-y-2 text-xs">
               <li>
-                <a href="#products" className="text-text-secondary hover:text-text-primary transition-colors">
-                  Product Catalog
+                <a href="#demo" className="text-dim hover:text-fg transition-colors">
+                  Experience Demo
                 </a>
               </li>
               <li>
-                <a href="#how-it-works" className="text-text-secondary hover:text-text-primary transition-colors">
-                  The Contactless Flow
+                <a href="#difference" className="text-dim hover:text-fg transition-colors">
+                  Why Us
                 </a>
               </li>
               <li>
-                <a href="#specifications" className="text-text-secondary hover:text-text-primary transition-colors">
-                  Dual-Tech Specifications
+                <a href="#products" className="text-dim hover:text-fg transition-colors">
+                  Products
                 </a>
               </li>
               <li>
-                <a href="#contact" className="text-text-secondary hover:text-text-primary transition-colors">
-                  B2B Orders &amp; Inquiries
+                <a href="#process" className="text-dim hover:text-fg transition-colors">
+                  Process
                 </a>
               </li>
               <li>
-                <a href="#faq" className="text-text-secondary hover:text-text-primary transition-colors">
-                  Frequently Asked Questions
+                <a href="#faq" className="text-dim hover:text-fg transition-colors">
+                  FAQ
                 </a>
               </li>
             </ul>
           </div>
 
-          {/* Direct Portals & Demo */}
-          <div>
-            <h4 className="text-xs font-bold text-text-primary uppercase tracking-wider mb-3">
-              Portals &amp; Demo
-            </h4>
+          {/* Portals & Demo */}
+          <div className="md:col-span-4 space-y-3">
+            <div className="font-mono text-xs uppercase tracking-wider text-fg font-bold">
+              Portals &amp; Compliance
+            </div>
             <ul className="space-y-2 text-xs">
               <li>
-                <Link href="/demo" className="text-text-secondary hover:text-accent-primary transition-colors flex items-center gap-1.5">
-                  <span>Live Profile Demo</span>
-                  <Icon name="ExternalLink" className="w-3 h-3 text-text-secondary" />
+                <Link href="/demo" className="text-dim hover:text-brand-text transition-colors flex items-center gap-1.5">
+                  <span>View Live Demo Profile</span>
+                  <span className="text-[10px] text-brand-text">↗</span>
                 </Link>
               </li>
               <li>
-                <Link href="/login" className="text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1.5">
-                  <span>Client Login</span>
+                <Link href="/login" className="text-dim hover:text-fg transition-colors">
+                  Client Portal Login
                 </Link>
               </li>
-            </ul>
-          </div>
-
-          {/* Privacy & Legal Column */}
-          <div>
-            <h4 className="text-xs font-bold text-text-primary uppercase tracking-wider mb-3">
-              Privacy &amp; Compliance
-            </h4>
-            <ul className="space-y-2 text-xs">
               <li>
-                <Link href="/privacy" className="text-text-secondary hover:text-text-primary transition-colors">
+                <Link href="/privacy" className="text-dim hover:text-fg transition-colors">
                   Privacy Notice (DPDP)
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-text-secondary hover:text-text-primary transition-colors">
+                <Link href="/terms" className="text-dim hover:text-fg transition-colors">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/privacy/data-request" className="text-accent-primary font-medium hover:underline">
+                <Link href="/privacy/data-request" className="text-dim hover:text-fg transition-colors">
                   Data Rights Request
                 </Link>
               </li>
@@ -106,20 +94,19 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-6 border-t border-border-hairline flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-text-secondary">
+        {/* Bottom Bar: Copyright & Back-to-Top */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-dim">
           <div>
-            &copy; 2026 NFCISTA. All rights reserved.
+            &copy; {new Date().getFullYear()} NFCISTA. All rights reserved.
           </div>
-          <div className="flex flex-wrap items-center gap-3 text-xs">
-            <Link href="/privacy" className="hover:text-text-primary transition-colors">Privacy</Link>
-            <span>&bull;</span>
-            <Link href="/terms" className="hover:text-text-primary transition-colors">Terms</Link>
-            <span>&bull;</span>
-            <Link href="/privacy/data-request" className="hover:text-text-primary transition-colors">Data Rights</Link>
-            <span>&bull;</span>
-            <span>Contactless Physical Identity</span>
-          </div>
+
+          <a
+            href="#"
+            className="hover:text-fg transition-colors flex items-center gap-1.5 font-medium"
+          >
+            <span>Back to top</span>
+            <span aria-hidden="true">↑</span>
+          </a>
         </div>
       </div>
     </footer>
