@@ -14,6 +14,7 @@ import ProfileShareModalLazy from "@/components/profile/ProfileShareModalLazy";
 import ProfileQuickActions from "@/components/profile/ProfileQuickActions";
 import ProfileGallery from "@/components/profile/ProfileGallery";
 import ProfileEnquiryButton from "@/components/profile/ProfileEnquiryButton";
+import ProfileIntro from "@/components/profile/ProfileIntro";
 import Icon from "@/components/ui/Icon";
 
 import { unstable_cache } from "next/cache";
@@ -161,8 +162,7 @@ export default async function CustomerPublicProfilePage({ params }) {
   const safeWebsite      = getSafeExternalUrl(customer.website);
   const safeGoogleReview = getSafeExternalUrl(customer.google_review_url);
   const safePhotoUrl     = getSafeExternalUrl(customer.photo_url);
-  const hasCustomBanner  = Boolean(customer.banner_url?.trim());
-  const safeBannerUrl    = hasCustomBanner ? getSafeExternalUrl(customer.banner_url) : null;
+  const safeBannerUrl    = getSafeExternalUrl(customer.banner_url) || "/images/hero-mountains.jpg";
   const hasWebsite       = Boolean(safeWebsite);
   const hasGoogleReview  = Boolean(safeGoogleReview);
 
@@ -298,16 +298,18 @@ export default async function CustomerPublicProfilePage({ params }) {
 
   // ── Render ──────────────────────────────────────────────────────────
   return (
-    <main className="min-h-screen bg-canvas text-text-primary antialiased overflow-x-hidden">
+    <main className="min-h-screen bg-[#eef2ff] antialiased overflow-x-hidden">
+      <ProfileIntro name={customer.full_name} />
+
       {/*
-        Executive profile container:
+        Profile card:
         - Mobile: max-w-[430px], clean white surface, seamless edge-to-edge
         - Desktop (lg): max-w-[1040px], centered 2-column card with hairline border
       */}
       <div
         className="w-full max-w-[430px] mx-auto bg-surface-base min-h-screen
-                   lg:max-w-[1040px] lg:min-h-0 lg:my-10 lg:rounded-2xl
-                   lg:overflow-hidden lg:border lg:border-border-hairline lg:shadow-card
+                   lg:max-w-[1040px] lg:min-h-0 lg:my-8 lg:rounded-3xl
+                   lg:overflow-hidden lg:border lg:border-blue-100/60 lg:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)]
                    lg:grid lg:grid-cols-[380px_1fr]"
       >
 
@@ -316,39 +318,44 @@ export default async function CustomerPublicProfilePage({ params }) {
         {/* ═══════════════════════════════════════════════════════════════ */}
         <div className="flex flex-col bg-surface-base lg:border-r lg:border-border-hairline">
 
-          {/* ── Hardware-Inspired Header Banner ──────────────────────── */}
-          <div className="relative h-36 sm:h-40 bg-slate-950 overflow-hidden flex flex-col justify-between p-4">
-            {safeBannerUrl ? (
-              <>
-                <Image
-                  src={safeBannerUrl}
-                  alt=""
-                  aria-hidden="true"
-                  fill
-                  priority
-                  sizes="(max-width: 430px) 100vw, 380px"
-                  className="object-cover select-none pointer-events-none"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/30 to-slate-950/85" />
-              </>
-            ) : (
-              <div className="absolute inset-0 bg-slate-900 border-b border-slate-800" />
-            )}
+          {/* ── Premium Hero Banner ─────────────────────────────────── */}
+          <div className="relative overflow-hidden h-44 sm:h-48 lg:h-56 bg-[#071426]">
+            {/* Background banner (custom uploaded or NFCISTA default) */}
+            <Image
+              src={safeBannerUrl}
+              alt=""
+              aria-hidden="true"
+              fill
+              priority
+              sizes="(max-width: 430px) 100vw, (max-width: 1024px) 430px, 390px"
+              className="object-cover object-[center_35%] select-none pointer-events-none"
+            />
 
-            {/* Top brand & hardware indicator */}
-            <div className="relative z-10 flex items-center justify-between w-full">
-              <Link href="/" className="flex items-center gap-2 group flex-shrink-0">
-                <div className="w-6 h-6 rounded-md bg-white/10 border border-white/20 flex items-center justify-center text-white group-hover:bg-white/20 transition-colors">
-                  <Icon name="nfc" size={13} strokeWidth={2} />
+            {/* Gradient overlays: balanced for crisp mountain visibility and high text contrast */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#051329]/80 via-[#071426]/20 to-[#071426]/90" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_70%_20%,rgba(255,190,100,0.15),transparent_60%)] pointer-events-none" />
+
+            {/* Top bar: NFCISTA brand + desktop tagline & Tap to Connect indicator */}
+            <div className="relative z-10 flex items-center justify-between px-3.5 sm:px-4 pt-3.5 sm:pt-4">
+              <Link href="/" className="flex items-center gap-1.5 sm:gap-2 group flex-shrink-0">
+                <div className="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center flex-shrink-0 shadow-sm group-hover:bg-white/30 transition-colors">
+                  <Icon name="nfc" size={15} strokeWidth={2} className="text-white" />
                 </div>
-                <span className="text-white text-xs font-bold tracking-wider">
+                <span className="text-white text-[12.5px] sm:text-[13px] font-bold tracking-wide drop-shadow-md">
                   NFCISTA
                 </span>
               </Link>
 
-              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white/10 border border-white/15 rounded-md text-white/90 text-[10px] font-medium tracking-wide">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span>NFC Active</span>
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                <p className="hidden lg:block text-white/70 text-[11px] italic font-light tracking-wide mr-2 drop-shadow-sm">
+                  Small Tap · Big Connections
+                </p>
+                <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/30 text-white flex-shrink-0 shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                  <span className="text-[9px] sm:text-[10px] font-semibold tracking-wide whitespace-nowrap drop-shadow-sm">
+                    Tap to Connect
+                  </span>
+                </div>
               </div>
             </div>
           </div>
