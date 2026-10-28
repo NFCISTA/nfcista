@@ -9,7 +9,18 @@ module.exports = {
     extend: {
       // ── NFCISTA Premium Design System Colors ─────────────────────────────
       colors: {
-        // Foundation tokens
+        // Obsidian Luxury Theme Tokens (Homepage Redesign)
+        ink: "#040507",
+        "ink-alt": "#06080B",
+        line: "#14171D",
+        fg: "#F2F4F8",
+        muted: "#9BA4B3",
+        dim: "#7C8696",
+        brand: "#2563EB",
+        "brand-hover": "#3B6BFF",
+        "brand-text": "#6F93FF",
+
+        // Foundation tokens (Preserved for existing routes and components)
         canvas: "#FBFBFC",
         "surface-base": "#FFFFFF",
         "surface-subtle": "#F3F4F6",
@@ -192,8 +203,10 @@ module.exports = {
 
       // ── Font Family ──────────────────────────────────────────────────────
       fontFamily: {
-        sans: ["var(--font-hanken)", "system-ui", "sans-serif"],
+        display: ["var(--font-inter-tight)", "system-ui", "sans-serif"],
+        sans: ["var(--font-inter)", "var(--font-hanken)", "system-ui", "sans-serif"],
         mono: [
+          "var(--font-jetbrains-mono)",
           "ui-monospace",
           "SFMono-Regular",
           "Menlo",
@@ -201,6 +214,22 @@ module.exports = {
           "Consolas",
           "monospace",
         ],
+      },
+
+      // ── Keyframes & Animations (Obsidian Homepage) ─────────────────────────
+      keyframes: {
+        tapPulse: {
+          "0%": { transform: "scale(0.7)", opacity: "0.9" },
+          "100%": { transform: "scale(1.7)", opacity: "0" },
+        },
+        fadeUp: {
+          "0%": { opacity: "0", transform: "translateY(14px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+      },
+      animation: {
+        tapPulse: "tapPulse 3.2s cubic-bezier(0, 0, 0.2, 1) infinite",
+        fadeUp: "fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards",
       },
 
       // ── Elevation & Shadows (Restrained Neutral Elevation) ───────────────
