@@ -27,33 +27,33 @@ export default function Hero() {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto pt-2">
               <a
                 href="#products"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-accent-primary text-white font-semibold text-sm hover:bg-accent-hover shadow-2xs transition-colors active:scale-[0.98]"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-accent-primary text-white font-semibold text-sm hover:bg-accent-hover shadow-2xs transition-colors active:scale-[0.98] select-none"
               >
                 <span>Explore NFC Cards</span>
-                <Icon name="ArrowRight" className="w-4 h-4" />
+                <Icon name="ArrowRight" size={16} className="w-4 h-4 shrink-0" />
               </a>
 
               <Link
                 href="/p/sachin-suruse"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-surface-elevated text-text-primary border border-border-hairline font-semibold text-sm hover:bg-surface-subtle transition-colors active:scale-[0.98]"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-surface-elevated text-text-primary border border-border-hairline font-semibold text-sm hover:bg-surface-subtle transition-colors active:scale-[0.98] select-none"
               >
-                <Icon name="ExternalLink" className="w-4 h-4 text-text-secondary" />
+                <Icon name="ExternalLink" size={16} className="w-4 h-4 text-text-secondary shrink-0" />
                 <span>View Live Profile Demo</span>
               </Link>
             </div>
 
             {/* Factual Technical Benefits Bar */}
             <div className="pt-6 flex flex-wrap items-center gap-y-2 gap-x-6 text-xs text-text-secondary border-t border-border-hairline w-full">
-              <div className="flex items-center gap-1.5">
-                <Icon name="CheckCircle2" className="w-4 h-4 text-accent-primary" />
+              <div className="flex items-center gap-2 shrink-0">
+                <Icon name="CheckCircle2" size={16} className="w-4 h-4 text-accent-primary shrink-0" />
                 <span>No App Required</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Icon name="CheckCircle2" className="w-4 h-4 text-accent-primary" />
+              <div className="flex items-center gap-2 shrink-0">
+                <Icon name="CheckCircle2" size={16} className="w-4 h-4 text-accent-primary shrink-0" />
                 <span>Native Phone Detection</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Icon name="CheckCircle2" className="w-4 h-4 text-accent-primary" />
+              <div className="flex items-center gap-2 shrink-0">
+                <Icon name="CheckCircle2" size={16} className="w-4 h-4 text-accent-primary shrink-0" />
                 <span>Physical NFC + QR Backup</span>
               </div>
             </div>
@@ -77,7 +77,7 @@ export default function Hero() {
               {/* Hardware Spec Label */}
               <div className="mt-3 pt-3 border-t border-border-hairline flex items-center justify-between text-xs text-text-secondary">
                 <div className="flex items-center gap-1.5 font-medium text-text-primary">
-                  <Icon name="Radio" className="w-3.5 h-3.5 text-accent-primary" />
+                  <Icon name="Radio" size={14} className="w-3.5 h-3.5 text-accent-primary shrink-0" />
                   <span>Matte Black NFC Card</span>
                 </div>
                 <span className="text-[11px] text-text-secondary font-medium">Embedded Chip · QR Backup</span>

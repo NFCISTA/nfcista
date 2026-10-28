@@ -39,7 +39,46 @@ import {
 } from "lucide-react";
 
 const ICON_MAP = {
-  // Brand & hardware
+  // Direct PascalCase Lucide component exports
+  Radio,
+  Phone,
+  Mail,
+  MessageSquare,
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle2,
+  Check,
+  X,
+  Pencil,
+  Trash2,
+  ExternalLink,
+  Copy,
+  QrCode,
+  Star,
+  User,
+  Shield,
+  Lock,
+  LogOut,
+  RotateCw,
+  Camera,
+  Image: ImageIcon,
+  ImageIcon,
+  Upload,
+  AlertTriangle,
+  Info,
+  Search,
+  Menu,
+  ChevronDown,
+  ChevronRight,
+  ChevronLeft,
+  Share2,
+  Globe,
+  MapPin,
+  Tag,
+  Briefcase,
+  ShoppingBag,
+
+  // Brand & hardware aliases
   contactless: Radio,
   nfc: Radio,
   radio: Radio,
@@ -48,7 +87,7 @@ const ICON_MAP = {
   qr_code_2: QrCode,
   qr_code_scanner: QrCode,
 
-  // Communication & contact
+  // Communication & contact aliases
   call: Phone,
   phone: Phone,
   mail: Mail,
@@ -57,29 +96,35 @@ const ICON_MAP = {
   message: MessageSquare,
   share: Share2,
 
-  // Navigation
+  // Navigation aliases
   arrow_forward: ArrowRight,
   "arrow-right": ArrowRight,
+  arrow_right: ArrowRight,
   arrow_back: ArrowLeft,
   "arrow-left": ArrowLeft,
+  arrow_left: ArrowLeft,
   chevron_right: ChevronRight,
   chevron_left: ChevronLeft,
+  chevron_down: ChevronDown,
   expand_more: ChevronDown,
   menu: Menu,
   close: X,
   open_in_new: ExternalLink,
   "external-link": ExternalLink,
+  external_link: ExternalLink,
 
-  // Status & Feedback
+  // Status & Feedback aliases
   check_circle: CheckCircle2,
+  check_circle_2: CheckCircle2,
   check: Check,
   star: Star,
   warning: AlertTriangle,
   error: AlertTriangle,
   info: Info,
   refresh: RotateCw,
+  rotate_cw: RotateCw,
 
-  // Entities & Security
+  // Entities & Security aliases
   person: User,
   user: User,
   person_add: User,
@@ -90,7 +135,7 @@ const ICON_MAP = {
   lock_reset: Lock,
   logout: LogOut,
 
-  // Actions & Content
+  // Actions & Content aliases
   copy: Copy,
   content_copy: Copy,
   edit: Pencil,
@@ -103,14 +148,17 @@ const ICON_MAP = {
   image: ImageIcon,
   photo_library: ImageIcon,
 
-  // Details
+  // Details aliases
   language: Globe,
   website: Globe,
   location_on: MapPin,
   location: MapPin,
+  map_pin: MapPin,
+  "map-pin": MapPin,
   label: Tag,
   tag: Tag,
   work: Briefcase,
+  briefcase: Briefcase,
   shopping_bag: ShoppingBag,
 };
 
@@ -129,7 +177,23 @@ export default function Icon({
   "aria-hidden": ariaHidden = true,
   ...props
 }) {
-  const IconComponent = typeof name === "string" ? ICON_MAP[name] : name;
+  let IconComponent = null;
+
+  if (typeof name === "function" || (typeof name === "object" && name !== null)) {
+    IconComponent = name;
+  } else if (typeof name === "string") {
+    // 1. Direct key match (case-sensitive: e.g. "ArrowRight", "check_circle")
+    IconComponent = ICON_MAP[name];
+
+    // 2. Case-insensitive & normalized fallback
+    if (!IconComponent) {
+      const lower = name.toLowerCase();
+      IconComponent =
+        ICON_MAP[lower] ||
+        ICON_MAP[lower.replace(/-/g, "_")] ||
+        ICON_MAP[lower.replace(/_/g, "-")];
+    }
+  }
 
   if (!IconComponent) {
     // If unknown icon name, fallback gracefully to material-symbols class with inline fontSize
