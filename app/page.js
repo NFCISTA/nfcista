@@ -1,9 +1,7 @@
 import Navbar from "@/components/home/Navbar";
 import Hero from "@/components/home/Hero";
-import WhyNfcista from "@/components/home/WhyNfcista";
-import ProductShowcase from "@/components/home/ProductShowcase";
-import ProductsPreview from "@/components/home/ProductsPreview";
 import HowItWorks from "@/components/home/HowItWorks";
+import ProductsPreview from "@/components/home/ProductsPreview";
 import NfcExplanation from "@/components/home/NfcExplanation";
 import ContactCTA from "@/components/home/ContactCTA";
 import FAQ from "@/components/home/FAQ";
@@ -11,37 +9,31 @@ import Footer from "@/components/home/Footer";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC] selection:bg-primary selection:text-white">
-      {/* 1. HEADER */}
+    <div className="min-h-screen flex flex-col bg-canvas text-text-primary selection:bg-accent-primary selection:text-white">
+      {/* 1. HEADER & NAVIGATION */}
       <Navbar />
 
       <main className="flex-1">
-        {/* 2. HERO SECTION */}
+        {/* 2. HARDWARE HERO */}
         <Hero />
 
-        {/* 3. WHY NFCISTA */}
-        <WhyNfcista />
-
-        {/* 4. PRODUCT SHOWCASE */}
-        <ProductShowcase />
-
-        {/* 5. PRODUCTS PREVIEW */}
-        <ProductsPreview />
-
-        {/* 5. HOW IT WORKS */}
+        {/* 3. THE CONTACTLESS FLOW (PRODUCT STORY) */}
         <HowItWorks />
 
-        {/* 6. NFC + QR EXPLANATION */}
+        {/* 4. HARDWARE CATALOG */}
+        <ProductsPreview />
+
+        {/* 5. DUAL-TECH SPECIFICATIONS (NFC + QR + CLOUD PROFILE) */}
         <NfcExplanation />
 
-        {/* 7. ORDER CTA */}
+        {/* 6. B2B ORDERS & INQUIRIES */}
         <ContactCTA />
 
-        {/* 8. FAQ */}
+        {/* 7. TECHNICAL FAQ */}
         <FAQ />
       </main>
 
-      {/* 9. FOOTER */}
+      {/* 8. FOOTER & COMPLIANCE */}
       <Footer />
     </div>
   );

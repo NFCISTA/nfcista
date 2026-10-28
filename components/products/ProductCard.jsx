@@ -1,12 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
+import Icon from "@/components/ui/Icon";
+import Badge from "@/components/ui/Badge";
 
 /**
  * ProductCard
  *
  * Reusable card component for storefront product listings.
  * Displays real product photography, badge, short description,
- * variant indicator (if variants exist), and a "View Product" button.
+ * variant indicator (if variants exist), and a "View Details" button.
  */
 export default function ProductCard({ product }) {
   if (!product) return null;
@@ -26,66 +28,65 @@ export default function ProductCard({ product }) {
   const variantCount = variants && variants.length > 1 ? variants.length : 0;
 
   return (
-    <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-6 sm:p-7 shadow-card hover:shadow-float transition-all flex flex-col justify-between group">
+    <div className="bg-surface-elevated border border-border-hairline rounded-2xl p-5 sm:p-6 shadow-2xs hover:border-slate-300 transition-colors flex flex-col justify-between group">
       <div>
-        {/* Product Image Area */}
+        {/* Product Image Area - marked tabIndex="-1" aria-hidden="true" to avoid redundant tab stops */}
         <Link
           href={`/products/${slug}`}
-          className="block relative aspect-square w-full rounded-2xl overflow-hidden bg-surface-container-low border border-outline-variant/20 mb-6 group/img"
-          aria-label={`View ${name}`}
+          tabIndex="-1"
+          aria-hidden="true"
+          className="block relative aspect-[4/3] w-full rounded-xl overflow-hidden bg-surface-subtle border border-border-hairline mb-5 group/img"
         >
           <Image
             src={image || "/images/product-showcase.png"}
             alt={name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-contain group-hover/img:scale-105 transition-transform duration-300"
+            className="object-contain p-2 group-hover/img:scale-[1.02] transition-transform duration-300"
           />
 
-          {/* Optional neutral variant indicator */}
           {variantCount > 0 && (
-            <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-xs text-[11px] font-semibold text-on-surface-variant border border-outline-variant/30 shadow-xs">
-              {variantCount} options
+            <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-surface-elevated/95 backdrop-blur-sm text-[10px] font-semibold text-text-secondary border border-border-hairline shadow-2xs">
+              {variantCount} Options
             </span>
           )}
         </Link>
 
         {/* Product Info */}
-        <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="flex items-start justify-between gap-2 mb-2">
           <Link
             href={`/products/${slug}`}
-            className="hover:text-primary transition-colors"
+            className="hover:text-accent-primary transition-colors"
           >
-            <h3 className="text-xl font-bold text-on-surface">
+            <h3 className="text-base sm:text-lg font-bold text-text-primary">
               {name}
             </h3>
           </Link>
           {badge && (
-            <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-surface-container-low text-primary flex-shrink-0">
+            <Badge variant="neutral" dot={false} className="text-[10px] font-semibold shrink-0">
               {badge}
-            </span>
+            </Badge>
           )}
         </div>
 
-        <p className="text-body-md text-on-surface-variant leading-relaxed mb-6">
+        <p className="text-xs sm:text-sm text-text-secondary leading-relaxed mb-5">
           {descriptionText}
         </p>
       </div>
 
-      {/* Action / Footer Area */}
-      <div className="pt-5 border-t border-outline-variant/20 flex items-center justify-between mt-auto">
-        <span className="inline-flex items-center gap-1.5 text-label-sm font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-          <span>{status || "Coming Soon"}</span>
+      {/* Action / Footer Row */}
+      <div className="pt-4 border-t border-border-hairline flex items-center justify-between mt-auto">
+        <span className="text-[11px] font-semibold text-text-secondary bg-surface-subtle border border-border-hairline px-2.5 py-1 rounded-md">
+          {status || "Coming Soon"}
         </span>
 
         <Link
           href={`/products/${slug}`}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface-container-low text-primary border border-primary/20 font-semibold text-label-md hover:bg-primary hover:text-white transition-all active:scale-[0.98]"
-          aria-label={`View ${name}`}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-subtle text-text-primary border border-border-hairline font-semibold text-xs hover:bg-accent-primary hover:text-white hover:border-accent-primary transition-all active:scale-[0.98]"
+          aria-label={`View details for ${name}`}
         >
-          <span>View Product</span>
-          <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+          <span>View Details</span>
+          <Icon name="ArrowRight" className="w-3.5 h-3.5" />
         </Link>
       </div>
     </div>

@@ -1,109 +1,86 @@
 import Link from "next/link";
 import Image from "next/image";
+import Icon from "@/components/ui/Icon";
+import Badge from "@/components/ui/Badge";
 
 export default function Hero() {
   return (
-    <section className="relative pt-12 pb-20 md:pt-20 md:pb-28 overflow-hidden">
-      {/* Background soft glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-primary/5 via-surface-container-low/40 to-transparent pointer-events-none -z-10" />
-
+    <section className="relative pt-12 pb-16 md:pt-20 md:pb-24 border-b border-border-hairline bg-canvas">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-          {/* Left Column: Copy & Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+          {/* Left Column: Direct Hardware Value Proposition */}
           <div className="lg:col-span-7 flex flex-col items-start text-left space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container-low border border-outline-variant/30">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-label-sm font-bold text-primary tracking-wide uppercase">
-                Next-Gen Business Cards
-              </span>
-            </div>
+            <Badge variant="neutral" dot={false} className="uppercase tracking-wider text-[11px] font-semibold">
+              Contactless Physical Identity
+            </Badge>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-on-surface leading-[1.15]">
-              Turn Every Tap Into a{" "}
-              <span className="bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">
-                Connection.
-              </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-text-primary leading-[1.15]">
+              Contactless NFC Hardware for In-Person Business.
             </h1>
 
-            <p className="text-lg sm:text-xl text-on-surface-variant font-normal leading-relaxed max-w-xl">
-              Smart NFC cards for Google Reviews, Instagram, WhatsApp and digital business profiles.
+            <p className="text-base sm:text-lg text-text-secondary font-normal leading-relaxed max-w-xl">
+              Smart physical cards that instantly connect customers to your digital business profile,
+              Google review page, or direct WhatsApp chat with a single tap. Works natively on modern smartphones with zero app installation.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full sm:w-auto pt-2">
-              {/* Primary CTA → /products catalog */}
-              <Link
-                href="/products"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-on-primary font-semibold text-label-lg hover:bg-primary-container shadow-btn-primary transition-all active:scale-[0.98]"
+            {/* Direct CTAs */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto pt-2">
+              <a
+                href="#products"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-accent-primary text-white font-semibold text-sm hover:bg-accent-hover shadow-2xs transition-colors active:scale-[0.98]"
               >
                 <span>Explore NFC Cards</span>
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-              </Link>
-
-              <a
-                href="https://wa.me/919000000000?text=Hi%20NFCISTA%2C%20I%20would%20like%20to%20order%20an%20NFC%20card."
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#25D366] text-white font-semibold text-label-lg hover:bg-[#20ba59] shadow-sm transition-all active:scale-[0.98]"
-              >
-                <span className="material-symbols-outlined text-[18px]">chat</span>
-                <span>Order on WhatsApp</span>
+                <Icon name="ArrowRight" className="w-4 h-4" />
               </a>
+
+              <Link
+                href="/p/sachin-suruse"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-surface-elevated text-text-primary border border-border-hairline font-semibold text-sm hover:bg-surface-subtle transition-colors active:scale-[0.98]"
+              >
+                <Icon name="ExternalLink" className="w-4 h-4 text-text-secondary" />
+                <span>View Live Profile Demo</span>
+              </Link>
             </div>
 
-            {/* Quick factual benefit badges */}
-            <div className="pt-4 flex flex-wrap items-center gap-y-2 gap-x-6 text-body-sm text-on-surface-variant border-t border-outline-variant/20 w-full">
+            {/* Factual Technical Benefits Bar */}
+            <div className="pt-6 flex flex-wrap items-center gap-y-2 gap-x-6 text-xs text-text-secondary border-t border-border-hairline w-full">
               <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px] text-primary">check_circle</span>
-                <span>Tap to Connect</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px] text-primary">check_circle</span>
+                <Icon name="CheckCircle2" className="w-4 h-4 text-accent-primary" />
                 <span>No App Required</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px] text-primary">check_circle</span>
-                <span>NFC + QR Backup</span>
+                <Icon name="CheckCircle2" className="w-4 h-4 text-accent-primary" />
+                <span>Native Phone Detection</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Icon name="CheckCircle2" className="w-4 h-4 text-accent-primary" />
+                <span>Physical NFC + QR Backup</span>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Physical NFC Card Product Image */}
-          <div className="lg:col-span-5 flex justify-center items-center relative">
-            {/* Outer aura glow */}
-            <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-primary-container/15 to-secondary/10 rounded-3xl blur-2xl -z-10" />
-
-            <div className="relative w-full max-w-[380px] sm:max-w-[400px]">
-              {/* Real Physical NFC Card Product Image */}
-              <div className="relative aspect-square w-full rounded-2xl overflow-hidden shadow-2xl border border-outline-variant/30 bg-surface-container-lowest">
+          {/* Right Column: Clean Hardware Presentation */}
+          <div className="lg:col-span-5 flex justify-center items-center">
+            <div className="w-full max-w-[420px] rounded-2xl bg-surface-elevated border border-border-hairline p-4 sm:p-5 shadow-sm">
+              {/* Product Frame */}
+              <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-surface-subtle border border-border-hairline flex items-center justify-center">
                 <Image
                   src="/images/products/digital-business-card-black.png"
-                  alt="NFCISTA Matte Black NFC Digital Business Card"
+                  alt="NFCISTA Matte Black Physical NFC Business Card"
                   fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
-                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 420px"
+                  className="object-contain p-2"
                   priority
                 />
               </div>
 
-              {/* Floating Interaction Pills */}
-              <div className="absolute -bottom-4 -left-3 sm:-left-6 bg-white border border-outline-variant/30 rounded-xl px-3.5 py-2 shadow-float flex items-center gap-2 z-10">
-                <div className="w-7 h-7 rounded-lg bg-green-50 text-green-600 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[16px]">chat</span>
+              {/* Hardware Spec Label */}
+              <div className="mt-3 pt-3 border-t border-border-hairline flex items-center justify-between text-xs text-text-secondary">
+                <div className="flex items-center gap-1.5 font-medium text-text-primary">
+                  <Icon name="Radio" className="w-3.5 h-3.5 text-accent-primary" />
+                  <span>Matte Black NFC Card</span>
                 </div>
-                <div className="text-left">
-                  <div className="text-[11px] font-bold text-on-surface">One-Tap Connect</div>
-                  <div className="text-[10px] text-on-surface-variant">Instant WhatsApp & Call</div>
-                </div>
-              </div>
-
-              <div className="absolute -top-4 -right-3 sm:-right-6 bg-white border border-outline-variant/30 rounded-xl px-3.5 py-2 shadow-float flex items-center gap-2 z-10">
-                <div className="w-7 h-7 rounded-lg bg-blue-50 text-primary flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[16px]">contact_page</span>
-                </div>
-                <div className="text-left">
-                  <div className="text-[11px] font-bold text-on-surface">Save Contact</div>
-                  <div className="text-[10px] text-on-surface-variant">Direct to phonebook</div>
-                </div>
+                <span className="text-[11px] text-text-secondary font-medium">Embedded Chip · QR Backup</span>
               </div>
             </div>
           </div>

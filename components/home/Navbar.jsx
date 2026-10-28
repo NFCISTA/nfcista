@@ -2,117 +2,109 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Icon from "@/components/ui/Icon";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
-    { label: "Products", href: "/products" },
+    { label: "Products", href: "#products" },
     { label: "How It Works", href: "#how-it-works" },
+    { label: "Specifications", href: "#specifications" },
     { label: "FAQ", href: "#faq" },
     { label: "Contact", href: "#contact" },
   ];
 
-  const whatsappUrl = "https://wa.me/919000000000?text=Hi%20NFCISTA%2C%20I%20would%20like%20to%20order%20an%20NFC%20card.";
-
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-outline-variant/30">
+    <header className="sticky top-0 z-50 bg-canvas/90 backdrop-blur-md border-b border-border-hairline transition-colors">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-btn-primary group-hover:scale-105 transition-transform">
-            <span className="material-symbols-outlined text-[20px]">contactless</span>
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-8 h-8 rounded-lg bg-surface-elevated border border-border-hairline flex items-center justify-center text-accent-primary shadow-2xs group-hover:border-accent-primary/40 transition-colors">
+            <Icon name="Radio" className="w-4 h-4 text-accent-primary" />
           </div>
-          <span className="text-headline-md font-bold tracking-tight text-on-surface">
+          <span className="text-base font-bold tracking-tight text-text-primary">
             NFCISTA
           </span>
         </Link>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-8" aria-label="Main navigation">
+        {/* Desktop Navigation Links */}
+        <nav className="hidden md:flex items-center gap-7" aria-label="Main navigation">
           {navLinks.map((link) => (
-            link.href.startsWith("/") ? (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="text-body-md font-medium text-on-surface-variant hover:text-primary transition-colors"
-              >
-                {link.label}
-              </Link>
-            ) : (
-              <a
-                key={link.label}
-                href={link.href}
-                className="text-body-md font-medium text-on-surface-variant hover:text-primary transition-colors"
-              >
-                {link.label}
-              </a>
-            )
+            <a
+              key={link.label}
+              href={link.href}
+              className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+            >
+              {link.label}
+            </a>
           ))}
         </nav>
 
-        {/* Desktop CTA */}
+        {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#25D366] text-white text-label-md font-semibold hover:bg-[#20ba59] shadow-sm transition-all active:scale-[0.98]"
+          {/* Working Customer Portal Login */}
+          <Link
+            href="/login"
+            className="text-sm font-medium text-text-secondary hover:text-text-primary px-3 py-1.5 rounded-lg hover:bg-surface-subtle transition-colors"
           >
-            <span className="material-symbols-outlined text-[18px]">chat</span>
-            <span>Order on WhatsApp</span>
+            Client Login
+          </Link>
+
+          {/* Primary Inquire / Order Action -> Scrolls directly to verified on-page contact section */}
+          <a
+            href="#contact"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-accent-primary text-white text-xs font-semibold hover:bg-accent-hover shadow-2xs transition-colors active:scale-[0.98]"
+          >
+            <Icon name="MessageSquare" className="w-3.5 h-3.5" />
+            <span>Contact &amp; Orders</span>
           </a>
         </div>
 
-        {/* Mobile Hamburger Button */}
+        {/* Mobile Hamburger Button (44x44px minimum touch target) */}
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           aria-expanded={isOpen}
-          aria-label="Toggle mobile menu"
-          className="md:hidden w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors"
+          aria-label="Toggle navigation menu"
+          className="md:hidden w-11 h-11 rounded-lg border border-border-hairline bg-surface-elevated flex items-center justify-center text-text-primary hover:bg-surface-subtle transition-colors"
         >
-          <span className="material-symbols-outlined text-[24px]">
-            {isOpen ? "close" : "menu"}
-          </span>
+          <Icon name={isOpen ? "X" : "Menu"} className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Mobile Drawer Menu */}
       {isOpen && (
-        <div className="md:hidden border-t border-outline-variant/30 bg-white px-4 py-5 shadow-float">
-          <nav className="flex flex-col gap-2" aria-label="Mobile navigation">
+        <div className="md:hidden border-t border-border-hairline bg-surface-elevated px-4 py-5 shadow-lg">
+          <nav className="flex flex-col gap-1" aria-label="Mobile navigation">
             {navLinks.map((link) => (
-              link.href.startsWith("/") ? (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className="px-3 py-2 rounded-lg text-body-md font-medium text-on-surface hover:bg-surface-container-low transition-colors"
-                >
-                  {link.label}
-                </Link>
-              ) : (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className="px-3 py-2 rounded-lg text-body-md font-medium text-on-surface hover:bg-surface-container-low transition-colors"
-                >
-                  {link.label}
-                </a>
-              )
-            ))}
-            <div className="pt-3 mt-1 border-t border-outline-variant/20 flex flex-col gap-2">
               <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+                key={link.label}
+                href={link.href}
                 onClick={() => setIsOpen(false)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#25D366] text-white text-label-md font-semibold hover:bg-[#20ba59] shadow-sm transition-all text-center"
+                className="px-3 py-2.5 rounded-lg text-sm font-medium text-text-primary hover:bg-surface-subtle transition-colors"
               >
-                <span className="material-symbols-outlined text-[18px]">chat</span>
-                <span>Order on WhatsApp</span>
+                {link.label}
+              </a>
+            ))}
+
+            <div className="pt-3 mt-2 border-t border-border-hairline flex flex-col gap-2">
+              <Link
+                href="/login"
+                onClick={() => setIsOpen(false)}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-border-hairline text-sm font-medium text-text-primary hover:bg-surface-subtle transition-colors text-center"
+              >
+                <Icon name="User" className="w-4 h-4 text-text-secondary" />
+                <span>Client Login</span>
+              </Link>
+
+              <a
+                href="#contact"
+                onClick={() => setIsOpen(false)}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-accent-primary text-white text-sm font-semibold hover:bg-accent-hover shadow-2xs transition-colors text-center"
+              >
+                <Icon name="MessageSquare" className="w-4 h-4" />
+                <span>Contact &amp; Orders</span>
               </a>
             </div>
           </nav>

@@ -1,37 +1,40 @@
 import Link from "next/link";
 import { products } from "@/data/products";
 import ProductCard from "@/components/products/ProductCard";
+import Icon from "@/components/ui/Icon";
+import Badge from "@/components/ui/Badge";
 
 export default function ProductsPreview() {
   return (
-    <section id="products" className="py-20 bg-white border-y border-outline-variant/20">
+    <section id="products" className="py-16 md:py-24 bg-canvas border-b border-border-hairline">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-label-sm font-bold text-primary uppercase tracking-wider">
-            NFC Hardware Solutions
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-on-surface mt-2 tracking-tight">
+        <div className="text-center max-w-2xl mx-auto mb-12 md:mb-16">
+          <Badge variant="neutral" dot={false} className="uppercase tracking-wider text-[11px] font-semibold mb-2">
+            Hardware Catalog
+          </Badge>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-text-primary tracking-tight">
             Choose Your NFC Card
           </h2>
-          <p className="text-body-lg text-on-surface-variant mt-3">
-            Smart contactless cards purpose-built for growing your business connections.
+          <p className="text-sm sm:text-base text-text-secondary mt-2.5 leading-relaxed">
+            Purpose-built contactless smart cards designed for in-person customer connection and business growth.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* 2x2 Hardware Catalog Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
 
-        {/* View All Products CTA */}
-        <div className="mt-12 text-center">
+        {/* Catalog Specifications Link */}
+        <div className="mt-10 text-center">
           <Link
             href="/products"
-            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-surface-container-low text-primary border border-primary/20 font-semibold text-label-lg hover:bg-primary hover:text-white transition-all shadow-sm active:scale-[0.98]"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface-elevated text-text-primary border border-border-hairline font-semibold text-xs hover:bg-surface-subtle transition-colors shadow-2xs active:scale-[0.98]"
           >
-            <span>View All Products</span>
-            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+            <span>View All Product Specifications</span>
+            <Icon name="ArrowRight" className="w-3.5 h-3.5 text-text-secondary" />
           </Link>
         </div>
       </div>
