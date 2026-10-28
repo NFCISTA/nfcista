@@ -139,6 +139,7 @@ export default function AdminLayout({ children }) {
     { href: "/admin/qr-codes", label: "Card Generator", icon: "add_circle" },
     { href: "/admin/qr-scan", label: "Scan QR", icon: "qr_code_scanner" },
     { href: "/admin/qr-print", label: "Print Cards", icon: "print" },
+    { href: "/admin/inquiries", label: "Inquiries", icon: "mail" },
   ];
 
   return (
