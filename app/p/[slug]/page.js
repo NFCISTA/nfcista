@@ -10,8 +10,7 @@ import {
 import { getCustomerGallery } from "@/lib/gallery";
 import SaveContactButtonLazy from "@/components/SaveContactButtonLazy";
 import ProfileAvatar from "@/components/profile/ProfileAvatar";
-import ProfileShareModalLazy from "@/components/profile/ProfileShareModalLazy";
-import ProfileQuickActions from "@/components/profile/ProfileQuickActions";
+import ProfileLinksArea from "@/components/profile/ProfileLinksArea";
 import ProfileGallery from "@/components/profile/ProfileGallery";
 import ProfileEnquiryButton from "@/components/profile/ProfileEnquiryButton";
 import ProfileIntro from "@/components/profile/ProfileIntro";
@@ -185,116 +184,156 @@ export default async function CustomerPublicProfilePage({ params }) {
 
   const profileUrl = `https://nfcista.vercel.app/p/${slug}`;
 
-  // ── Top Action Row items (WhatsApp, Call, Email) ─────────────────────
-  const topActions = [];
+  // ── Contact Links (WhatsApp, Call, Email, Address) ───────────────────
+  const contactLinks = [];
   if (hasWhatsApp) {
-    topActions.push({
+    contactLinks.push({
       id: "whatsapp",
       label: "WhatsApp",
-      icon: "chat",
+      value: customer.whatsapp.trim(),
+      iconName: "whatsapp",
+      brandColor: "#25D366",
       href: `https://wa.me/${customer.whatsapp.trim().replace(/\D/g, "")}`,
       isExternal: true,
     });
   }
   if (hasPhone) {
-    topActions.push({
+    contactLinks.push({
       id: "call",
-      label: "Call",
-      icon: "call",
+      label: "Phone",
+      value: customer.phone.trim(),
+      iconName: "phone",
+      brandColor: "#2563EB",
       href: `tel:${customer.phone.trim().replace(/\s/g, "")}`,
       isExternal: false,
+      copyValue: customer.phone.trim(),
+      copyLabel: "Phone number",
     });
   }
   if (hasEmail) {
-    topActions.push({
+    contactLinks.push({
       id: "email",
       label: "Email",
-      icon: "mail",
+      value: customer.email.trim(),
+      iconName: "email",
+      brandColor: "#6366F1",
       href: `mailto:${customer.email.trim()}`,
       isExternal: false,
+      copyValue: customer.email.trim(),
+      copyLabel: "Email address",
+    });
+  }
+  if (hasAddress) {
+    contactLinks.push({
+      id: "address",
+      label: "Location / Directions",
+      value: customer.address.trim(),
+      iconName: "location",
+      brandColor: "#EA4335",
+      href: `https://maps.google.com/?q=${encodeURIComponent(customer.address.trim())}`,
+      isExternal: true,
+      copyValue: customer.address.trim(),
+      copyLabel: "Address",
     });
   }
 
-  // ── Quick Connect / Web Presence ─────────────────────────────────────
-  const quickConnectItems = [];
+  // ── Social Links (Instagram, LinkedIn, X, Facebook) ──────────────────
+  const socialLinks = [];
   if (hasInstagram) {
-    quickConnectItems.push({
-      id: "qc-ig",
+    socialLinks.push({
+      id: "instagram",
       label: "Instagram",
-      handle: `@${cleanInstagram}`,
-      icon: "camera",
+      value: `@${cleanInstagram}`,
+      iconName: "instagram",
+      brandColor: "#E1306C",
       href: `https://instagram.com/${cleanInstagram}`,
-      color: "text-pink-600",
-      bg: "bg-pink-50 border-pink-100",
     });
   }
   if (hasLinkedin) {
-    quickConnectItems.push({
-      id: "qc-li",
+    socialLinks.push({
+      id: "linkedin",
       label: "LinkedIn",
-      handle: "Professional profile",
-      icon: "work",
+      value: "Professional Profile",
+      iconName: "linkedin",
+      brandColor: "#0A66C2",
       href: safeLinkedin,
-      color: "text-sky-700",
-      bg: "bg-sky-50 border-sky-100",
     });
   }
   if (hasTwitter) {
-    quickConnectItems.push({
-      id: "qc-x",
+    const xHandle = safeTwitter.replace(/^https?:\/\/(x\.com|twitter\.com)\//i, "@").replace(/\/$/, "");
+    socialLinks.push({
+      id: "x",
       label: "X (Twitter)",
-      handle: safeTwitter.replace(/^https?:\/\/(x\.com|twitter\.com)\//i, "@").replace(/\/$/, ""),
-      icon: "share",
+      value: xHandle,
+      iconName: "x",
+      brandColor: "#94A3B8",
       href: safeTwitter,
-      color: "text-slate-900",
-      bg: "bg-slate-100 border-slate-200",
     });
   }
   if (hasFacebook) {
-    quickConnectItems.push({
-      id: "qc-fb",
+    socialLinks.push({
+      id: "facebook",
       label: "Facebook",
-      handle: "Facebook page",
-      icon: "share",
+      value: "Facebook Page",
+      iconName: "facebook",
+      brandColor: "#1877F2",
       href: safeFacebook,
-      color: "text-blue-600",
-      bg: "bg-blue-50 border-blue-100",
     });
   }
+
+  // ── Business Links (Website, Google Review, Catalog & Utilities) ──────
+  const businessLinks = [];
   if (hasWebsite) {
-    quickConnectItems.push({
-      id: "qc-web",
-      label: "Website",
-      handle: safeWebsite.replace(/^https?:\/\//i, "").replace(/\/$/, ""),
-      icon: "language",
+    const cleanWeb = safeWebsite.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+    businessLinks.push({
+      id: "website",
+      label: "Official Website",
+      value: cleanWeb,
+      iconName: "website",
+      brandColor: "#2563EB",
       href: safeWebsite,
-      color: "text-accent-primary",
-      bg: "bg-blue-50 border-blue-100",
+      isExternal: true,
     });
   }
   if (hasGoogleReview) {
-    quickConnectItems.push({
-      id: "qc-gr",
+    businessLinks.push({
+      id: "google_review",
       label: "Google Review",
-      handle: "Leave a review",
-      icon: "star",
+      value: "Rate & review on Google Maps",
+      iconName: "googlereview",
+      brandColor: "#FBBC05",
       href: safeGoogleReview,
-      color: "text-amber-600",
-      bg: "bg-amber-50 border-amber-100",
+      isExternal: true,
     });
   }
   if (hasDrive) {
-    quickConnectItems.push({
-      id: "qc-drive",
-      label: "Catalog & Documents",
-      handle: "Google Drive folder",
-      icon: "photo_library",
+    businessLinks.push({
+      id: "catalog_drive",
+      label: "Product Catalog & Documents",
+      value: "Google Drive folder",
+      iconName: "googledrive",
+      brandColor: "#34A853",
       href: safeDrive,
-      color: "text-emerald-700",
-      bg: "bg-emerald-50 border-emerald-100",
+      isExternal: true,
     });
   }
-  const hasQuickConnect = quickConnectItems.length > 0;
+  // Digital Profile QR & Share utilities
+  businessLinks.push({
+    id: "digital_qr",
+    label: "Digital Profile QR",
+    value: "Scan or display profile QR code",
+    iconName: "qr",
+    brandColor: "#6F93FF",
+    isQrTrigger: true,
+  });
+  businessLinks.push({
+    id: "share_profile",
+    label: "Share Profile",
+    value: "Share via apps or copy link",
+    iconName: "share",
+    brandColor: "#6F93FF",
+    isShareTrigger: true,
+  });
 
   // ── Render ──────────────────────────────────────────────────────────
   return (
@@ -413,6 +452,14 @@ export default async function CustomerPublicProfilePage({ params }) {
                 )}
               </div>
             )}
+
+            {/* Optional opening-hours/status line */}
+            {customer.opening_hours?.trim() && (
+              <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200/80 rounded-full text-emerald-800 text-[11px] font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>{customer.opening_hours.trim()}</span>
+              </div>
+            )}
           </div>
 
           {/* ── Primary Action: Save Contact ─────────────────────────── */}
@@ -477,70 +524,16 @@ export default async function CustomerPublicProfilePage({ params }) {
         {/* ═══════════════════════════════════════════════════════════════ */}
         <div className="divide-y divide-border-hairline bg-surface-base">
 
-          {/* ── Top Action Row: WhatsApp · Call · Email · Share ──────── */}
-          <section className="px-4 sm:px-5 py-4" aria-label="Direct contact actions">
-            <ProfileQuickActions
-              actions={topActions}
+          {/* ── Precision Profile Links (Contact · Social · Business) ─ */}
+          <section className="px-4 sm:px-5 py-5" aria-label="Connect and Actions">
+            <ProfileLinksArea
+              contactLinks={contactLinks}
+              socialLinks={socialLinks}
+              businessLinks={businessLinks}
               profileUrl={profileUrl}
               profileName={customer.full_name}
             />
           </section>
-
-          {/* ── Connect & Presence Grid ──────────────────────────────── */}
-          {hasQuickConnect && (
-            <section className="px-4 sm:px-5 py-4" aria-label="Connect and Social Presence">
-              <div className="mb-3">
-                <h2 className="text-sm font-bold text-text-primary">
-                  Connect &amp; Presence
-                </h2>
-                <p className="text-[11px] text-text-muted mt-0.5">
-                  Verified web and communication channels
-                </p>
-              </div>
-
-              <div
-                className={`grid gap-2 ${
-                  quickConnectItems.length === 1 ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"
-                }`}
-              >
-                {quickConnectItems.map((item) => (
-                  <a
-                    key={item.id}
-                    href={item.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${item.label}: ${item.handle}`}
-                    className="flex items-center gap-3 p-3 bg-surface-base border border-border-hairline hover:border-border-strong hover:bg-surface-subtle/50 rounded-xl transition-all active:scale-[0.98] group min-w-0 shadow-2xs"
-                  >
-                    <div
-                      className={`w-9 h-9 rounded-lg ${item.bg} flex items-center justify-center flex-shrink-0`}
-                    >
-                      <Icon
-                        name={item.icon}
-                        size={17}
-                        strokeWidth={2}
-                        className={item.color}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-text-primary leading-tight">
-                        {item.label}
-                      </p>
-                      <p className="text-[11px] text-text-secondary truncate mt-0.5">
-                        {item.handle}
-                      </p>
-                    </div>
-                    <Icon
-                      name="chevron_right"
-                      size={15}
-                      strokeWidth={2}
-                      className="text-slate-300 group-hover:text-text-primary transition-colors flex-shrink-0"
-                    />
-                  </a>
-                ))}
-              </div>
-            </section>
-          )}
 
           {/* ── About Section ────────────────────────────────────────── */}
           {hasDescription && (
@@ -551,14 +544,6 @@ export default async function CustomerPublicProfilePage({ params }) {
               </p>
             </section>
           )}
-
-          {/* ── Share My Card ────────────────────────────────────────── */}
-          <section className="px-4 sm:px-5 py-4" aria-label="Share card">
-            <ProfileShareModalLazy
-              name={customer.full_name}
-              slug={customer.profile_slug}
-            />
-          </section>
 
           {/* ── Portfolio & Products ─────────────────────────────────── */}
           {galleryItems.length > 0 && (
