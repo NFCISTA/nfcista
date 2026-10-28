@@ -34,7 +34,7 @@ export default function Hero() {
               </a>
 
               <Link
-                href="/p/sachin-suruse"
+                href="/demo"
                 className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-surface-elevated text-text-primary border border-border-hairline font-semibold text-sm hover:bg-surface-subtle transition-colors active:scale-[0.98] select-none"
               >
                 <Icon name="ExternalLink" size={16} className="w-4 h-4 text-text-secondary shrink-0" />

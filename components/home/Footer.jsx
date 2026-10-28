@@ -68,7 +68,7 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <Link href="/p/sachin-suruse" className="text-text-secondary hover:text-accent-primary transition-colors flex items-center gap-1.5">
+                <Link href="/demo" className="text-text-secondary hover:text-accent-primary transition-colors flex items-center gap-1.5">
                   <span>Live Profile Demo</span>
                   <Icon name="ExternalLink" className="w-3 h-3 text-text-secondary" />
                 </Link>
