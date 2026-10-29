@@ -39,8 +39,6 @@ const LUCIDE_GENERIC_MAP = {
   star: Star,
   review: Star,
   reviews: Star,
-  googlereview: Star,
-  googlereviews: Star,
   file: FileText,
   document: FileText,
   chat: MessageCircle,
@@ -51,13 +49,13 @@ const LUCIDE_GENERIC_MAP = {
  * IconTile — Frameless Premium Icon Presentation
  *
  * Requirements:
- * - NO heavy black square tile backgrounds, borders, or inset shadows
- * - Sits naturally and framelessly on the profile link row
- * - Uniform optical center and visual weight
- * - Authentic brand logos in official signature identities
- * - Generic action icons in refined, crisp Lucide stroke
+ * - Completely frameless: NO black boxes, NO borders, NO heavy tile shadows
+ * - Sits naturally and directly against the link-row background
+ * - Authentic brand logos for WhatsApp, Instagram, Facebook, LinkedIn, YouTube, X, Google Drive, Google Review
+ * - Polished Lucide action icons for Phone, Email, Location, Website, QR, Share, etc.
+ * - Perfectly aligned 44×44px touch-safe optical center
  * - Subtle hover lift and gentle brand halo filter
- * - Full reduced-motion and accessibility support
+ * - Accessible focus indicators and full reduced-motion compliance
  *
  * @param {{
  *   iconName: string,
@@ -74,7 +72,7 @@ export default function IconTile({
 }) {
   const normalized = (iconName || "").toLowerCase().replace(/[^a-z0-9]/g, "");
   const isBrand = Boolean(BRAND_COMPONENTS[normalized]);
-  const isReview = ["star", "review", "reviews", "googlereview", "googlereviews"].includes(normalized);
+  const isGenericReview = ["star", "review", "reviews"].includes(normalized);
   const LucideComponent = LUCIDE_GENERIC_MAP[normalized] || Globe;
 
   return (
@@ -86,7 +84,7 @@ export default function IconTile({
                   ${className}`.trim()}
       style={{
         filter: isHovered && brandColor
-          ? `drop-shadow(0 3px 8px ${brandColor}33)`
+          ? `drop-shadow(0 2px 6px ${brandColor}25)`
           : "none",
       }}
       aria-hidden="true"
@@ -94,20 +92,20 @@ export default function IconTile({
       {isBrand ? (
         <ProfileBrandIcon
           name={normalized}
-          size={30}
+          size={normalized === "x" ? 25 : 28}
           className="shrink-0 transition-transform duration-200 motion-reduce:transform-none"
         />
-      ) : isReview ? (
+      ) : isGenericReview ? (
         <Star
-          size={23}
-          strokeWidth={1.75}
+          size={24}
+          strokeWidth={1.8}
           color="#F59E0B"
           fill="#F59E0B"
           className="shrink-0 transition-transform duration-200 motion-reduce:transform-none"
         />
       ) : (
         <LucideComponent
-          size={23}
+          size={24}
           strokeWidth={1.9}
           color={brandColor || "#2563EB"}
           className="shrink-0 transition-transform duration-200 motion-reduce:transform-none"

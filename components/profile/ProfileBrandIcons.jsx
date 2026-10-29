@@ -3,17 +3,17 @@ import React from "react";
 /**
  * ProfileBrandIcons — Authentic, recognizable brand assets.
  * Respects official brand identity guidelines:
- * - WhatsApp: Signature green bubble (#25D366) with crisp white receiver
- * - Instagram: Iconic camera with multi-stop sunset gradient
- * - Facebook: Official Meta Facebook blue (#1877F2) with white 'f' mark
+ * - WhatsApp: Signature green bubble (#25D366) with crisp white receiver (Simple Icons geometry)
+ * - Instagram: Iconic camera with multi-stop sunset gradient (Official Meta spec)
+ * - Facebook: Official Meta Facebook blue (#1877F2) with white mark
  * - LinkedIn: Official LinkedIn blue (#0A66C2) with white 'in' mark
- * - YouTube: Official YouTube red (#FF0000) with white play triangle
- * - X: Crisp white geometric X mark on authentic black squircle (#000000)
- * - Google Drive: Official 3-color triangle (#FFBA00, #2684FC, #00AC47)
- * - Google / Google Review: Official 4-color 'G' mark
+ * - YouTube: Official YouTube red (#FF0000) with white play triangle (Simple Icons geometry)
+ * - X: Verified standalone geometric X mark (#000000) with zero background box (Simple Icons geometry)
+ * - Google Drive: Official 3-color loop triangle (#FFBA00, #2684FC, #00AC47)
+ * - Google Review / Google: Official 4-color 'G' mark (#4285F4, #34A853, #FBBC05, #EA4335)
  */
 
-function WhatsAppLogo({ size = 30, className = "" }) {
+function WhatsAppLogo({ size = 28, className = "" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -35,7 +35,7 @@ function WhatsAppLogo({ size = 30, className = "" }) {
   );
 }
 
-function InstagramLogo({ size = 30, className = "" }) {
+function InstagramLogo({ size = 28, className = "" }) {
   const gradId = "nfcista-ig-sunset";
   return (
     <svg
@@ -48,21 +48,23 @@ function InstagramLogo({ size = 30, className = "" }) {
     >
       <defs>
         <linearGradient id={gradId} x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#FFC107" />
-          <stop offset="30%" stopColor="#F44336" />
-          <stop offset="65%" stopColor="#E91E63" />
-          <stop offset="100%" stopColor="#9C27B0" />
+          <stop offset="0%" stopColor="#FFDC80" />
+          <stop offset="25%" stopColor="#F77737" />
+          <stop offset="50%" stopColor="#F56040" />
+          <stop offset="75%" stopColor="#FD1D1D" />
+          <stop offset="85%" stopColor="#C13584" />
+          <stop offset="100%" stopColor="#833AB4" />
         </linearGradient>
       </defs>
-      <rect width="20" height="20" x="2" y="2" rx="5.5" fill={`url(#${gradId})`} />
-      <rect width="11" height="11" x="6.5" y="6.5" rx="3.2" stroke="#FFFFFF" strokeWidth="1.6" fill="none" />
-      <circle cx="12" cy="12" r="2.8" stroke="#FFFFFF" strokeWidth="1.6" fill="none" />
-      <circle cx="15.8" cy="8.2" r="0.85" fill="#FFFFFF" />
+      <rect width="22" height="22" x="1" y="1" rx="6" fill={`url(#${gradId})`} />
+      <rect width="12" height="12" x="6" y="6" rx="3.5" stroke="#FFFFFF" strokeWidth="1.75" fill="none" />
+      <circle cx="12" cy="12" r="3" stroke="#FFFFFF" strokeWidth="1.75" fill="none" />
+      <circle cx="16.2" cy="7.8" r="0.9" fill="#FFFFFF" />
     </svg>
   );
 }
 
-function FacebookLogo({ size = 30, className = "" }) {
+function FacebookLogo({ size = 28, className = "" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -72,7 +74,7 @@ function FacebookLogo({ size = 30, className = "" }) {
       className={className}
       style={{ overflow: "visible" }}
     >
-      <circle cx="12" cy="12" r="10" fill="#1877F2" />
+      <circle cx="12" cy="12" r="11" fill="#1877F2" />
       <path
         fill="#FFFFFF"
         d="M14.5 12.3h-2.1v7.6h-3.1v-7.6H7.8v-2.7h1.5V7.8c0-1.2.6-3.1 3.1-3.1h2.3v2.6h-1.7c-.3 0-.6.1-.6.7v1.6h2.4l-.3 2.7z"
@@ -81,7 +83,7 @@ function FacebookLogo({ size = 30, className = "" }) {
   );
 }
 
-function LinkedInLogo({ size = 30, className = "" }) {
+function LinkedInLogo({ size = 28, className = "" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -91,16 +93,16 @@ function LinkedInLogo({ size = 30, className = "" }) {
       className={className}
       style={{ overflow: "visible" }}
     >
-      <rect width="20" height="20" x="2" y="2" rx="4.5" fill="#0A66C2" />
+      <rect width="22" height="22" x="1" y="1" rx="4.5" fill="#0A66C2" />
       <path
         fill="#FFFFFF"
-        d="M6.3 8.7h2.8v9.1H6.3V8.7zM7.7 5c.9 0 1.6.7 1.6 1.6s-.7 1.6-1.6 1.6-1.6-.7-1.6-1.6.7-1.6 1.6-1.6zM11 8.7h2.7v1.2h.1c.4-.7 1.3-1.5 2.7-1.5 2.9 0 3.4 1.9 3.4 4.4v5H17v-4.4c0-1.1 0-2.4-1.5-2.4s-1.7 1.2-1.7 2.3v4.5H11V8.7z"
+        d="M6.2 8.6h2.7v9.2H6.2V8.6zm1.4-4.3c.9 0 1.6.7 1.6 1.6s-.7 1.6-1.6 1.6-1.6-.7-1.6-1.6.7-1.6 1.6-1.6zm3.3 4.3h2.6v1.3h.1c.4-.7 1.3-1.5 2.8-1.5 3 0 3.5 2 3.5 4.5v5H17v-4.4c0-1.1 0-2.4-1.5-2.4s-1.7 1.2-1.7 2.4v4.4h-2.9V8.6z"
       />
     </svg>
   );
 }
 
-function YouTubeLogo({ size = 30, className = "" }) {
+function YouTubeLogo({ size = 28, className = "" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -110,32 +112,32 @@ function YouTubeLogo({ size = 30, className = "" }) {
       className={className}
       style={{ overflow: "visible" }}
     >
-      <rect x="2" y="4.5" width="20" height="15" rx="4.5" fill="#FF0000" />
-      <polygon points="10,8.5 16,12 10,15.5" fill="#FFFFFF" />
-    </svg>
-  );
-}
-
-function XLogo({ size = 30, className = "" }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width={size}
-      height={size}
-      aria-hidden="true"
-      className={className}
-      style={{ overflow: "visible" }}
-    >
-      <rect width="20" height="20" x="2" y="2" rx="4.5" fill="#000000" />
       <path
-        fill="#FFFFFF"
-        d="M15.4 6h1.8l-3.9 4.5 4.6 6.1h-3.6l-2.8-3.7-3.2 3.7H6.5l4.2-4.8L6.2 6h3.7l2.6 3.4L15.4 6zm-.6 9.5h1l-6.4-8.5h-1.1l6.5 8.5z"
+        fill="#FF0000"
+        d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"
       />
+      <polygon points="9.545,15.568 9.545,8.432 15.818,12" fill="#FFFFFF" />
     </svg>
   );
 }
 
-function GoogleDriveLogo({ size = 30, className = "" }) {
+function XLogo({ size = 25, className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="#000000"
+      aria-hidden="true"
+      className={className}
+      style={{ overflow: "visible" }}
+    >
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 24.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
+
+function GoogleDriveLogo({ size = 28, className = "" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -152,7 +154,7 @@ function GoogleDriveLogo({ size = 30, className = "" }) {
   );
 }
 
-function GoogleReviewLogo({ size = 30, className = "" }) {
+function GoogleReviewLogo({ size = 28, className = "" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -192,11 +194,13 @@ const BRAND_COMPONENTS = {
   twitter: XLogo,
   googledrive: GoogleDriveLogo,
   drive: GoogleDriveLogo,
+  googlereview: GoogleReviewLogo,
+  google: GoogleReviewLogo,
 };
 
 export default function ProfileBrandIcon({
   name,
-  size = 30,
+  size = 28,
   className = "",
   "aria-hidden": ariaHidden = true,
   ...props
