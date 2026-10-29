@@ -5,15 +5,15 @@ import React from "react";
  * Respects official brand identity guidelines:
  * - WhatsApp: Signature green bubble (#25D366) with crisp white receiver
  * - Instagram: Iconic camera with multi-stop sunset gradient
- * - Facebook: Official Meta Facebook blue (#1877F2) with white mark
+ * - Facebook: Official Meta Facebook blue (#1877F2) with white 'f' mark
  * - LinkedIn: Official LinkedIn blue (#0A66C2) with white 'in' mark
  * - YouTube: Official YouTube red (#FF0000) with white play triangle
- * - X: Authentic monochrome geometric X mark (#FFFFFF)
+ * - X: Crisp white geometric X mark on authentic black squircle (#000000)
  * - Google Drive: Official 3-color triangle (#FFBA00, #2684FC, #00AC47)
  * - Google / Google Review: Official 4-color 'G' mark
  */
 
-function WhatsAppLogo({ size = 22, className = "" }) {
+function WhatsAppLogo({ size = 30, className = "" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -21,6 +21,7 @@ function WhatsAppLogo({ size = 22, className = "" }) {
       height={size}
       aria-hidden="true"
       className={className}
+      style={{ overflow: "visible" }}
     >
       <path
         fill="#25D366"
@@ -34,7 +35,7 @@ function WhatsAppLogo({ size = 22, className = "" }) {
   );
 }
 
-function InstagramLogo({ size = 22, className = "" }) {
+function InstagramLogo({ size = 30, className = "" }) {
   const gradId = "nfcista-ig-sunset";
   return (
     <svg
@@ -43,6 +44,7 @@ function InstagramLogo({ size = 22, className = "" }) {
       height={size}
       aria-hidden="true"
       className={className}
+      style={{ overflow: "visible" }}
     >
       <defs>
         <linearGradient id={gradId} x1="0%" y1="100%" x2="100%" y2="0%">
@@ -53,13 +55,14 @@ function InstagramLogo({ size = 22, className = "" }) {
         </linearGradient>
       </defs>
       <rect width="20" height="20" x="2" y="2" rx="5.5" fill={`url(#${gradId})`} />
-      <circle cx="12" cy="12" r="4.3" stroke="#FFFFFF" strokeWidth="1.8" fill="none" />
-      <circle cx="17.2" cy="6.8" r="1.1" fill="#FFFFFF" />
+      <rect width="11" height="11" x="6.5" y="6.5" rx="3.2" stroke="#FFFFFF" strokeWidth="1.6" fill="none" />
+      <circle cx="12" cy="12" r="2.8" stroke="#FFFFFF" strokeWidth="1.6" fill="none" />
+      <circle cx="15.8" cy="8.2" r="0.85" fill="#FFFFFF" />
     </svg>
   );
 }
 
-function FacebookLogo({ size = 22, className = "" }) {
+function FacebookLogo({ size = 30, className = "" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -67,8 +70,9 @@ function FacebookLogo({ size = 22, className = "" }) {
       height={size}
       aria-hidden="true"
       className={className}
+      style={{ overflow: "visible" }}
     >
-      <circle cx="12" cy="12" r="10.5" fill="#1877F2" />
+      <circle cx="12" cy="12" r="10" fill="#1877F2" />
       <path
         fill="#FFFFFF"
         d="M14.5 12.3h-2.1v7.6h-3.1v-7.6H7.8v-2.7h1.5V7.8c0-1.2.6-3.1 3.1-3.1h2.3v2.6h-1.7c-.3 0-.6.1-.6.7v1.6h2.4l-.3 2.7z"
@@ -77,7 +81,7 @@ function FacebookLogo({ size = 22, className = "" }) {
   );
 }
 
-function LinkedInLogo({ size = 22, className = "" }) {
+function LinkedInLogo({ size = 30, className = "" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -85,6 +89,7 @@ function LinkedInLogo({ size = 22, className = "" }) {
       height={size}
       aria-hidden="true"
       className={className}
+      style={{ overflow: "visible" }}
     >
       <rect width="20" height="20" x="2" y="2" rx="4.5" fill="#0A66C2" />
       <path
@@ -95,7 +100,7 @@ function LinkedInLogo({ size = 22, className = "" }) {
   );
 }
 
-function YouTubeLogo({ size = 22, className = "" }) {
+function YouTubeLogo({ size = 30, className = "" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -103,6 +108,7 @@ function YouTubeLogo({ size = 22, className = "" }) {
       height={size}
       aria-hidden="true"
       className={className}
+      style={{ overflow: "visible" }}
     >
       <rect x="2" y="4.5" width="20" height="15" rx="4.5" fill="#FF0000" />
       <polygon points="10,8.5 16,12 10,15.5" fill="#FFFFFF" />
@@ -110,22 +116,26 @@ function YouTubeLogo({ size = 22, className = "" }) {
   );
 }
 
-function XLogo({ size = 20, className = "" }) {
+function XLogo({ size = 30, className = "" }) {
   return (
     <svg
       viewBox="0 0 24 24"
       width={size}
       height={size}
-      fill="#FFFFFF"
       aria-hidden="true"
       className={className}
+      style={{ overflow: "visible" }}
     >
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 24.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+      <rect width="20" height="20" x="2" y="2" rx="4.5" fill="#000000" />
+      <path
+        fill="#FFFFFF"
+        d="M15.4 6h1.8l-3.9 4.5 4.6 6.1h-3.6l-2.8-3.7-3.2 3.7H6.5l4.2-4.8L6.2 6h3.7l2.6 3.4L15.4 6zm-.6 9.5h1l-6.4-8.5h-1.1l6.5 8.5z"
+      />
     </svg>
   );
 }
 
-function GoogleDriveLogo({ size = 22, className = "" }) {
+function GoogleDriveLogo({ size = 30, className = "" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -133,6 +143,7 @@ function GoogleDriveLogo({ size = 22, className = "" }) {
       height={size}
       aria-hidden="true"
       className={className}
+      style={{ overflow: "visible" }}
     >
       <path fill="#FFBA00" d="m7.71 3.5-6.56 11.5 3.43 6 6.56-11.5L7.71 3.5Z" />
       <path fill="#2684FC" d="M12.57 3.5 6.01 15h13.14l3.43-6H12.57Z" />
@@ -141,7 +152,7 @@ function GoogleDriveLogo({ size = 22, className = "" }) {
   );
 }
 
-function GoogleReviewLogo({ size = 22, className = "" }) {
+function GoogleReviewLogo({ size = 30, className = "" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -149,6 +160,7 @@ function GoogleReviewLogo({ size = 22, className = "" }) {
       height={size}
       aria-hidden="true"
       className={className}
+      style={{ overflow: "visible" }}
     >
       <path
         fill="#4285F4"
@@ -184,7 +196,7 @@ const BRAND_COMPONENTS = {
 
 export default function ProfileBrandIcon({
   name,
-  size = 22,
+  size = 30,
   className = "",
   "aria-hidden": ariaHidden = true,
   ...props
