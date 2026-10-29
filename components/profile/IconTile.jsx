@@ -1,5 +1,5 @@
 import React from "react";
-import ProfileBrandIcon, { BRAND_SVGS } from "./ProfileBrandIcons";
+import ProfileBrandIcon, { BRAND_COMPONENTS } from "./ProfileBrandIcons";
 import {
   Phone,
   Mail,
@@ -17,7 +17,7 @@ import {
 
 /**
  * Generic Lucide icon map matching generic profile actions.
- * Rendered with consistent 1.5px stroke weight.
+ * Rendered with consistent 1.75px stroke weight and crisp monochrome #F2F4F8.
  */
 const LUCIDE_GENERIC_MAP = {
   phone: Phone,
@@ -39,6 +39,9 @@ const LUCIDE_GENERIC_MAP = {
   qrcode: QrCode,
   star: Star,
   review: Star,
+  reviews: Star,
+  googlereview: Star,
+  googlereviews: Star,
   file: FileText,
   document: FileText,
   chat: MessageCircle,
@@ -46,17 +49,16 @@ const LUCIDE_GENERIC_MAP = {
 };
 
 /**
- * IconTile — Monoline Glass Tile Component
+ * IconTile — Monoline Glass Tile Component with Authentic Brand Logos
  *
  * Requirements:
  * - 48 × 48 px, 14 px radius
  * - #0B0D11 background, 1px solid #1D222B border
  * - Inset top highlight rgba(255,255,255,0.06)
- * - 22 × 22 px inline SVG glyph in monochrome #F2F4F8
- * - Consistent 1.5px stroke for Lucide icons
- * - Verified Simple Icons brand glyphs for brands
- * - Interactive hover lift (-2px), subtle brand glow, active press scale (0.97)
- * - Reduced-motion compliance
+ * - Authentic brand logos with signature color identities (WhatsApp green, Instagram sunset, etc.)
+ * - Generic action icons in elegant, crisp Lucide stroke (#F2F4F8)
+ * - Interactive hover lift (-2px), restrained brand glow, active press scale (0.97)
+ * - Full reduced-motion compliance
  *
  * @param {{
  *   iconName: string,
@@ -72,7 +74,7 @@ export default function IconTile({
   isHovered = false,
 }) {
   const normalized = (iconName || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  const isBrand = Boolean(BRAND_SVGS[normalized]);
+  const isBrand = Boolean(BRAND_COMPONENTS[normalized]);
   const LucideComponent = LUCIDE_GENERIC_MAP[normalized] || Globe;
 
   return (
@@ -94,14 +96,13 @@ export default function IconTile({
       {isBrand ? (
         <ProfileBrandIcon
           name={normalized}
-          size={22}
-          color="#F2F4F8"
-          className="transition-transform duration-200 group-hover:scale-105 motion-reduce:transform-none"
+          size={normalized === "x" ? 20 : 22}
+          className="transition-transform duration-200 group-hover:scale-105 motion-reduce:transform-none shrink-0"
         />
       ) : (
         <LucideComponent
-          size={22}
-          strokeWidth={1.5}
+          size={20}
+          strokeWidth={1.75}
           color="#F2F4F8"
           className="transition-transform duration-200 group-hover:scale-105 motion-reduce:transform-none shrink-0"
         />
