@@ -138,18 +138,40 @@ function XLogo({ size = 25, className = "" }) {
 }
 
 function GoogleDriveLogo({ size = 28, className = "" }) {
+  const height = Math.round((size * 78) / 87.3);
   return (
     <svg
-      viewBox="0 0 24 24"
+      viewBox="0 0 87.3 78"
       width={size}
-      height={size}
+      height={height}
       aria-hidden="true"
       className={className}
       style={{ overflow: "visible" }}
     >
-      <path fill="#FFBA00" d="m7.71 3.5-6.56 11.5 3.43 6 6.56-11.5L7.71 3.5Z" />
-      <path fill="#2684FC" d="M12.57 3.5 6.01 15h13.14l3.43-6H12.57Z" />
-      <path fill="#00AC47" d="M22.85 15l-3.43 6H6.29l3.43-6h13.13Z" />
+      <path
+        d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z"
+        fill="#0066da"
+      />
+      <path
+        d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z"
+        fill="#00ac47"
+      />
+      <path
+        d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z"
+        fill="#ea4335"
+      />
+      <path
+        d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z"
+        fill="#00832d"
+      />
+      <path
+        d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z"
+        fill="#2684fc"
+      />
+      <path
+        d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z"
+        fill="#ffba00"
+      />
     </svg>
   );
 }
