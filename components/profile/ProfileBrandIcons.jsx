@@ -1,79 +1,210 @@
 import React from "react";
 
 /**
- * ProfileBrandIcons — High-fidelity, zero-dependency inline SVG brand glyphs.
- * Direct path definitions matching Simple Icons specifications.
- * Renders in monochrome #F2F4F8 with uniform 22×22 optical sizing.
+ * ProfileBrandIcons — Authentic, recognizable brand assets.
+ * Respects official brand identity guidelines:
+ * - WhatsApp: Signature green bubble (#25D366) with crisp white receiver
+ * - Instagram: Iconic camera with multi-stop sunset gradient
+ * - Facebook: Official Meta Facebook blue (#1877F2) with white mark
+ * - LinkedIn: Official LinkedIn blue (#0A66C2) with white 'in' mark
+ * - YouTube: Official YouTube red (#FF0000) with white play triangle
+ * - X: Authentic monochrome geometric X mark (#FFFFFF)
+ * - Google Drive: Official 3-color triangle (#FFBA00, #2684FC, #00AC47)
+ * - Google / Google Review: Official 4-color 'G' mark
  */
-const BRAND_SVGS = {
-  instagram: {
-    viewBox: "0 0 24 24",
-    d: "M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z",
-  },
-  whatsapp: {
-    viewBox: "0 0 24 24",
-    d: "M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2M12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 15 3.8 13.47 3.8 11.91C3.81 7.37 7.5 3.67 12.05 3.67M8.53 7.33C8.37 7.33 8.1 7.39 7.87 7.64C7.65 7.89 7 8.5 7 9.71C7 10.93 7.89 12.1 8.01 12.27C8.14 12.44 9.76 14.94 12.24 16C12.83 16.27 13.28 16.42 13.64 16.53C14.25 16.72 14.79 16.69 15.22 16.63C15.71 16.56 16.73 16.01 16.94 15.42C17.15 14.83 17.15 14.33 17.09 14.23C17.03 14.12 16.86 14.06 16.61 13.93C16.36 13.81 15.13 13.2 14.9 13.12C14.68 13.03 14.51 12.99 14.35 13.24C14.19 13.49 13.71 14.06 13.57 14.23C13.42 14.39 13.28 14.41 13.03 14.29C12.78 14.16 11.98 13.9 11.04 13.06C10.3 12.4 9.8 11.59 9.66 11.34C9.51 11.09 9.64 10.96 9.77 10.83C9.88 10.72 10.02 10.54 10.14 10.4C10.27 10.25 10.31 10.15 10.39 9.98C10.47 9.82 10.43 9.67 10.37 9.55C10.31 9.43 9.81 8.21 9.61 7.72C9.41 7.24 9.2 7.31 9.05 7.3C8.9 7.3 8.74 7.33 8.53 7.33Z",
-  },
-  linkedin: {
-    viewBox: "0 0 24 24",
-    d: "M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.45a1.63 1.63 0 1 0 1.63 1.63c0-.9-.73-1.63-1.63-1.63Z",
-  },
-  x: {
-    viewBox: "0 0 24 24",
-    d: "M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z",
-  },
-  twitter: {
-    viewBox: "0 0 24 24",
-    d: "M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z",
-  },
-  facebook: {
-    viewBox: "0 0 24 24",
-    d: "M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z",
-  },
-  google: {
-    viewBox: "0 0 24 24",
-    d: "M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z",
-  },
-  googlereview: {
-    viewBox: "0 0 24 24",
-    d: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z",
-  },
-  drive: {
-    viewBox: "0 0 24 24",
-    d: "M7.71 3.5 1.15 15l3.43 6 6.55-11.5L7.71 3.5Zm4.86 0-3.43 6h13.14l3.43-6H12.57ZM22.85 15l-3.43 6H6.29l3.43-6h13.13Z",
-  },
-  googledrive: {
-    viewBox: "0 0 24 24",
-    d: "M7.71 3.5 1.15 15l3.43 6 6.55-11.5L7.71 3.5Zm4.86 0-3.43 6h13.14l3.43-6H12.57ZM22.85 15l-3.43 6H6.29l3.43-6h13.13Z",
-  },
+
+function WhatsAppLogo({ size = 22, className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      className={className}
+    >
+      <path
+        fill="#25D366"
+        d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2z"
+      />
+      <path
+        fill="#FFFFFF"
+        d="M17.47 14.39c-.29-.15-1.7-.84-1.96-.94-.26-.1-.45-.15-.64.15-.19.29-.74.94-.9 1.13-.17.19-.34.21-.63.07-.29-.15-1.23-.45-2.35-1.44-.87-.77-1.45-1.73-1.62-2.02-.17-.29-.02-.45.13-.59.13-.13.29-.34.43-.51.15-.17.19-.29.29-.48.1-.19.05-.36-.02-.51-.08-.15-.64-1.54-.87-2.11-.23-.56-.47-.48-.65-.49h-.55c-.19 0-.5.07-.76.36-.26.29-1 1-1 2.43s1.03 2.82 1.17 3.01c.15.19 2.02 3.08 4.89 4.32.68.3 1.22.47 1.63.6.69.22 1.32.19 1.82.11.55-.08 1.7-.7 1.94-1.37.24-.67.24-1.25.17-1.37-.07-.12-.26-.19-.55-.34z"
+      />
+    </svg>
+  );
+}
+
+function InstagramLogo({ size = 22, className = "" }) {
+  const gradId = "nfcista-ig-sunset";
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      className={className}
+    >
+      <defs>
+        <linearGradient id={gradId} x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#FFC107" />
+          <stop offset="30%" stopColor="#F44336" />
+          <stop offset="65%" stopColor="#E91E63" />
+          <stop offset="100%" stopColor="#9C27B0" />
+        </linearGradient>
+      </defs>
+      <rect width="20" height="20" x="2" y="2" rx="5.5" fill={`url(#${gradId})`} />
+      <circle cx="12" cy="12" r="4.3" stroke="#FFFFFF" strokeWidth="1.8" fill="none" />
+      <circle cx="17.2" cy="6.8" r="1.1" fill="#FFFFFF" />
+    </svg>
+  );
+}
+
+function FacebookLogo({ size = 22, className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      className={className}
+    >
+      <circle cx="12" cy="12" r="10.5" fill="#1877F2" />
+      <path
+        fill="#FFFFFF"
+        d="M14.5 12.3h-2.1v7.6h-3.1v-7.6H7.8v-2.7h1.5V7.8c0-1.2.6-3.1 3.1-3.1h2.3v2.6h-1.7c-.3 0-.6.1-.6.7v1.6h2.4l-.3 2.7z"
+      />
+    </svg>
+  );
+}
+
+function LinkedInLogo({ size = 22, className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      className={className}
+    >
+      <rect width="20" height="20" x="2" y="2" rx="4.5" fill="#0A66C2" />
+      <path
+        fill="#FFFFFF"
+        d="M6.3 8.7h2.8v9.1H6.3V8.7zM7.7 5c.9 0 1.6.7 1.6 1.6s-.7 1.6-1.6 1.6-1.6-.7-1.6-1.6.7-1.6 1.6-1.6zM11 8.7h2.7v1.2h.1c.4-.7 1.3-1.5 2.7-1.5 2.9 0 3.4 1.9 3.4 4.4v5H17v-4.4c0-1.1 0-2.4-1.5-2.4s-1.7 1.2-1.7 2.3v4.5H11V8.7z"
+      />
+    </svg>
+  );
+}
+
+function YouTubeLogo({ size = 22, className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      className={className}
+    >
+      <rect x="2" y="4.5" width="20" height="15" rx="4.5" fill="#FF0000" />
+      <polygon points="10,8.5 16,12 10,15.5" fill="#FFFFFF" />
+    </svg>
+  );
+}
+
+function XLogo({ size = 20, className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="#FFFFFF"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 24.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
+
+function GoogleDriveLogo({ size = 22, className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      className={className}
+    >
+      <path fill="#FFBA00" d="m7.71 3.5-6.56 11.5 3.43 6 6.56-11.5L7.71 3.5Z" />
+      <path fill="#2684FC" d="M12.57 3.5 6.01 15h13.14l3.43-6H12.57Z" />
+      <path fill="#00AC47" d="M22.85 15l-3.43 6H6.29l3.43-6h13.13Z" />
+    </svg>
+  );
+}
+
+function GoogleReviewLogo({ size = 22, className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      className={className}
+    >
+      <path
+        fill="#4285F4"
+        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.27v3.15C3.25 21.32 7.31 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.27C.46 8.2 0 10.04 0 12s.46 3.8 1.27 5.42l4.01-3.15z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.68 1.27 6.58l4.01 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+      />
+    </svg>
+  );
+}
+
+const BRAND_COMPONENTS = {
+  whatsapp: WhatsAppLogo,
+  instagram: InstagramLogo,
+  facebook: FacebookLogo,
+  linkedin: LinkedInLogo,
+  youtube: YouTubeLogo,
+  x: XLogo,
+  twitter: XLogo,
+  googledrive: GoogleDriveLogo,
+  drive: GoogleDriveLogo,
 };
 
 export default function ProfileBrandIcon({
   name,
   size = 22,
   className = "",
-  color = "#F2F4F8",
   "aria-hidden": ariaHidden = true,
   ...props
 }) {
   const normalizedKey = (name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  const glyph = BRAND_SVGS[normalizedKey];
+  const BrandComponent = BRAND_COMPONENTS[normalizedKey];
 
-  if (!glyph) return null;
+  if (!BrandComponent) return null;
 
-  return (
-    <svg
-      viewBox={glyph.viewBox}
-      width={size}
-      height={size}
-      fill={color}
-      aria-hidden={ariaHidden}
-      className={`shrink-0 ${className}`.trim()}
-      {...props}
-    >
-      <path d={glyph.d} />
-    </svg>
-  );
+  return <BrandComponent size={size} className={className} {...props} />;
 }
 
-export { BRAND_SVGS };
+export {
+  BRAND_COMPONENTS,
+  WhatsAppLogo,
+  InstagramLogo,
+  FacebookLogo,
+  LinkedInLogo,
+  YouTubeLogo,
+  XLogo,
+  GoogleDriveLogo,
+  GoogleReviewLogo,
+};
