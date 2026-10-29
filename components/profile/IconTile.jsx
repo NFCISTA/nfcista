@@ -17,7 +17,6 @@ import {
 
 /**
  * Generic Lucide icon map matching generic profile actions.
- * Rendered with consistent 1.75px stroke weight and crisp monochrome #F2F4F8.
  */
 const LUCIDE_GENERIC_MAP = {
   phone: Phone,
@@ -49,16 +48,16 @@ const LUCIDE_GENERIC_MAP = {
 };
 
 /**
- * IconTile — Monoline Glass Tile Component with Authentic Brand Logos
+ * IconTile — Frameless Premium Icon Presentation
  *
  * Requirements:
- * - 48 × 48 px, 14 px radius
- * - #0B0D11 background, 1px solid #1D222B border
- * - Inset top highlight rgba(255,255,255,0.06)
- * - Authentic brand logos with signature color identities (WhatsApp green, Instagram sunset, etc.)
- * - Generic action icons in elegant, crisp Lucide stroke (#F2F4F8)
- * - Interactive hover lift (-2px), restrained brand glow, active press scale (0.97)
- * - Full reduced-motion compliance
+ * - NO heavy black square tile backgrounds, borders, or inset shadows
+ * - Sits naturally and framelessly on the profile link row
+ * - Uniform optical center and visual weight
+ * - Authentic brand logos in official signature identities
+ * - Generic action icons in refined, crisp Lucide stroke
+ * - Subtle hover lift and gentle brand halo filter
+ * - Full reduced-motion and accessibility support
  *
  * @param {{
  *   iconName: string,
@@ -69,42 +68,49 @@ const LUCIDE_GENERIC_MAP = {
  */
 export default function IconTile({
   iconName = "",
-  brandColor = "#6F93FF",
+  brandColor = "#2563EB",
   className = "",
   isHovered = false,
 }) {
   const normalized = (iconName || "").toLowerCase().replace(/[^a-z0-9]/g, "");
   const isBrand = Boolean(BRAND_COMPONENTS[normalized]);
+  const isReview = ["star", "review", "reviews", "googlereview", "googlereviews"].includes(normalized);
   const LucideComponent = LUCIDE_GENERIC_MAP[normalized] || Globe;
 
   return (
     <div
-      className={`relative w-12 h-12 min-w-[48px] min-h-[48px] rounded-[14px] flex items-center justify-center
-                  bg-[#0B0D11] border border-[#1D222B]
-                  transition-all duration-200 ease-out select-none
+      className={`relative w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0
+                  transition-transform duration-200 ease-out select-none
                   motion-reduce:transition-none motion-reduce:transform-none
-                  group-hover:-translate-y-0.5 group-active:scale-[0.97]
+                  group-hover:scale-105 group-active:scale-95
                   ${className}`.trim()}
       style={{
-        boxShadow: isHovered
-          ? `inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 6px 18px -4px ${brandColor}40`
-          : "inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 4px rgba(0, 0, 0, 0.25)",
-        borderColor: isHovered ? `${brandColor}60` : "#1D222B",
+        filter: isHovered && brandColor
+          ? `drop-shadow(0 3px 8px ${brandColor}33)`
+          : "none",
       }}
       aria-hidden="true"
     >
       {isBrand ? (
         <ProfileBrandIcon
           name={normalized}
-          size={normalized === "x" ? 20 : 22}
-          className="transition-transform duration-200 group-hover:scale-105 motion-reduce:transform-none shrink-0"
+          size={30}
+          className="shrink-0 transition-transform duration-200 motion-reduce:transform-none"
+        />
+      ) : isReview ? (
+        <Star
+          size={23}
+          strokeWidth={1.75}
+          color="#F59E0B"
+          fill="#F59E0B"
+          className="shrink-0 transition-transform duration-200 motion-reduce:transform-none"
         />
       ) : (
         <LucideComponent
-          size={20}
-          strokeWidth={1.75}
-          color="#F2F4F8"
-          className="transition-transform duration-200 group-hover:scale-105 motion-reduce:transform-none shrink-0"
+          size={23}
+          strokeWidth={1.9}
+          color={brandColor || "#2563EB"}
+          className="shrink-0 transition-transform duration-200 motion-reduce:transform-none"
         />
       )}
     </div>
