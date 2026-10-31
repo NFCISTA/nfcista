@@ -19,20 +19,23 @@ export default function StickyNav() {
         {/* Brand */}
         <Link href="/" className="flex items-center gap-2.5 text-fg group">
           <div className="w-8 h-8 rounded-full bg-ink-alt border border-line flex items-center justify-center text-brand transition-colors group-hover:border-brand/40">
-            {/* Inline SVG NFC Wave Icon */}
+            {/* NFCISTA brand mark: card-tap symbol */}
             <svg
               className="w-4 h-4"
-              viewBox="0 0 24 24"
+              viewBox="0 0 20 20"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="1.7"
               strokeLinecap="round"
               strokeLinejoin="round"
               aria-hidden="true"
             >
-              <path d="M6 8a9 9 0 0 1 12 0" />
-              <path d="M8.5 11.5a5 5 0 0 1 7 0" />
-              <circle cx="12" cy="15" r="1.5" fill="currentColor" />
+              {/* Card body — solid fill */}
+              <rect x="2" y="5" width="11" height="10" rx="2" fill="currentColor" stroke="none" />
+              {/* Near tap arc */}
+              <path d="M15.5 8.5a3 3 0 0 1 0 3" />
+              {/* Far tap arc */}
+              <path d="M17.5 6.5a6 6 0 0 1 0 7" />
             </svg>
           </div>
           <span className="font-display font-bold text-base tracking-tight text-fg">
