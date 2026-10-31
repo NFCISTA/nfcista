@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import NfcistaLogo from "@/components/ui/NfcistaLogo";
 
 export default function StickyNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -18,25 +19,8 @@ export default function StickyNav() {
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         {/* Brand */}
         <Link href="/" className="flex items-center gap-2.5 text-fg group">
-          <div className="w-8 h-8 rounded-full bg-ink-alt border border-line flex items-center justify-center text-brand transition-colors group-hover:border-brand/40">
-            {/* NFCISTA brand mark: card-tap symbol */}
-            <svg
-              className="w-4 h-4"
-              viewBox="0 0 20 20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              {/* Card body — solid fill */}
-              <rect x="2" y="5" width="11" height="10" rx="2" fill="currentColor" stroke="none" />
-              {/* Near tap arc */}
-              <path d="M15.5 8.5a3 3 0 0 1 0 3" />
-              {/* Far tap arc */}
-              <path d="M17.5 6.5a6 6 0 0 1 0 7" />
-            </svg>
+          <div className="w-8 h-8 rounded-full bg-ink-alt border border-line flex items-center justify-center overflow-hidden transition-colors group-hover:border-brand/40">
+            <NfcistaLogo size={22} priority />
           </div>
           <span className="font-display font-bold text-base tracking-tight text-fg">
             NFCISTA

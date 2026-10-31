@@ -1,4 +1,5 @@
 import Link from "next/link";
+import NfcistaLogo from "@/components/ui/NfcistaLogo";
 
 export default function Footer() {
   return (
@@ -8,12 +9,8 @@ export default function Footer() {
           {/* Brand & Tagline */}
           <div className="md:col-span-5 space-y-4">
             <Link href="/" className="flex items-center gap-2.5 text-fg group">
-              <div className="w-8 h-8 rounded-full bg-ink border border-line flex items-center justify-center text-brand">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M6 8a9 9 0 0 1 12 0" />
-                  <path d="M8.5 11.5a5 5 0 0 1 7 0" />
-                  <circle cx="12" cy="15" r="1.5" fill="currentColor" />
-                </svg>
+              <div className="w-8 h-8 rounded-full bg-ink border border-line flex items-center justify-center overflow-hidden transition-colors group-hover:border-brand/40">
+                <NfcistaLogo size={22} />
               </div>
               <span className="font-display font-bold text-lg tracking-tight text-fg">
                 NFCISTA

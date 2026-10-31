@@ -114,8 +114,8 @@ export default async function CustomerPublicProfilePage({ params }) {
       <main className="min-h-screen bg-canvas flex items-center justify-center p-4 antialiased">
         <div className="w-full max-w-[390px] bg-surface-base rounded-2xl p-8 text-center border border-border-hairline shadow-card">
           <div className="mb-6 flex items-center justify-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-accent-primary flex items-center justify-center text-white">
-              <NfcistaLogo size={16} />
+            <div className="w-7 h-7 rounded-lg bg-surface-elevated border border-border-hairline flex items-center justify-center overflow-hidden shadow-2xs">
+              <NfcistaLogo size={18} />
             </div>
             <span className="text-sm font-bold tracking-wider text-text-primary">
               NFCISTA
@@ -378,8 +378,8 @@ export default async function CustomerPublicProfilePage({ params }) {
             {/* Top bar: NFCISTA brand + desktop tagline & Tap to Connect indicator */}
             <div className="relative z-10 flex items-center justify-between px-3.5 sm:px-4 pt-3.5 sm:pt-4">
               <Link href="/" className="flex items-center gap-1.5 sm:gap-2 group flex-shrink-0">
-                <div className="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center flex-shrink-0 shadow-sm group-hover:bg-white/30 transition-colors">
-                  <NfcistaLogo size={15} className="text-white" />
+                <div className="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center flex-shrink-0 shadow-sm group-hover:bg-white/30 transition-colors overflow-hidden">
+                  <NfcistaLogo size={18} priority />
                 </div>
                 <span className="text-white text-[12.5px] sm:text-[13px] font-bold tracking-wide drop-shadow-md">
                   NFCISTA
@@ -493,8 +493,8 @@ export default async function CustomerPublicProfilePage({ params }) {
           {/* Desktop Footer in Left Column */}
           <footer className="hidden lg:flex flex-col items-center py-5 px-5 border-t border-border-hairline">
             <div className="flex items-center gap-1.5 mb-1">
-              <div className="w-5 h-5 rounded-md bg-accent-primary flex items-center justify-center text-white">
-                <NfcistaLogo size={11} />
+              <div className="w-5.5 h-5.5 rounded-md bg-surface-subtle border border-border-hairline flex items-center justify-center overflow-hidden">
+                <NfcistaLogo size={14} />
               </div>
               <span className="text-xs font-bold text-text-primary">NFCISTA</span>
             </div>
@@ -554,8 +554,8 @@ export default async function CustomerPublicProfilePage({ params }) {
           {/* ── Mobile-Only Footer ───────────────────────────────────── */}
           <footer className="lg:hidden px-5 py-6 text-center border-t border-border-hairline">
             <div className="flex items-center justify-center gap-1.5 mb-1">
-              <div className="w-5 h-5 rounded-md bg-accent-primary flex items-center justify-center text-white">
-                <NfcistaLogo size={12} />
+              <div className="w-5.5 h-5.5 rounded-md bg-surface-subtle border border-border-hairline flex items-center justify-center overflow-hidden">
+                <NfcistaLogo size={14} />
               </div>
               <span className="text-xs font-bold text-text-primary">NFCISTA</span>
             </div>

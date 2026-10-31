@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/ui/Icon";
+import NfcistaLogo from "@/components/ui/NfcistaLogo";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,25 +21,8 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         {/* Brand */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg bg-surface-elevated border border-border-hairline flex items-center justify-center text-accent-primary shadow-2xs group-hover:border-accent-primary/40 transition-colors">
-            {/* NFCISTA brand mark: card-tap symbol */}
-            <svg
-              className="w-4 h-4"
-              viewBox="0 0 20 20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              {/* Card body — solid fill */}
-              <rect x="2" y="5" width="11" height="10" rx="2" fill="currentColor" stroke="none" />
-              {/* Near tap arc */}
-              <path d="M15.5 8.5a3 3 0 0 1 0 3" />
-              {/* Far tap arc */}
-              <path d="M17.5 6.5a6 6 0 0 1 0 7" />
-            </svg>
+          <div className="w-8 h-8 rounded-lg bg-surface-elevated border border-border-hairline flex items-center justify-center overflow-hidden shadow-2xs group-hover:border-accent-primary/40 transition-colors">
+            <NfcistaLogo size={22} priority />
           </div>
           <span className="text-base font-bold tracking-tight text-text-primary">
             NFCISTA
