@@ -1,9 +1,23 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
+import { createClient } from "@supabase/supabase-js";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 import { getClientIp, checkRateLimit } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Builds a service-role Supabase client when credentials are present.
+ * Server-side only — never exposed to the browser.
+ */
+function getServiceRoleClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
 
 /**
  * Normalizes phone numbers to digits only.
@@ -105,8 +119,11 @@ export async function POST(request) {
     // 8. Validate Message (optional)
     const rawMessage = typeof body.message === "string" ? body.message.trim().slice(0, 1000) : null;
 
-    // 9. Database Persistence Check
-    if (!isSupabaseConfigured || !supabase) {
+    // 9. Database Client Resolution
+    const serviceClient = getServiceRoleClient();
+    const dbClient = serviceClient || supabase;
+
+    if (!isSupabaseConfigured || !dbClient) {
       console.error("[inquiry] Supabase client is not configured on the server.");
       return NextResponse.json(
         {
@@ -116,7 +133,7 @@ export async function POST(request) {
       );
     }
 
-    // Insert into public.company_inquiries
+    // Insert payload
     const insertPayload = {
       name: rawName,
       shop_name: rawShopName,
@@ -128,15 +145,70 @@ export async function POST(request) {
       ip_hash: hashIp(clientIp),
     };
 
-    const { data, error } = await supabase
-      .from("company_inquiries")
-      .insert([insertPayload])
-      .select("id")
-      .single();
+    let inquiryId = null;
+    let insertSucceeded = false;
+    let lastError = null;
 
-    if (error) {
-      console.error("[inquiry-insert-error]", error.message);
-      // If table doesn't exist yet or permission error, return clear error with direct email fallback
+    // Strategy 1: Service-role client insert (elevated privilege, bypasses RLS)
+    if (serviceClient) {
+      const { data: srData, error: srError } = await serviceClient
+        .from("company_inquiries")
+        .insert([insertPayload])
+        .select("id")
+        .single();
+
+      if (!srError) {
+        insertSucceeded = true;
+        inquiryId = srData?.id || null;
+      } else {
+        lastError = srError;
+        console.warn("[inquiry-service-role] Insert warning:", srError.message);
+      }
+    }
+
+    // Strategy 2: Atomic SECURITY DEFINER RPC (submit_company_inquiry)
+    if (!insertSucceeded) {
+      const { data: rpcRows, error: rpcError } = await dbClient.rpc("submit_company_inquiry", {
+        name_input: rawName,
+        phone_input: normalizedPhone,
+        shop_name_input: rawShopName,
+        product_input: rawProduct,
+        message_input: rawMessage,
+        ip_hash_input: hashIp(clientIp),
+      });
+
+      if (!rpcError) {
+        const result = Array.isArray(rpcRows) && rpcRows.length > 0 ? rpcRows[0] : rpcRows;
+        if (result && (result.status === "OK" || result.inquiry_id)) {
+          insertSucceeded = true;
+          inquiryId = result.inquiry_id || null;
+        }
+      } else {
+        lastError = rpcError;
+        const code = String(rpcError.code || "");
+        if (code !== "PGRST202" && code !== "42883") {
+          console.warn("[inquiry-rpc] RPC call warning:", rpcError.message);
+        }
+      }
+    }
+
+    // Strategy 3: Standard direct table insert without .select("id") to avoid RLS RETURNING/SELECT blockage
+    if (!insertSucceeded) {
+      const { error: directInsertError } = await dbClient
+        .from("company_inquiries")
+        .insert([insertPayload]);
+
+      if (!directInsertError) {
+        insertSucceeded = true;
+      } else {
+        lastError = directInsertError;
+        console.error("[inquiry-direct-insert] Error:", directInsertError.message, `(code: ${directInsertError.code})`);
+      }
+    }
+
+    // If all strategies failed, return clear 503 error with email fallback
+    if (!insertSucceeded) {
+      console.error("[inquiry-failed] All insert strategies failed. Last error:", lastError?.message || "Unknown error");
       return NextResponse.json(
         {
           error: "Inquiry storage is currently being initialized. Please email your inquiry to hellonfcista@gmail.com.",
@@ -150,7 +222,7 @@ export async function POST(request) {
       {
         success: true,
         message: "Thank you. Your quote request has been received. Our team will contact you shortly.",
-        inquiry_id: data?.id,
+        inquiry_id: inquiryId,
       },
       { status: 200 }
     );
