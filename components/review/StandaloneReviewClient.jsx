@@ -88,6 +88,19 @@ export default function StandaloneReviewClient({ cardConfig }) {
     );
   }
 
+  // ── Keyboard Navigation for Star Rating Radiogroup ──────────────────────
+  function handleStarKeyDown(e, currentStar) {
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const next = Math.min(5, (currentStar || rating || 0) + 1);
+      setRating(next);
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+      e.preventDefault();
+      const prev = Math.max(1, (currentStar || rating || 2) - 1);
+      setRating(prev);
+    }
+  }
+
   // ── Generate Review (100% Local Browser Execution) ──────────────────────
   const handleGenerate = useCallback(
     (customSeed = null, customLang = null, customStyle = null) => {
@@ -232,7 +245,8 @@ export default function StandaloneReviewClient({ cardConfig }) {
             <button
               type="button"
               onClick={handleDirectLaunch}
-              className="w-full min-h-[48px] inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-[#1D4ED8] hover:bg-[#1E40AF] active:scale-[0.98] text-white font-bold text-sm shadow-sm transition-all cursor-pointer"
+              className="w-full min-h-[48px] inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-[#1D4ED8] hover:bg-[#1E40AF] active:scale-[0.98] text-white font-bold text-sm shadow-sm transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              aria-label="Write review directly on Google"
             >
               <Icon name="ExternalLink" size={16} />
               <span>Write Review on Google</span>
@@ -273,8 +287,8 @@ export default function StandaloneReviewClient({ cardConfig }) {
           <button
             type="button"
             onClick={handleDirectLaunch}
-            className="min-h-[40px] px-3.5 py-1.5 rounded-xl border border-blue-200 bg-blue-50/80 hover:bg-blue-100 text-[#1D4ED8] active:scale-95 font-bold text-xs inline-flex items-center gap-1.5 transition-all cursor-pointer"
-            aria-label="Write review directly on Google"
+            className="min-h-[44px] px-3.5 py-2 rounded-xl border border-blue-200 bg-blue-50/80 hover:bg-blue-100 text-[#1D4ED8] active:scale-95 font-bold text-xs inline-flex items-center gap-1.5 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            aria-label="Skip assistant and write review directly on Google"
           >
             <span>Direct to Google</span>
             <Icon name="ExternalLink" size={13} strokeWidth={2.2} />
@@ -294,12 +308,12 @@ export default function StandaloneReviewClient({ cardConfig }) {
             <h1 className="text-xl sm:text-2xl font-black text-[#0F172A] tracking-tight">
               {businessName}
             </h1>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">
+            <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mt-1">
               {industry || category}
             </p>
           </div>
 
-          <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-700 max-w-md mx-auto leading-relaxed">
             Need help putting your experience into words? Select your rating and tags to generate an editable draft in your preferred language and style.
           </p>
         </section>
@@ -313,12 +327,12 @@ export default function StandaloneReviewClient({ cardConfig }) {
               </span>
               Rate Your Experience
             </span>
-            <span className="text-xs font-semibold text-slate-500">
+            <span className="text-xs font-semibold text-slate-600">
               {rating ? RATING_LABELS[rating] : "Select stars"}
             </span>
           </div>
 
-          {/* 5 Large Star Tiles (Min 48x48px mobile touch target) */}
+          {/* 5 Large Star Tiles (Min 48x48px mobile touch target with keyboard arrow navigation) */}
           <div
             className="flex items-center justify-center gap-2.5 sm:gap-3.5 py-1"
             role="radiogroup"
@@ -331,14 +345,15 @@ export default function StandaloneReviewClient({ cardConfig }) {
                   key={star}
                   type="button"
                   onClick={() => setRating(star)}
-                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border flex items-center justify-center text-2xl sm:text-3xl transition-all cursor-pointer active:scale-90 select-none ${
+                  onKeyDown={(e) => handleStarKeyDown(e, star)}
+                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border flex items-center justify-center text-2xl sm:text-3xl transition-all cursor-pointer active:scale-90 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${
                     isSelected
                       ? "bg-amber-400 border-amber-500 text-white shadow-xs"
                       : "bg-slate-50 border-slate-200 text-slate-300 hover:border-slate-300 hover:text-slate-400"
                   }`}
                   role="radio"
                   aria-checked={rating === star}
-                  aria-label={`${star} star${star > 1 ? "s" : ""}`}
+                  aria-label={RATING_LABELS[star]}
                 >
                   ★
                 </button>
@@ -351,10 +366,10 @@ export default function StandaloneReviewClient({ cardConfig }) {
             <button
               type="button"
               onClick={handleDirectLaunch}
-              className="text-[11px] font-semibold text-slate-400 hover:text-blue-600 transition-colors inline-flex items-center gap-1 cursor-pointer"
+              className="text-xs font-semibold text-slate-600 hover:text-blue-700 underline underline-offset-2 transition-colors inline-flex items-center gap-1 cursor-pointer py-1.5 px-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
             >
               <span>Want to skip directly to Google Reviews? Tap here</span>
-              <Icon name="ExternalLink" size={11} />
+              <Icon name="ExternalLink" size={12} />
             </button>
           </div>
         </section>
@@ -370,12 +385,12 @@ export default function StandaloneReviewClient({ cardConfig }) {
                 </span>
                 Choose Language
               </span>
-              <span className="text-[11px] font-semibold text-slate-400">
+              <span className="text-xs font-semibold text-slate-600">
                 {LANGUAGES.find((l) => l.id === lang)?.nativeLabel || "English"}
               </span>
             </div>
 
-            {/* Horizontal Scrollable Language Pills (Min 44-48px touch target) */}
+            {/* Horizontal Scrollable Language Pills (Min 48px touch target) */}
             <div
               className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1"
               role="radiogroup"
@@ -388,13 +403,14 @@ export default function StandaloneReviewClient({ cardConfig }) {
                     key={l.id}
                     type="button"
                     onClick={() => handleLangChange(l.id)}
-                    className={`min-h-[44px] px-4 py-2.5 rounded-2xl font-bold text-xs shrink-0 transition-all cursor-pointer select-none active:scale-95 flex items-center gap-1.5 border ${
+                    className={`min-h-[48px] px-4 py-2.5 rounded-2xl font-bold text-xs shrink-0 transition-all cursor-pointer select-none active:scale-95 flex items-center gap-1.5 border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
                       isActive
                         ? "bg-[#0F172A] text-white border-[#0F172A] shadow-xs"
-                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                        : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                     }`}
                     role="radio"
                     aria-checked={isActive}
+                    aria-label={`${l.nativeLabel} (${l.label})`}
                   >
                     <span>{l.nativeLabel}</span>
                     {l.id !== "en" && l.id !== "hinglish" && (
@@ -412,12 +428,12 @@ export default function StandaloneReviewClient({ cardConfig }) {
               <span className="text-xs font-bold uppercase tracking-wider text-[#0F172A]">
                 Writing Style / Tone
               </span>
-              <span className="text-[11px] font-semibold text-slate-400">
+              <span className="text-xs font-semibold text-slate-600">
                 {WRITING_STYLES.find((s) => s.id === style)?.hint || "Natural"}
               </span>
             </div>
 
-            {/* Horizontal Scrollable Style Pills (Min 44-48px touch target) */}
+            {/* Horizontal Scrollable Style Pills (Min 48px touch target) */}
             <div
               className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1"
               role="radiogroup"
@@ -430,13 +446,14 @@ export default function StandaloneReviewClient({ cardConfig }) {
                     key={s.id}
                     type="button"
                     onClick={() => handleStyleChange(s.id)}
-                    className={`min-h-[44px] px-4 py-2.5 rounded-2xl font-bold text-xs shrink-0 transition-all cursor-pointer select-none active:scale-95 flex items-center gap-1.5 border ${
+                    className={`min-h-[48px] px-4 py-2.5 rounded-2xl font-bold text-xs shrink-0 transition-all cursor-pointer select-none active:scale-95 flex items-center gap-1.5 border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
                       isActive
                         ? "bg-[#1D4ED8] text-white border-[#1D4ED8] shadow-xs"
-                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                        : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                     }`}
                     role="radio"
                     aria-checked={isActive}
+                    aria-label={`${s.label} tone - ${s.hint}`}
                   >
                     <span>{s.label}</span>
                   </button>
@@ -455,13 +472,13 @@ export default function StandaloneReviewClient({ cardConfig }) {
               </span>
               What Stood Out?
             </span>
-            <span className="text-[11px] font-semibold text-slate-400">
+            <span className="text-xs font-semibold text-slate-600">
               {selectedChipIds.length} selected
             </span>
           </div>
 
-          {/* Chips Grid (Touch target min 44px height) */}
-          <div className="flex flex-wrap gap-2 pt-1">
+          {/* Chips Grid: Touch target min 48px height. Distinguishable by border style & symbols (not color alone) */}
+          <div className="flex flex-wrap gap-2.5 pt-1" role="group" aria-label="Experience tags">
             {categoryChips.map((chip) => {
               const isSelected = selectedChipIds.includes(chip.id);
               const isNegative = chip.sentiment === "negative";
@@ -471,25 +488,29 @@ export default function StandaloneReviewClient({ cardConfig }) {
                   key={chip.id}
                   type="button"
                   onClick={() => toggleChip(chip.id)}
-                  className={`min-h-[44px] px-4 py-2.5 rounded-full text-xs font-semibold border transition-all cursor-pointer active:scale-95 select-none inline-flex items-center gap-1.5 ${
+                  className={`min-h-[48px] px-4 py-2.5 rounded-full text-xs font-semibold border transition-all cursor-pointer active:scale-95 select-none inline-flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
                     isSelected
                       ? isNegative
-                        ? "bg-rose-600 border-rose-600 text-white shadow-xs"
-                        : "bg-[#1D4ED8] border-[#1D4ED8] text-white shadow-xs"
+                        ? "bg-rose-700 border-rose-700 text-white shadow-xs border-solid"
+                        : "bg-[#1D4ED8] border-[#1D4ED8] text-white shadow-xs border-solid"
                       : isNegative
-                      ? "bg-rose-50/70 border-rose-200 text-rose-800 hover:border-rose-300"
-                      : "bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300"
+                      ? "bg-rose-50/80 border-dashed border-2 border-rose-300 text-rose-900 hover:border-rose-400"
+                      : "bg-slate-50 border-solid border border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-100"
                   }`}
                   aria-pressed={isSelected}
+                  aria-label={`${chip.label} (${isNegative ? "Constructive feedback" : "Positive aspect"})${isSelected ? ", selected" : ""}`}
                 >
                   {isSelected ? (
-                    <Icon name="Check" size={13} strokeWidth={2.5} />
+                    <Icon name="Check" size={14} strokeWidth={2.8} />
                   ) : isNegative ? (
-                    <span className="text-rose-500 font-bold">−</span>
+                    <span className="text-rose-700 font-black text-sm leading-none" aria-hidden="true">−</span>
                   ) : (
-                    <span className="text-blue-500 font-bold">+</span>
+                    <span className="text-blue-600 font-black text-sm leading-none" aria-hidden="true">+</span>
                   )}
                   <span>{chip.label}</span>
+                  <span className="sr-only">
+                    ({isNegative ? "Constructive feedback" : "Positive aspect"})
+                  </span>
                 </button>
               );
             })}
@@ -499,7 +520,7 @@ export default function StandaloneReviewClient({ cardConfig }) {
           <div className="space-y-1.5 pt-2">
             <label
               htmlFor="product-service-input"
-              className="block text-[11px] font-bold uppercase tracking-wider text-slate-500"
+              className="block text-xs font-bold uppercase tracking-wider text-slate-700"
             >
               Product or Service Used (Optional)
             </label>
@@ -509,7 +530,7 @@ export default function StandaloneReviewClient({ cardConfig }) {
               placeholder="e.g. Root canal, Haircut, Espresso, Oil change"
               value={product}
               onChange={(e) => setProduct(e.target.value)}
-              className="min-h-[44px] w-full text-xs sm:text-sm px-4 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-600 focus:outline-none transition-all"
+              className="min-h-[48px] w-full text-xs sm:text-sm px-4 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none transition-all"
             />
           </div>
 
@@ -517,7 +538,7 @@ export default function StandaloneReviewClient({ cardConfig }) {
           <div className="space-y-1.5">
             <label
               htmlFor="personal-note-input"
-              className="block text-[11px] font-bold uppercase tracking-wider text-slate-500"
+              className="block text-xs font-bold uppercase tracking-wider text-slate-700"
             >
               Any personal thoughts or notes (Optional)
             </label>
@@ -527,7 +548,7 @@ export default function StandaloneReviewClient({ cardConfig }) {
               placeholder="e.g. Dr. Sharma was very gentle and explained everything clearly"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="min-h-[44px] w-full text-xs sm:text-sm px-4 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-600 focus:outline-none transition-all"
+              className="min-h-[48px] w-full text-xs sm:text-sm px-4 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none transition-all"
             />
           </div>
 
@@ -537,7 +558,7 @@ export default function StandaloneReviewClient({ cardConfig }) {
               type="button"
               onClick={() => handleGenerate()}
               disabled={isGenerateDisabled}
-              className="w-full min-h-[50px] py-3.5 px-5 rounded-2xl bg-[#1D4ED8] hover:bg-[#1E40AF] disabled:bg-slate-200 disabled:text-slate-400 active:scale-[0.98] text-white font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+              className="w-full min-h-[50px] py-3.5 px-5 rounded-2xl bg-[#1D4ED8] hover:bg-[#1E40AF] disabled:bg-slate-200 disabled:text-slate-400 active:scale-[0.98] text-white font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
             >
               {draft ? (
                 <>
@@ -571,69 +592,90 @@ export default function StandaloneReviewClient({ cardConfig }) {
               <button
                 type="button"
                 onClick={handleRegenerate}
-                className="text-xs font-bold text-[#1D4ED8] hover:text-[#1E40AF] active:scale-95 inline-flex items-center gap-1 py-1 px-2 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer"
+                className="text-xs font-bold text-[#1D4ED8] hover:text-[#1E40AF] active:scale-95 inline-flex items-center gap-1 py-1.5 px-2.5 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
                 title="Generate another variation"
+                aria-label="Generate another variation with different wording"
               >
                 <span>Try another</span>
                 <Icon name="RotateCw" size={12} />
               </button>
             </div>
 
-            {/* Editable Textarea */}
+            {/* Editable Textarea with Accessible Label */}
             <div className="space-y-1.5">
+              <label htmlFor="review-draft-textarea" className="sr-only">
+                Editable review draft
+              </label>
               <textarea
+                id="review-draft-textarea"
                 ref={textareaRef}
                 rows={4}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                className="w-full p-4 text-xs sm:text-sm text-slate-800 leading-relaxed bg-slate-50/70 rounded-2xl border border-slate-200 focus:border-blue-600 focus:bg-white focus:outline-none transition-all shadow-inner font-normal"
+                className="w-full p-4 text-xs sm:text-sm text-slate-800 leading-relaxed bg-slate-50/70 rounded-2xl border border-slate-200 focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:outline-none transition-all shadow-inner font-normal"
                 placeholder="Your review draft will appear here..."
               />
 
               {/* Character & Word Counter */}
-              <div className="flex items-center justify-between px-1 text-[11px] text-slate-400 font-medium">
+              <div className="flex items-center justify-between px-1 text-[11px] text-slate-500 font-medium">
                 <span>100% editable — tap to edit any word</span>
-                <span>
+                <span aria-label={`${draft.length} characters, ${draft.trim().split(/\s+/).filter(Boolean).length} words`}>
                   {draft.length} chars · {draft.trim().split(/\s+/).filter(Boolean).length} words
                 </span>
               </div>
             </div>
 
-            {/* Status Feedback */}
+            {/* Status Feedback with aria-live and role */}
             {copyStatus === "copied" && (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2">
-                <Icon name="CheckCircle2" size={15} className="text-emerald-600 shrink-0" />
+              <div
+                role="status"
+                aria-live="polite"
+                className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs font-semibold flex items-center gap-2"
+              >
+                <Icon name="CheckCircle2" size={16} className="text-emerald-700 shrink-0" />
                 <span>Copied to clipboard! Ready to paste into Google Reviews.</span>
               </div>
             )}
 
             {copyStatus === "copied-fallback" && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-800 text-xs font-semibold flex items-center gap-2">
-                <Icon name="Check" size={15} className="text-blue-600 shrink-0" />
+              <div
+                role="status"
+                aria-live="polite"
+                className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 text-xs font-semibold flex items-center gap-2"
+              >
+                <Icon name="Check" size={16} className="text-blue-700 shrink-0" />
                 <span>Text selected & copied!</span>
               </div>
             )}
 
             {copyStatus === "failed" && (
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs font-medium flex items-center gap-2">
-                <Icon name="AlertTriangle" size={15} className="text-amber-600 shrink-0" />
+              <div
+                role="alert"
+                aria-live="assertive"
+                className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-950 text-xs font-medium flex items-center gap-2"
+              >
+                <Icon name="AlertTriangle" size={16} className="text-amber-700 shrink-0" />
                 <span>Could not copy automatically. Please select the text above to copy.</span>
               </div>
             )}
 
             {/* Popup Blocked Fallback */}
             {popupBlocked && (
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs space-y-1">
+              <div
+                role="alert"
+                aria-live="assertive"
+                className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-950 text-xs space-y-1"
+              >
                 <div className="font-bold flex items-center gap-1.5">
-                  <Icon name="AlertTriangle" size={14} className="text-amber-600" />
+                  <Icon name="AlertTriangle" size={15} className="text-amber-700" />
                   <span>Browser blocked Google Reviews popup</span>
                 </div>
-                <p className="text-[11px] text-amber-800">
+                <p className="text-[11px] text-amber-900">
                   Your review draft is copied!{" "}
                   <button
                     type="button"
                     onClick={handleDirectLaunch}
-                    className="underline font-bold text-amber-900 hover:text-black cursor-pointer"
+                    className="underline font-bold text-amber-950 hover:text-black cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600 rounded"
                   >
                     Tap here to open Google Reviews directly
                   </button>
@@ -644,11 +686,11 @@ export default function StandaloneReviewClient({ cardConfig }) {
 
             {/* ── 3 Separate Actions (Requirement 6) ────────────────────────── */}
             <div className="space-y-2.5 pt-1">
-              {/* Action 1: Copy & Open Google (Primary CTA) */}
+              {/* Action 1: Copy & Open Google (Primary CTA, high contrast emerald) */}
               <button
                 type="button"
                 onClick={handleCopyAndLaunch}
-                className="w-full min-h-[50px] py-3.5 px-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                className="w-full min-h-[50px] py-3.5 px-5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-[0.98] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
               >
                 <Icon name="Copy" size={16} />
                 <span>
@@ -664,9 +706,9 @@ export default function StandaloneReviewClient({ cardConfig }) {
                 <button
                   type="button"
                   onClick={handleCopyOnly}
-                  className="flex-1 min-h-[48px] py-2.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                  className="flex-1 min-h-[48px] py-2.5 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                 >
-                  <Icon name="Copy" size={13} />
+                  <Icon name="Copy" size={14} />
                   <span>{copyStatus === "copied" ? "✓ Copied to Clipboard" : "Copy Draft Only"}</span>
                 </button>
 
@@ -674,22 +716,22 @@ export default function StandaloneReviewClient({ cardConfig }) {
                 <button
                   type="button"
                   onClick={handleDirectLaunch}
-                  className="flex-1 min-h-[48px] py-2.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                  className="flex-1 min-h-[48px] py-2.5 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                 >
                   <span>Open Google Without Text</span>
-                  <Icon name="ExternalLink" size={13} />
+                  <Icon name="ExternalLink" size={14} />
                 </button>
               </div>
             </div>
 
-            <p className="text-[11px] text-slate-400 text-center leading-normal pt-1">
+            <p className="text-[11px] text-slate-500 text-center leading-normal pt-1">
               Reviews are posted under your own Google account. NFCISTA does not store, modify, or auto-submit your review.
             </p>
           </section>
         )}
 
         {/* ── Footer ────────────────────────────────────────────────────────── */}
-        <footer className="text-center pt-6 text-[11px] text-slate-400 space-y-1">
+        <footer className="text-center pt-6 text-[11px] text-slate-500 space-y-1">
           <div>Card Ref: {cardCode} · Verified Contactless Card</div>
           <div>Powered by NFCISTA Physical Contactless Smart Cards</div>
         </footer>

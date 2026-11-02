@@ -51,13 +51,13 @@ function InactiveCardView({ cardCode }) {
 
         <div className="space-y-1.5">
           <h1 className="text-lg font-bold text-slate-900">Card Not Active</h1>
-          <p className="text-xs text-slate-500 leading-relaxed">
+          <p className="text-xs text-slate-600 leading-relaxed">
             This NFCISTA Google Review Card is currently unassigned or pending configuration.
           </p>
         </div>
 
         {safeCode && (
-          <div className="inline-block px-3 py-1 bg-slate-50 border border-slate-200 rounded-md font-mono text-[11px] text-slate-500 tracking-wider">
+          <div className="inline-block px-3 py-1 bg-slate-50 border border-slate-200 rounded-md font-mono text-[11px] text-slate-600 tracking-wider">
             REF: {safeCode}
           </div>
         )}
@@ -65,13 +65,13 @@ function InactiveCardView({ cardCode }) {
         <div className="pt-2">
           <Link
             href="/"
-            className="inline-flex items-center justify-center w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-semibold shadow-xs transition-all"
+            className="inline-flex items-center justify-center w-full min-h-[48px] py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-semibold shadow-xs transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
           >
             Visit NFCISTA
           </Link>
         </div>
 
-        <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-400">
+        <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-500">
           Physical Contactless Identity · NFCISTA
         </div>
       </div>
