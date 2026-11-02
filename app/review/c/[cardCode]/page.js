@@ -16,7 +16,7 @@ export async function generateMetadata({ params }) {
   }
 
   const cardConfig = await getReviewCardConfig(cardCode);
-  if (!cardConfig) {
+  if (!cardConfig || !cardConfig.is_active || !cardConfig.review_assistant_enabled) {
     return { title: "Card Not Active — NFCISTA", robots: { index: false, follow: false } };
   }
 
@@ -92,7 +92,7 @@ export default async function StandaloneReviewPage({ params }) {
 
   const cardConfig = await getReviewCardConfig(cardCode);
 
-  if (!cardConfig || !cardConfig.is_active) {
+  if (!cardConfig || !cardConfig.is_active || !cardConfig.review_assistant_enabled) {
     return <InactiveCardView cardCode={cardCode} />;
   }
 

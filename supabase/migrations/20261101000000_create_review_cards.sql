@@ -84,7 +84,9 @@ CREATE POLICY "Allow admins full access to review_cards"
     WITH CHECK (public.is_admin());
 
 -- 3. Public Lookup RPC (SECURITY DEFINER)
--- Returns ONLY the 5 necessary public attributes; strictly strips IDs, timestamps, and admin notes
+-- Returns ONLY the 5 necessary public attributes; strictly strips IDs, timestamps, and admin notes.
+-- SECURITY REQUIREMENT: Returns NO ROWS unless card exists, is active AND review_assistant_enabled = true.
+-- Inactive or unconfigured cards never expose business name or Google Review URL to the public.
 DROP FUNCTION IF EXISTS public.get_review_card_config(text);
 
 CREATE OR REPLACE FUNCTION public.get_review_card_config(card_code_input text)
@@ -109,9 +111,12 @@ AS $$
     FROM public.review_cards r
     WHERE r.card_code = upper(trim(card_code_input))
       AND r.is_active = true
+      AND r.review_assistant_enabled = true
     LIMIT 1;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.get_review_card_config(text) TO anon, authenticated;
+-- Security Hardening: Revoke execution from PUBLIC, grant strictly to anon, authenticated, service_role
+REVOKE ALL ON FUNCTION public.get_review_card_config(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_review_card_config(text) TO anon, authenticated, service_role;
 
 COMMIT;

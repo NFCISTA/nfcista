@@ -59,13 +59,26 @@ runTest("Safeguard 1: Google Review URL validator accepts genuine Google review 
   assert.strictEqual(gooGl.valid, true);
 });
 
-runTest("Safeguard 1: Google Review URL validator strictly rejects malicious or non-Google URLs", () => {
+runTest("Safeguard 1: Google Review URL validator strictly rejects malicious, deceptive or non-Google URLs", () => {
   assert.strictEqual(validateGoogleReviewUrl("").valid, false);
   assert.strictEqual(validateGoogleReviewUrl(null).valid, false);
   assert.strictEqual(validateGoogleReviewUrl("not-a-url").valid, false);
   assert.strictEqual(validateGoogleReviewUrl("javascript:alert(1)").valid, false);
   assert.strictEqual(validateGoogleReviewUrl("ftp://google.com/review").valid, false);
   assert.strictEqual(validateGoogleReviewUrl("https://phishing-site.com/fake-google").valid, false);
+  
+  // Deceptive domain checks (subdomain or suffix spoofing)
+  assert.strictEqual(validateGoogleReviewUrl("https://evilgoogle.com/review").valid, false);
+  assert.strictEqual(validateGoogleReviewUrl("https://attacker-google.com/writereview").valid, false);
+  assert.strictEqual(validateGoogleReviewUrl("https://google.com.phishing.io/review").valid, false);
+  assert.strictEqual(validateGoogleReviewUrl("https://fakeg.page/r/abc").valid, false);
+
+  // Embedded credentials check
+  assert.strictEqual(validateGoogleReviewUrl("https://admin:pass@google.com/maps").valid, false);
+
+  // Generic root search homepage rejection
+  assert.strictEqual(validateGoogleReviewUrl("https://google.com/").valid, false);
+  assert.strictEqual(validateGoogleReviewUrl("https://www.google.com").valid, false);
 });
 
 // -----------------------------------------------------------------------------
@@ -91,8 +104,25 @@ runTest("Migration: RLS enabled and direct anon table access denied", () => {
 runTest("Migration: Public RPC get_review_card_config is SECURITY DEFINER with minimal projection", () => {
   assert.ok(migrationContent.includes("CREATE OR REPLACE FUNCTION public.get_review_card_config"));
   assert.ok(migrationContent.includes("SECURITY DEFINER"));
+  assert.ok(migrationContent.includes("SET search_path = public"));
   assert.ok(migrationContent.includes("r.is_active = true"));
-  assert.ok(migrationContent.includes("GRANT EXECUTE ON FUNCTION public.get_review_card_config"));
+  assert.ok(migrationContent.includes("r.review_assistant_enabled = true"), "RPC must filter for review_assistant_enabled = true");
+  assert.ok(migrationContent.includes("REVOKE ALL ON FUNCTION public.get_review_card_config(text) FROM PUBLIC;"), "Must revoke execution from PUBLIC");
+  assert.ok(migrationContent.includes("GRANT EXECUTE ON FUNCTION public.get_review_card_config(text) TO anon, authenticated, service_role;"));
+});
+
+// -----------------------------------------------------------------------------
+// 3. Customer Route Protection Checks
+// -----------------------------------------------------------------------------
+const customerPagePath = "app/review/c/[cardCode]/page.js";
+const customerPageContent = fs.readFileSync(customerPagePath, "utf8");
+
+runTest("Customer Route: Inactive or disabled cards are protected and render InactiveCardView", () => {
+  assert.ok(
+    customerPageContent.includes("!cardConfig.is_active || !cardConfig.review_assistant_enabled"),
+    "Server page must check both is_active and review_assistant_enabled"
+  );
+  assert.ok(customerPageContent.includes("<InactiveCardView cardCode={cardCode} />"));
 });
 
 // -----------------------------------------------------------------------------
