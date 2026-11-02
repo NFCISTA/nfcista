@@ -168,6 +168,26 @@ runTest("Standalone UX: reuses existing reviewGenerator and reviewChips", () => 
   assert.ok(clientCompContent.includes('import { getCategoryChips } from "@/lib/reviewChips"'));
 });
 
+runTest("Standalone UX: 4 languages and 4 writing styles supported with live regeneration", () => {
+  assert.ok(clientCompContent.includes('id: "en"') && clientCompContent.includes('id: "hi"') && clientCompContent.includes('id: "hinglish"') && clientCompContent.includes('id: "mr"'));
+  assert.ok(clientCompContent.includes('id: "concise"') && clientCompContent.includes('id: "balanced"') && clientCompContent.includes('id: "enthusiastic"') && clientCompContent.includes('id: "professional"'));
+  assert.ok(clientCompContent.includes("handleLangChange") && clientCompContent.includes("handleStyleChange"));
+});
+
+runTest("Standalone UX: 3 separate action buttons present (Copy & Open, Copy Draft Only, Open Without Text)", () => {
+  assert.ok(clientCompContent.includes("Copy Review & Open Google"));
+  assert.ok(clientCompContent.includes("Copy Draft Only"));
+  assert.ok(clientCompContent.includes("Open Google Without Text"));
+});
+
+runTest("Standalone UX: WCAG 2.1 AA accessibility & non-color distinction on chips", () => {
+  assert.ok(clientCompContent.includes('role="radiogroup"'));
+  assert.ok(clientCompContent.includes('role="radio"'));
+  assert.ok(clientCompContent.includes('role="status"') && clientCompContent.includes('aria-live="polite"'));
+  assert.ok(clientCompContent.includes("border-dashed"), "Constructive chips must have dashed border for non-color distinction");
+  assert.ok(clientCompContent.includes("min-h-[48px]"), "Interactive elements must meet 48px touch target");
+});
+
 // -----------------------------------------------------------------------------
 // 5. Existing Routes Preserved
 // -----------------------------------------------------------------------------
