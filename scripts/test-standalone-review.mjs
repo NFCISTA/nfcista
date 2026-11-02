@@ -180,11 +180,11 @@ runTest("Standalone UX: 3 separate action buttons present (Copy & Open, Copy Dra
   assert.ok(clientCompContent.includes("Open Google Without Text"));
 });
 
-runTest("Standalone UX: WCAG 2.1 AA accessibility & non-color distinction on chips", () => {
+runTest("Standalone UX: WCAG 2.1 AA accessibility & visually consistent positive chips", () => {
   assert.ok(clientCompContent.includes('role="radiogroup"'));
   assert.ok(clientCompContent.includes('role="radio"'));
   assert.ok(clientCompContent.includes('role="status"') && clientCompContent.includes('aria-live="polite"'));
-  assert.ok(clientCompContent.includes("border-dashed"), "Constructive chips must have dashed border for non-color distinction");
+  assert.ok(clientCompContent.includes('.filter((c) => c.sentiment !== "negative")'), "Must filter out negative chips for simplified positive UI");
   assert.ok(clientCompContent.includes("min-h-[48px]"), "Interactive elements must meet 48px touch target");
 });
 

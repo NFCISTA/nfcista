@@ -61,11 +61,14 @@ export default function StandaloneReviewClient({ cardConfig }) {
     card_code: cardCode,
   } = cardConfig;
 
-  // Industry chips based on business category
-  const { industry, chips: categoryChips } = useMemo(
-    () => getCategoryChips(category),
-    [category]
-  );
+  // Industry chips based on business category (filtered to positive experience chips for simplified customer UX)
+  const { industry, chips: categoryChips } = useMemo(() => {
+    const res = getCategoryChips(category);
+    return {
+      industry: res.industry,
+      chips: (res.chips || []).filter((c) => c.sentiment !== "negative"),
+    };
+  }, [category]);
 
   // ── State ───────────────────────────────────────────────────────────────
   const [rating, setRating] = useState(null); // Must start unselected (null)
@@ -111,12 +114,16 @@ export default function StandaloneReviewClient({ cardConfig }) {
       const activeLang = customLang !== null ? customLang : lang;
       const activeStyle = customStyle !== null ? customStyle : style;
 
+      // Safeguard: Only suggest positive recommendation if customer selected positive chips AND rating >= 4
+      const canRecommend = rating && rating >= 4 && selectedChipIds.length > 0;
+      const isNegativeRating = rating && rating <= 2;
+
       const generated = generateReview({
         rating,
         chipIds: selectedChipIds,
         product: product.trim(),
         note: note.trim(),
-        recommend: rating && rating >= 4 ? "yes" : rating && rating <= 2 ? "no" : null,
+        recommend: canRecommend ? "yes" : isNegativeRating ? "no" : null,
         lang: activeLang,
         style: activeStyle,
         seed: activeSeed,
@@ -477,11 +484,10 @@ export default function StandaloneReviewClient({ cardConfig }) {
             </span>
           </div>
 
-          {/* Chips Grid: Touch target min 48px height. Distinguishable by border style & symbols (not color alone) */}
+          {/* Chips Grid: Display ONLY positive experience chips with visually consistent styling */}
           <div className="flex flex-wrap gap-2.5 pt-1" role="group" aria-label="Experience tags">
-            {categoryChips.map((chip) => {
+            {categoryChips.filter((c) => c.sentiment !== "negative").map((chip) => {
               const isSelected = selectedChipIds.includes(chip.id);
-              const isNegative = chip.sentiment === "negative";
 
               return (
                 <button
@@ -490,27 +496,18 @@ export default function StandaloneReviewClient({ cardConfig }) {
                   onClick={() => toggleChip(chip.id)}
                   className={`min-h-[48px] px-4 py-2.5 rounded-full text-xs font-semibold border transition-all cursor-pointer active:scale-95 select-none inline-flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
                     isSelected
-                      ? isNegative
-                        ? "bg-rose-700 border-rose-700 text-white shadow-xs border-solid"
-                        : "bg-[#1D4ED8] border-[#1D4ED8] text-white shadow-xs border-solid"
-                      : isNegative
-                      ? "bg-rose-50/80 border-dashed border-2 border-rose-300 text-rose-900 hover:border-rose-400"
-                      : "bg-slate-50 border-solid border border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-100"
+                      ? "bg-[#1D4ED8] border-[#1D4ED8] text-white shadow-xs"
+                      : "bg-slate-50 border border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-100"
                   }`}
                   aria-pressed={isSelected}
-                  aria-label={`${chip.label} (${isNegative ? "Constructive feedback" : "Positive aspect"})${isSelected ? ", selected" : ""}`}
+                  aria-label={`${chip.label}${isSelected ? ", selected" : ""}`}
                 >
                   {isSelected ? (
                     <Icon name="Check" size={14} strokeWidth={2.8} />
-                  ) : isNegative ? (
-                    <span className="text-rose-700 font-black text-sm leading-none" aria-hidden="true">−</span>
                   ) : (
-                    <span className="text-blue-600 font-black text-sm leading-none" aria-hidden="true">+</span>
+                    <span className="text-blue-600 font-bold text-sm leading-none" aria-hidden="true">+</span>
                   )}
                   <span>{chip.label}</span>
-                  <span className="sr-only">
-                    ({isNegative ? "Constructive feedback" : "Positive aspect"})
-                  </span>
                 </button>
               );
             })}
