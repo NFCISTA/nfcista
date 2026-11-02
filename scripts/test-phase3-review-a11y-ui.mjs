@@ -51,12 +51,43 @@ runTest("WCAG 2.1 AA: Languages and Styles have radiogroup semantics and descrip
   assert.ok(clientSrc.includes("nativeLabel"), "Missing native language labels");
 });
 
-runTest("WCAG 2.1 AA: Color contrast — constructive chips do not rely on color alone", () => {
-  // Non-color distinction: border-dashed + minus symbol + screen reader text
-  assert.ok(clientSrc.includes("border-dashed"), "Constructive chips must have a distinct border style (e.g. dashed)");
+runTest("WCAG 2.1 AA & UX: Experience section displays only positive chips with visually consistent styling", () => {
+  // Only positive chips in client UI
+  assert.ok(clientSrc.includes('.filter((c) => c.sentiment !== "negative")'), "UI must filter out negative chips");
   assert.ok(clientSrc.includes("aria-pressed="), "Chips must have aria-pressed attribute");
-  assert.ok(clientSrc.includes("Constructive feedback"), "Constructive chips must have accessible text indicator");
-  assert.ok(clientSrc.includes("Positive aspect") || clientSrc.includes("Positive experience"), "Positive chips must have accessible indicator");
+  assert.ok(clientSrc.includes("min-h-[48px]"), "Chips must satisfy 48px touch target");
+  assert.ok(clientSrc.includes("focus-visible:ring-2"), "Chips must have visible focus rings");
+});
+
+runTest("Safeguards: Customer notes can express concerns or constructive feedback without triggering positive praise", () => {
+  const negReview = generateReview({
+    rating: 2,
+    note: "The appointment was delayed by 45 minutes and staff was rushed",
+    style: "enthusiastic",
+    lang: "en",
+    seed: 1234,
+  });
+  assert.ok(typeof negReview === "string");
+  // Must NOT invent enthusiastic praise or recommendations for 1-3 star review
+  assert.ok(!/really great visit|truly wonderful|so pleased/i.test(negReview));
+  assert.ok(!/would definitely recommend|highly recommended/i.test(negReview));
+  // Must preserve the exact customer note
+  assert.ok(negReview.includes("The appointment was delayed by 45 minutes and staff was rushed"));
+});
+
+runTest("Safeguards: 4-5 star rating alone does not invent unsupported claims about business quality or staff", () => {
+  const ratingReview = generateReview({
+    rating: 5,
+    note: "Quick stop on my way home",
+    style: "enthusiastic",
+    lang: "en",
+    seed: 5678,
+  });
+  assert.ok(typeof ratingReview === "string");
+  // When no chips are selected, do not add enthusiastic claims about staff or service
+  assert.ok(!/really great visit|truly wonderful|so pleased/i.test(ratingReview));
+  assert.ok(ratingReview.includes("Quick stop on my way home"));
+  assert.ok(/5-star/i.test(ratingReview));
 });
 
 runTest("WCAG 2.1 AA: Status announcements use aria-live and role attributes", () => {
