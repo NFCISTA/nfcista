@@ -94,9 +94,12 @@ runTest("Migration: review_assistant_enabled defaults to FALSE (Mandatory requir
   );
 });
 
-runTest("Migration: RLS enabled and direct anon table access denied", () => {
+runTest("Migration: RLS enabled and direct table access denied from PUBLIC, anon, and non-admin authenticated", () => {
   assert.ok(migrationContent.includes("ALTER TABLE public.review_cards ENABLE ROW LEVEL SECURITY;"));
-  assert.ok(migrationContent.includes("REVOKE ALL ON public.review_cards FROM anon;"));
+  assert.ok(
+    migrationContent.includes("REVOKE ALL ON TABLE public.review_cards FROM PUBLIC, anon, authenticated;"),
+    "Must revoke all table privileges from PUBLIC, anon, and authenticated"
+  );
   assert.ok(migrationContent.includes('CREATE POLICY "Deny direct anon access to review_cards"'));
   assert.ok(migrationContent.includes("public.is_admin()"));
 });
@@ -105,6 +108,7 @@ runTest("Migration: Public RPC get_review_card_config is SECURITY DEFINER with m
   assert.ok(migrationContent.includes("CREATE OR REPLACE FUNCTION public.get_review_card_config"));
   assert.ok(migrationContent.includes("SECURITY DEFINER"));
   assert.ok(migrationContent.includes("SET search_path = public"));
+  assert.ok(migrationContent.includes("ALTER FUNCTION public.get_review_card_config(text) OWNER TO postgres;"));
   assert.ok(migrationContent.includes("r.is_active = true"));
   assert.ok(migrationContent.includes("r.review_assistant_enabled = true"), "RPC must filter for review_assistant_enabled = true");
   assert.ok(migrationContent.includes("REVOKE ALL ON FUNCTION public.get_review_card_config(text) FROM PUBLIC;"), "Must revoke execution from PUBLIC");

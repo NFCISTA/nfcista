@@ -60,9 +60,8 @@ CREATE TRIGGER trigger_review_cards_updated_at
 -- 2. Row Level Security (RLS) Configuration
 ALTER TABLE public.review_cards ENABLE ROW LEVEL SECURITY;
 
--- Revoke all direct table operations from public/anon
-REVOKE ALL ON public.review_cards FROM anon;
-REVOKE ALL ON public.review_cards FROM authenticated;
+-- Revoke all direct table operations from PUBLIC, anon, and authenticated
+REVOKE ALL ON TABLE public.review_cards FROM PUBLIC, anon, authenticated;
 
 -- Explicitly deny direct table access for anon
 DROP POLICY IF EXISTS "Deny direct anon access to review_cards" ON public.review_cards;
@@ -73,7 +72,8 @@ CREATE POLICY "Deny direct anon access to review_cards"
     USING (false);
 
 -- Admin CRUD Access
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.review_cards TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE
+ON TABLE public.review_cards TO authenticated;
 
 DROP POLICY IF EXISTS "Allow admins full access to review_cards" ON public.review_cards;
 CREATE POLICY "Allow admins full access to review_cards"
@@ -114,6 +114,9 @@ AS $$
       AND r.review_assistant_enabled = true
     LIMIT 1;
 $$;
+
+-- Explicitly assign function ownership to trusted postgres role
+ALTER FUNCTION public.get_review_card_config(text) OWNER TO postgres;
 
 -- Security Hardening: Revoke execution from PUBLIC, grant strictly to anon, authenticated, service_role
 REVOKE ALL ON FUNCTION public.get_review_card_config(text) FROM PUBLIC;
