@@ -52,6 +52,30 @@ const RATING_LABELS = {
  * - 48x48px touch targets for mobile thumbs.
  * - 3 separate actions: Copy & Open Google, Copy Draft Only, Open Google Without Text.
  */
+/**
+ * Display names for business categories.
+ */
+const CATEGORY_DISPLAY_NAMES = {
+  perfume: "Perfume Shop",
+  bags_footwear: "Bags & Footwear",
+  optical: "Optical Store",
+  clothing: "Clothing Store",
+  retail: "Retail & Shopping",
+  restaurant: "Restaurant & Cafe",
+  clinic: "Healthcare & Clinic",
+  salon: "Salon & Beauty",
+  fitness: "Gym & Fitness",
+  automotive: "Automotive & Repair",
+  services: "Professional Services",
+  hotel: "Hospitality & Hotel",
+  generic: "Local Business",
+};
+
+function getCategoryLabel(ind, cat) {
+  const key = (ind || cat || "").toLowerCase().trim();
+  return CATEGORY_DISPLAY_NAMES[key] || (ind || cat || "").replace(/_/g, " ");
+}
+
 export default function StandaloneReviewClient({ cardConfig }) {
   const {
     business_name: businessName,
@@ -242,7 +266,7 @@ export default function StandaloneReviewClient({ cardConfig }) {
               {businessName}
             </h1>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              {industry || category}
+              {getCategoryLabel(industry, category)}
             </p>
             <p className="text-sm text-slate-600 leading-relaxed pt-2">
               Thank you for visiting! Tap below to share your genuine experience directly on Google.
@@ -317,7 +341,7 @@ export default function StandaloneReviewClient({ cardConfig }) {
               {businessName}
             </h1>
             <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mt-1">
-              {industry || category}
+              {getCategoryLabel(industry, category)}
             </p>
           </div>
 
