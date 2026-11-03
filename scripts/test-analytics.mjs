@@ -186,6 +186,50 @@ test("Frontend dashboards and navigation items are properly hooked", () => {
   assert.ok(adminPage.includes("Performance by Review Card"), "Admin card breakdown table present");
 });
 
+// ── 9. Admin Customer Assignment UI Verification ────────────────────────────
+test("app/admin/review-cards/page.js includes customer selection and assignment workflow", () => {
+  const adminCardsCode = fs.readFileSync(path.resolve("app/admin/review-cards/page.js"), "utf-8");
+
+  assert.ok(adminCardsCode.includes("import { getAdminCustomers } from \"@/lib/customers\";"), "Imports getAdminCustomers helper");
+  assert.ok(adminCardsCode.includes("customer_id: \"\""), "Initializes customer_id in form state");
+  assert.ok(adminCardsCode.includes("customer_id: card.customer_id || \"\""), "Prepopulates customer_id in edit modal");
+  assert.ok(adminCardsCode.includes("formData.customer_id?.trim() || null"), "Sanitizes customer_id (empty string to null)");
+  assert.ok(adminCardsCode.includes("Assigned Customer"), "Assigned Customer table header rendered");
+  assert.ok(adminCardsCode.includes("Unassigned"), "Renders Unassigned badge when customer_id is null");
+  assert.ok(adminCardsCode.includes("<select") && adminCardsCode.includes("formData.customer_id"), "Dropdown selects customer in modal");
+});
+
+// ── 10. Accurate Draft Generation Event Tracking Verification ────────────────
+test("components/review/StandaloneReviewClient.jsx tracks draft generation accurately without preview inflation", () => {
+  const clientCode = fs.readFileSync(path.resolve("components/review/StandaloneReviewClient.jsx"), "utf-8");
+
+  assert.ok(
+    clientCode.includes("(customSeed = null, customLang = null, customStyle = null, shouldTrackEvent = true)"),
+    "handleGenerate accepts shouldTrackEvent parameter with default true"
+  );
+  assert.ok(
+    clientCode.includes("if (shouldTrackEvent) {\n          trackAnalyticsEvent(\"draft_generated\");\n        }") ||
+    clientCode.includes("if (shouldTrackEvent) {\r\n          trackAnalyticsEvent(\"draft_generated\");\r\n        }"),
+    "draft_generated event is guarded by shouldTrackEvent"
+  );
+  assert.ok(
+    clientCode.includes("handleGenerate(seed, newLang, style, false)"),
+    "handleLangChange passes shouldTrackEvent=false"
+  );
+  assert.ok(
+    clientCode.includes("handleGenerate(seed, lang, newStyle, false)"),
+    "handleStyleChange passes shouldTrackEvent=false"
+  );
+  assert.ok(
+    clientCode.includes("handleGenerate(newSeed, null, null, true)"),
+    "handleRegenerate explicitly passes shouldTrackEvent=true"
+  );
+  assert.ok(
+    clientCode.includes("trackAnalyticsEvent]") && clientCode.includes("[rating, selectedChipIds"),
+    "trackAnalyticsEvent is included in useCallback dependencies"
+  );
+});
+
 console.log(`\nAnalytics Test Results: ${passed} / ${total} passed.\n`);
 if (passed !== total) {
   process.exit(1);

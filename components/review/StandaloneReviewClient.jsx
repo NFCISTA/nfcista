@@ -217,7 +217,7 @@ export default function StandaloneReviewClient({ cardConfig }) {
 
   // ── Generate Review (100% Local Browser Execution) ──────────────────────
   const handleGenerate = useCallback(
-    (customSeed = null, customLang = null, customStyle = null) => {
+    (customSeed = null, customLang = null, customStyle = null, shouldTrackEvent = true) => {
       setCopyStatus("");
       setPopupBlocked(false);
 
@@ -242,7 +242,9 @@ export default function StandaloneReviewClient({ cardConfig }) {
 
       if (generated) {
         setDraft(generated);
-        trackAnalyticsEvent("draft_generated");
+        if (shouldTrackEvent) {
+          trackAnalyticsEvent("draft_generated");
+        }
         setSelectedClosingId("none");
         setAppliedClosingText("");
         if (customSeed !== null) {
@@ -250,28 +252,33 @@ export default function StandaloneReviewClient({ cardConfig }) {
         }
       }
     },
-    [rating, selectedChipIds, product, note, lang, style, seed]
+    [rating, selectedChipIds, product, note, lang, style, seed, trackAnalyticsEvent]
   );
 
   // Re-generate draft automatically when language or style changes (if draft already present)
+  // Re-generate draft when language changes; shouldTrackEvent=false so language
+  // previews do not inflate draft_generated counts
   function handleLangChange(newLang) {
     setLang(newLang);
     if (draft) {
-      handleGenerate(seed, newLang, style);
+      handleGenerate(seed, newLang, style, false);
     }
   }
 
+  // Re-generate draft when style changes; shouldTrackEvent=false so style
+  // previews do not inflate draft_generated counts
   function handleStyleChange(newStyle) {
     setStyle(newStyle);
     if (draft) {
-      handleGenerate(seed, lang, newStyle);
+      handleGenerate(seed, lang, newStyle, false);
     }
   }
 
   // ── Regenerate with new seed ────────────────────────────────────────────
+  // User-initiated manual regeneration: explicitly tracks the generation event
   function handleRegenerate() {
     const newSeed = Date.now() + Math.floor(Math.random() * 10000);
-    handleGenerate(newSeed);
+    handleGenerate(newSeed, null, null, true);
   }
 
   // ── Clipboard Copy Flow ─────────────────────────────────────────────────

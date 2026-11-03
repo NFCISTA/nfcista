@@ -5,6 +5,7 @@ import Link from "next/link";
 import Icon from "@/components/ui/Icon";
 import { generateCardCode } from "@/lib/dynamicQr";
 import { validateGoogleReviewUrl } from "@/lib/reviewCards";
+import { getAdminCustomers } from "@/lib/customers";
 
 const CATEGORIES = [
   { value: "retail", label: "Retail & Shopping" },
@@ -23,6 +24,7 @@ const CATEGORIES = [
 
 export default function AdminReviewCardsPage() {
   const [cards, setCards] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [migrationPending, setMigrationPending] = useState(false);
@@ -39,6 +41,7 @@ export default function AdminReviewCardsPage() {
     review_assistant_enabled: false, // Default FALSE
     is_active: true,
     notes: "",
+    customer_id: "",
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -73,6 +76,14 @@ export default function AdminReviewCardsPage() {
       } else {
         setCards(json.cards || []);
       }
+
+      // Fetch customers for assignment dropdown
+      try {
+        const custList = await getAdminCustomers();
+        setCustomers(custList || []);
+      } catch (custErr) {
+        console.warn("[admin-review-cards] Could not load customers:", custErr);
+      }
     } catch {
       setError("Network connection error. Please refresh the page.");
     } finally {
@@ -95,6 +106,7 @@ export default function AdminReviewCardsPage() {
       review_assistant_enabled: false, // Explicitly false
       is_active: true,
       notes: "",
+      customer_id: "",
     });
     setFormError("");
     setModalOpen(true);
@@ -111,6 +123,7 @@ export default function AdminReviewCardsPage() {
       review_assistant_enabled: Boolean(card.review_assistant_enabled),
       is_active: Boolean(card.is_active),
       notes: card.notes || "",
+      customer_id: card.customer_id || "",
     });
     setFormError("");
     setModalOpen(true);
@@ -131,9 +144,10 @@ export default function AdminReviewCardsPage() {
     setSubmitting(true);
     try {
       const method = editingCard ? "PATCH" : "POST";
+      const cleanCustomerId = formData.customer_id?.trim() || null;
       const payload = editingCard
-        ? { id: editingCard.id, ...formData, google_review_url: urlCheck.normalizedUrl }
-        : { ...formData, google_review_url: urlCheck.normalizedUrl };
+        ? { id: editingCard.id, ...formData, customer_id: cleanCustomerId, google_review_url: urlCheck.normalizedUrl }
+        : { ...formData, customer_id: cleanCustomerId, google_review_url: urlCheck.normalizedUrl };
 
       const res = await fetch("/api/admin/review-cards", {
         method,
@@ -364,6 +378,7 @@ export default function AdminReviewCardsPage() {
                 <tr className="bg-slate-50/75 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
                   <th className="py-3 px-4">Card Code</th>
                   <th className="py-3 px-4">Business Name &amp; Category</th>
+                  <th className="py-3 px-4">Assigned Customer</th>
                   <th className="py-3 px-4">Google Link</th>
                   <th className="py-3 px-4">Review Assistant</th>
                   <th className="py-3 px-4">Card Status</th>
@@ -397,6 +412,31 @@ export default function AdminReviewCardsPage() {
                     <td className="py-3 px-4">
                       <div className="font-semibold text-slate-900">{card.business_name}</div>
                       <div className="text-[11px] text-slate-400">{CATEGORIES.find((c) => c.value === card.category)?.label || card.category || "Retail"}</div>
+                    </td>
+
+                    {/* Assigned Customer Profile */}
+                    <td className="py-3 px-4">
+                      {(() => {
+                        const assignedCust = customers.find((c) => c.id === card.customer_id);
+                        if (assignedCust) {
+                          const displayName = assignedCust.company_name || assignedCust.full_name || "Linked Customer";
+                          return (
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-blue-700 truncate max-w-[150px]">
+                                {displayName}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                /p/{assignedCust.profile_slug}
+                              </span>
+                            </div>
+                          );
+                        }
+                        return (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                            Unassigned
+                          </span>
+                        );
+                      })()}
                     </td>
 
                     {/* Google Link */}
@@ -579,6 +619,31 @@ export default function AdminReviewCardsPage() {
                 </select>
                 <p className="text-[10px] text-slate-400">
                   Used by Review Assistant to load relevant industry experience tags.
+                </p>
+              </div>
+
+              {/* Assigned Customer (Optional) */}
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Assign to Customer Profile (Optional)
+                </label>
+                <select
+                  value={formData.customer_id}
+                  onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
+                  className="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:outline-none bg-white"
+                >
+                  <option value="">-- Unassigned (Standalone Card) --</option>
+                  {customers.map((cust) => {
+                    const name = cust.company_name ? `${cust.company_name} (${cust.full_name})` : cust.full_name;
+                    return (
+                      <option key={cust.id} value={cust.id}>
+                        {name} — /p/{cust.profile_slug}
+                      </option>
+                    );
+                  })}
+                </select>
+                <p className="text-[10px] text-slate-400">
+                  Links this card to a customer account so they can view its conversion analytics in their customer portal.
                 </p>
               </div>
 
