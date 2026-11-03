@@ -6,6 +6,11 @@ import Icon from "@/components/ui/Icon";
 import NfcistaLogo from "@/components/ui/NfcistaLogo";
 import { generateReview } from "@/lib/reviewGenerator";
 import { getCategoryChips } from "@/lib/reviewChips";
+import {
+  getClosingSuggestions,
+  applyClosingLine,
+  removeClosingLine,
+} from "@/lib/reviewClosingLines";
 
 /**
  * Languages supported by the natural language review engine.
@@ -52,6 +57,30 @@ const RATING_LABELS = {
  * - 48x48px touch targets for mobile thumbs.
  * - 3 separate actions: Copy & Open Google, Copy Draft Only, Open Google Without Text.
  */
+/**
+ * Display names for business categories.
+ */
+const CATEGORY_DISPLAY_NAMES = {
+  perfume: "Perfume Shop",
+  bags_footwear: "Bags & Footwear",
+  optical: "Optical Store",
+  clothing: "Clothing Store",
+  retail: "Retail & Shopping",
+  restaurant: "Restaurant & Cafe",
+  clinic: "Healthcare & Clinic",
+  salon: "Salon & Beauty",
+  fitness: "Gym & Fitness",
+  automotive: "Automotive & Repair",
+  services: "Professional Services",
+  hotel: "Hospitality & Hotel",
+  generic: "Local Business",
+};
+
+function getCategoryLabel(ind, cat) {
+  const key = (ind || cat || "").toLowerCase().trim();
+  return CATEGORY_DISPLAY_NAMES[key] || (ind || cat || "").replace(/_/g, " ");
+}
+
 export default function StandaloneReviewClient({ cardConfig }) {
   const {
     business_name: businessName,
@@ -82,8 +111,42 @@ export default function StandaloneReviewClient({ cardConfig }) {
   const [copyStatus, setCopyStatus] = useState(""); // "" | "copied" | "copied-fallback" | "failed"
   const [popupBlocked, setPopupBlocked] = useState(false);
   const [showAllChips, setShowAllChips] = useState(false);
+  const [selectedClosingId, setSelectedClosingId] = useState("none");
+  const [appliedClosingText, setAppliedClosingText] = useState("");
 
   const textareaRef = useRef(null);
+
+  // Closing suggestions based on rating, language, and seed
+  const closingSuggestions = useMemo(() => {
+    return getClosingSuggestions({ rating, lang, seed });
+  }, [rating, lang, seed]);
+
+  // Handle closing line selection
+  const handleSelectClosing = useCallback(
+    (closingId, closingText = "") => {
+      if (closingId === "none" || !closingText) {
+        if (appliedClosingText) {
+          setDraft((prev) => removeClosingLine(prev, appliedClosingText));
+        }
+        setSelectedClosingId("none");
+        setAppliedClosingText("");
+        return;
+      }
+
+      setDraft((prev) => applyClosingLine(prev, closingText, appliedClosingText));
+      setSelectedClosingId(closingId);
+      setAppliedClosingText(closingText);
+    },
+    [appliedClosingText]
+  );
+
+  function handleFocusDraftEnd() {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+      const len = textareaRef.current.value.length;
+      textareaRef.current.setSelectionRange(len, len);
+    }
+  }
 
   // ── Chip Toggle ─────────────────────────────────────────────────────────
   function toggleChip(chipId) {
@@ -132,6 +195,8 @@ export default function StandaloneReviewClient({ cardConfig }) {
 
       if (generated) {
         setDraft(generated);
+        setSelectedClosingId("none");
+        setAppliedClosingText("");
         if (customSeed !== null) {
           setSeed(activeSeed);
         }
@@ -242,7 +307,7 @@ export default function StandaloneReviewClient({ cardConfig }) {
               {businessName}
             </h1>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              {industry || category}
+              {getCategoryLabel(industry, category)}
             </p>
             <p className="text-sm text-slate-600 leading-relaxed pt-2">
               Thank you for visiting! Tap below to share your genuine experience directly on Google.
@@ -317,7 +382,7 @@ export default function StandaloneReviewClient({ cardConfig }) {
               {businessName}
             </h1>
             <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mt-1">
-              {industry || category}
+              {getCategoryLabel(industry, category)}
             </p>
           </div>
 
@@ -650,6 +715,87 @@ export default function StandaloneReviewClient({ cardConfig }) {
                   {draft.length} chars · {draft.trim().split(/\s+/).filter(Boolean).length} words
                 </span>
               </div>
+            </div>
+
+            {/* ─── Optional Closing Line Section ─── */}
+            <div className="pt-2.5 border-t border-slate-100 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-slate-800 tracking-tight">
+                  How would you like to end your review?
+                </label>
+                <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                  Optional
+                </span>
+              </div>
+
+              {/* Closing suggestions & 'No closing line' */}
+              <div
+                className="flex flex-wrap gap-2 pt-0.5"
+                role="group"
+                aria-label="How would you like to end your review?"
+              >
+                {/* No closing line button */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectClosing("none")}
+                  className={`min-h-[44px] sm:min-h-[40px] text-xs font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 ${
+                    selectedClosingId === "none"
+                      ? "bg-slate-800 text-white shadow-sm ring-1 ring-slate-800"
+                      : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/80"
+                  }`}
+                  aria-pressed={selectedClosingId === "none"}
+                >
+                  No closing line
+                </button>
+
+                {/* Suggestions */}
+                {closingSuggestions.map((sug) => {
+                  const isSelected = selectedClosingId === sug.id;
+                  return (
+                    <button
+                      key={sug.id}
+                      type="button"
+                      onClick={() => handleSelectClosing(sug.id, sug.text)}
+                      className={`min-h-[44px] sm:min-h-[40px] text-xs font-medium px-3.5 py-2 rounded-xl transition-all text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 ${
+                        isSelected
+                          ? "bg-blue-50 text-[#1D4ED8] font-semibold border-2 border-blue-600 shadow-sm"
+                          : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/80"
+                      }`}
+                      aria-pressed={isSelected}
+                    >
+                      {sug.text}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Active Selection Info & Edit/Remove Controls */}
+              {selectedClosingId !== "none" && appliedClosingText && (
+                <div className="flex items-center justify-between text-xs bg-blue-50/70 border border-blue-200/70 rounded-xl px-3 py-2 text-slate-700">
+                  <span className="truncate pr-2 text-slate-800">
+                    <strong className="font-semibold text-blue-900">Ending added:</strong> &ldquo;{appliedClosingText}&rdquo;
+                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleFocusDraftEnd}
+                      className="text-[#1D4ED8] font-semibold hover:underline cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded"
+                      title="Edit closing line in text"
+                    >
+                      Edit in text
+                    </button>
+                    <span className="text-slate-300">|</span>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectClosing("none")}
+                      className="text-slate-500 hover:text-red-600 font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 rounded"
+                      title="Remove closing line"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Status Feedback with aria-live and role */}

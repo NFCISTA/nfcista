@@ -15,6 +15,10 @@ const CATEGORIES = [
   { value: "automotive", label: "Automotive & Repair" },
   { value: "services", label: "Professional Services" },
   { value: "hotel", label: "Hospitality & Hotel" },
+  { value: "perfume", label: "Perfume Shop" },
+  { value: "bags_footwear", label: "Bags & Footwear" },
+  { value: "optical", label: "Optical Store" },
+  { value: "clothing", label: "Clothing Store" },
 ];
 
 export default function AdminReviewCardsPage() {
@@ -382,7 +386,7 @@ export default function AdminReviewCardsPage() {
                     {/* Business Name */}
                     <td className="py-3 px-4">
                       <div className="font-semibold text-slate-900">{card.business_name}</div>
-                      <div className="text-[11px] text-slate-400 capitalize">{card.category || "retail"}</div>
+                      <div className="text-[11px] text-slate-400">{CATEGORIES.find((c) => c.value === card.category)?.label || card.category || "Retail"}</div>
                     </td>
 
                     {/* Google Link */}
