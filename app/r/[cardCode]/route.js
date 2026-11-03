@@ -1,4 +1,5 @@
 import { getDynamicQrDestination, isValidCardCode } from "@/lib/dynamicQr";
+import { supabase } from "@/lib/supabaseClient";
 
 export const dynamic = "force-dynamic";
 
@@ -206,6 +207,17 @@ export async function GET(request, { params }) {
         "Cache-Control": "no-store",
       },
     });
+  }
+
+  // Record card_visit event asynchronously (non-blocking for hardware redirect performance)
+  if (supabase) {
+    supabase
+      .rpc("record_review_card_event", {
+        p_card_code: String(cardCode).trim().toUpperCase(),
+        p_event_type: "card_visit",
+      })
+      .then(() => {})
+      .catch(() => {});
   }
 
   return new Response(null, {

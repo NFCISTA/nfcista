@@ -82,6 +82,7 @@ export async function POST(request) {
       review_assistant_enabled = false, // Safeguard: Defaults to FALSE
       is_active = true,
       notes = null,
+      customer_id = null,
     } = body || {};
 
     // 1. Validate Card Code
@@ -123,6 +124,7 @@ export async function POST(request) {
       review_assistant_enabled: Boolean(review_assistant_enabled), // Explicit boolean
       is_active: Boolean(is_active),
       notes: notes ? String(notes).trim().slice(0, 500) : null,
+      customer_id: isValidUuid(customer_id) ? customer_id : null,
     };
 
     const { data: created, error } = await authClient
@@ -179,7 +181,7 @@ export async function PATCH(request) {
       return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
     }
 
-    const { id, card_code, business_name, category, google_review_url, review_assistant_enabled, is_active, notes } =
+    const { id, card_code, business_name, category, google_review_url, review_assistant_enabled, is_active, notes, customer_id } =
       body || {};
 
     if (!isValidUuid(id)) {
@@ -221,6 +223,10 @@ export async function PATCH(request) {
 
     if (notes !== undefined) {
       updatePayload.notes = notes ? String(notes).trim().slice(0, 500) : null;
+    }
+
+    if (customer_id !== undefined) {
+      updatePayload.customer_id = isValidUuid(customer_id) ? customer_id : null;
     }
 
     if (Object.keys(updatePayload).length === 0) {
