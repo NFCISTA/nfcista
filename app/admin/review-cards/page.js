@@ -244,14 +244,24 @@ export default function AdminReviewCardsPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-semibold shadow-xs transition-all"
-        >
-          <Icon name="Plus" size={16} />
-          <span>New Review Card</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <Link
+            href="/admin/analytics"
+            className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-xs transition-all"
+          >
+            <span className="material-symbols-outlined text-[16px] text-blue-600">insights</span>
+            <span>Analytics</span>
+          </Link>
+
+          <button
+            type="button"
+            onClick={handleOpenCreate}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-semibold shadow-xs transition-all"
+          >
+            <Icon name="Plus" size={16} />
+            <span>New Review Card</span>
+          </button>
+        </div>
       </div>
 
       {/* Migration Pending Notice */}

@@ -115,6 +115,53 @@ export default function StandaloneReviewClient({ cardConfig }) {
   const [appliedClosingText, setAppliedClosingText] = useState("");
 
   const textareaRef = useRef(null);
+  const recordedPageViewRef = useRef(false);
+
+  // Record analytics events with client-side deduplication
+  const trackAnalyticsEvent = useCallback(
+    (eventType) => {
+      if (!cardCode || typeof window === "undefined") return;
+
+      const payload = JSON.stringify({
+        card_code: cardCode,
+        event_type: eventType,
+      });
+
+      try {
+        if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+          const blob = new Blob([payload], { type: "application/json" });
+          navigator.sendBeacon("/api/analytics/record", blob);
+        } else {
+          fetch("/api/analytics/record", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: payload,
+            keepalive: true,
+          }).catch(() => {});
+        }
+      } catch {
+        // Analytics must never break user experience
+      }
+    },
+    [cardCode]
+  );
+
+  // 1. Record review pageview once per unique visit (guarded against React rerenders)
+  useEffect(() => {
+    if (recordedPageViewRef.current || !cardCode) return;
+
+    try {
+      const sessionKey = "nfcista_pv_" + cardCode;
+      if (sessionStorage.getItem(sessionKey)) {
+        recordedPageViewRef.current = true;
+        return;
+      }
+      sessionStorage.setItem(sessionKey, "1");
+    } catch {}
+
+    recordedPageViewRef.current = true;
+    trackAnalyticsEvent("page_view");
+  }, [cardCode, trackAnalyticsEvent]);
 
   // Closing suggestions based on rating, language, and seed
   const closingSuggestions = useMemo(() => {
@@ -195,6 +242,7 @@ export default function StandaloneReviewClient({ cardConfig }) {
 
       if (generated) {
         setDraft(generated);
+        trackAnalyticsEvent("draft_generated");
         setSelectedClosingId("none");
         setAppliedClosingText("");
         if (customSeed !== null) {
@@ -233,6 +281,7 @@ export default function StandaloneReviewClient({ cardConfig }) {
       if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(draft.trim());
         setCopyStatus("copied");
+        trackAnalyticsEvent("draft_copied");
         return true;
       }
       throw new Error("Clipboard API unavailable");
@@ -245,6 +294,7 @@ export default function StandaloneReviewClient({ cardConfig }) {
           const success = document.execCommand("copy");
           if (success) {
             setCopyStatus("copied-fallback");
+            trackAnalyticsEvent("draft_copied");
             return true;
           }
         } catch {}
@@ -256,6 +306,7 @@ export default function StandaloneReviewClient({ cardConfig }) {
 
   // ── Action 1: Copy & Open Google (Primary CTA) ──────────────────────────
   async function handleCopyAndLaunch() {
+    trackAnalyticsEvent("google_click");
     setPopupBlocked(false);
     await handleCopy();
 
@@ -274,6 +325,7 @@ export default function StandaloneReviewClient({ cardConfig }) {
 
   // ── Action 3: Open Google Without Text (Direct Bypass) ───────────────────
   function handleDirectLaunch() {
+    trackAnalyticsEvent("google_click");
     setPopupBlocked(false);
     if (googleUrl) {
       const win = window.open(googleUrl, "_blank", "noopener,noreferrer");

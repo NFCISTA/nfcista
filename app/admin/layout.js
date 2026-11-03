@@ -134,6 +134,7 @@ export default function AdminLayout({ children }) {
   const navLinks = [
     { href: "/admin", label: "Customers", icon: "badge" },
     { href: "/admin/review-cards", label: "Review Cards", icon: "rate_review" },
+    { href: "/admin/analytics", label: "Analytics", icon: "insights" },
     { href: "/admin/products", label: "Products", icon: "inventory_2" },
     { href: "/admin/gallery", label: "Gallery", icon: "photo_library" },
     { href: "/admin/inquiries", label: "Inquiries", icon: "mail" },

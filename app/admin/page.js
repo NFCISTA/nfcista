@@ -52,6 +52,7 @@ const initialFormData = {
   enquiry_delivery_email: false,
   enquiry_delivery_whatsapp: false,
   review_assistant_enabled: false,
+  analytics_enabled: false,
   profile_slug: "",
   is_active: true,
 };
@@ -2089,6 +2090,35 @@ export default function AdminCustomersDashboard() {
                 ) : (
                   <p className="text-[11px] text-slate-500 italic">Enquiry Form is currently disabled for this customer.</p>
                 )}
+              </div>
+
+              {/* Section: Customer Analytics Dashboard Access */}
+              <div className="space-y-4 pt-4 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-primary">insights</span>
+                    <div>
+                      <h3 className="text-label-sm font-bold uppercase tracking-wider text-on-surface">
+                        Review Assistant Analytics Access
+                      </h3>
+                      <p className="text-[11px] text-on-surface-variant">
+                        Allow this customer to view real-time conversion analytics for their assigned review cards in their portal.
+                      </p>
+                    </div>
+                  </div>
+
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(formData.analytics_enabled)}
+                      onChange={(e) =>
+                        setFormData({ ...formData, analytics_enabled: e.target.checked })
+                      }
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
+                  </label>
+                </div>
               </div>
 
 

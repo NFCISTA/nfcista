@@ -116,6 +116,9 @@ export default function CustomerDashboardLayout({ children }) {
     { href: "/dashboard", label: "My Profile", icon: "badge" },
     { href: "/dashboard/profile", label: "Edit Details", icon: "edit_note" },
     { href: "/dashboard/enquiries", label: "Enquiries", icon: "mail" },
+    ...(customer?.analytics_enabled
+      ? [{ href: "/dashboard/analytics", label: "Analytics", icon: "insights" }]
+      : []),
   ];
 
   return (
