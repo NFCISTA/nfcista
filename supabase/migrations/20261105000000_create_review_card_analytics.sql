@@ -106,7 +106,7 @@ CREATE OR REPLACE FUNCTION public.record_review_card_event(
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
 DECLARE
     v_clean_code TEXT;
