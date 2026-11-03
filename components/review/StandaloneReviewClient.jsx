@@ -81,6 +81,7 @@ export default function StandaloneReviewClient({ cardConfig }) {
   const [seed, setSeed] = useState(() => Date.now());
   const [copyStatus, setCopyStatus] = useState(""); // "" | "copied" | "copied-fallback" | "failed"
   const [popupBlocked, setPopupBlocked] = useState(false);
+  const [showAllChips, setShowAllChips] = useState(false);
 
   const textareaRef = useRef(null);
 
@@ -484,9 +485,14 @@ export default function StandaloneReviewClient({ cardConfig }) {
             </span>
           </div>
 
-          {/* Chips Grid: Display ONLY positive experience chips with visually consistent styling */}
+          {/* Chips Grid: Display positive experience chips with initial 8 + expand option */}
           <div className="flex flex-wrap gap-2.5 pt-1" role="group" aria-label="Experience tags">
-            {categoryChips.filter((c) => c.sentiment !== "negative").map((chip) => {
+            {(showAllChips
+              ? categoryChips.filter((c) => c.sentiment !== "negative")
+              : categoryChips
+                  .filter((c) => c.sentiment !== "negative")
+                  .filter((c, idx) => idx < 8 || selectedChipIds.includes(c.id))
+            ).map((chip) => {
               const isSelected = selectedChipIds.includes(chip.id);
 
               return (
@@ -512,6 +518,25 @@ export default function StandaloneReviewClient({ cardConfig }) {
               );
             })}
           </div>
+
+          {/* Expand/Collapse more chips toggle */}
+          {categoryChips.filter((c) => c.sentiment !== "negative").length > 8 && (
+            <div className="pt-0.5">
+              <button
+                type="button"
+                onClick={() => setShowAllChips((prev) => !prev)}
+                className="text-xs font-semibold text-[#1D4ED8] hover:text-[#1E40AF] py-1.5 px-3 rounded-full bg-blue-50/80 hover:bg-blue-100/80 border border-blue-200/60 transition-colors inline-flex items-center gap-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                aria-expanded={showAllChips}
+              >
+                <span>
+                  {showAllChips
+                    ? "Show fewer experiences"
+                    : `+ Show more experiences (${categoryChips.filter((c) => c.sentiment !== "negative").length - 8} more)`}
+                </span>
+                <Icon name={showAllChips ? "ChevronUp" : "ChevronDown"} size={13} />
+              </button>
+            </div>
+          )}
 
           {/* Optional Product / Specific Service Input */}
           <div className="space-y-1.5 pt-2">
@@ -542,7 +567,7 @@ export default function StandaloneReviewClient({ cardConfig }) {
             <input
               id="personal-note-input"
               type="text"
-              placeholder="e.g. Dr. Sharma was very gentle and explained everything clearly"
+              placeholder="Anything specific you would like to mention about your experience?"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className="min-h-[48px] w-full text-xs sm:text-sm px-4 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none transition-all"
@@ -597,6 +622,11 @@ export default function StandaloneReviewClient({ cardConfig }) {
                 <Icon name="RotateCw" size={12} />
               </button>
             </div>
+
+            {/* Customer transparency & review ownership notice */}
+            <p className="text-xs text-slate-600 bg-slate-50 border border-slate-200/80 rounded-2xl p-3 sm:p-3.5 leading-relaxed">
+              <strong className="text-slate-800 font-semibold">Your experience, your words.</strong> Please review and edit this draft so it accurately reflects your visit before posting.
+            </p>
 
             {/* Editable Textarea with Accessible Label */}
             <div className="space-y-1.5">
