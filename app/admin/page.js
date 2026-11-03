@@ -246,6 +246,7 @@ export default function AdminCustomersDashboard() {
         enquiry_delivery_email: Boolean(fullRecord.enquiry_delivery_email),
         enquiry_delivery_whatsapp: Boolean(fullRecord.enquiry_delivery_whatsapp),
         review_assistant_enabled: Boolean(fullRecord.review_assistant_enabled),
+        analytics_enabled: Boolean(fullRecord.analytics_enabled),
         profile_slug: fullRecord.profile_slug || "",
         is_active: fullRecord.is_active !== undefined ? fullRecord.is_active : true,
       });
@@ -1049,6 +1050,26 @@ export default function AdminCustomersDashboard() {
                       </Link>
                     )}
 
+                    {/* Share Dashboard Access Action */}
+                    <button
+                      type="button"
+                      onClick={() => handleOpenLoginModal(customer)}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                        customer.auth_user_id
+                          ? "border-primary/30 text-primary bg-primary/5 hover:bg-primary/10"
+                          : "border-outline-variant/30 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+                      }`}
+                      title={
+                        customer.auth_user_id
+                          ? "Share Dashboard Access"
+                          : "Share Dashboard Access (Create Login)"
+                      }
+                      aria-label="Share Dashboard Access"
+                    >
+                      <span className="material-symbols-outlined text-[15px]">share</span>
+                      <span>Share Access</span>
+                    </button>
+
                     <button
                       onClick={() => handleToggleStatus(customer)}
                       className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
@@ -1243,6 +1264,27 @@ export default function AdminCustomersDashboard() {
                               </span>
                             </Link>
                           )}
+
+                          {/* Share Dashboard Access Action */}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenLoginModal(customer)}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              customer.auth_user_id
+                                ? "text-primary hover:bg-surface-container-low"
+                                : "text-slate-400 hover:text-primary hover:bg-surface-container-low"
+                            }`}
+                            title={
+                              customer.auth_user_id
+                                ? "Share Dashboard Access"
+                                : "Share Dashboard Access (Create Login)"
+                            }
+                            aria-label="Share Dashboard Access"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">
+                              share
+                            </span>
+                          </button>
 
                           {/* Quick Toggle Active */}
                           <button
@@ -2244,6 +2286,44 @@ export default function AdminCustomersDashboard() {
                     </div>
                   </div>
 
+                  {/* Customer Analytics Dashboard Access */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30 space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[22px] text-primary">insights</span>
+                          <h3 className="text-label-md font-bold text-on-surface">
+                            Review Assistant Analytics Access
+                          </h3>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                              formData.analytics_enabled
+                                ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                : "bg-slate-100 text-slate-600 border border-slate-200"
+                            }`}
+                          >
+                            {formData.analytics_enabled ? "Enabled" : "Disabled"}
+                          </span>
+                        </div>
+                        <p className="text-body-sm text-on-surface-variant leading-relaxed">
+                          Allow this customer to view real-time conversion analytics for their assigned review cards in their customer portal dashboard (<span className="font-mono text-primary font-semibold">/dashboard/analytics</span>).
+                        </p>
+                      </div>
+
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(formData.analytics_enabled)}
+                          onChange={(e) =>
+                            setFormData({ ...formData, analytics_enabled: e.target.checked })
+                          }
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
+                      </label>
+                    </div>
+                  </div>
+
                   {/* Status of Google Review URL */}
                   {!formData.google_review_url?.trim() ? (
                     <div className="p-4 bg-amber-50 border border-amber-200/70 rounded-2xl text-xs space-y-1.5 text-amber-900">
@@ -2393,9 +2473,9 @@ export default function AdminCustomersDashboard() {
       {/* ============================================================================== */}
       {loginModalCustomer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-float flex flex-col max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-md bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-float flex flex-col max-h-[90vh] overflow-hidden">
             {/* Header */}
-            <div className="px-5 pt-5 pb-4 border-b border-outline-variant/20 flex items-center justify-between sticky top-0 bg-surface-container-lowest z-10">
+            <div className="px-5 pt-5 pb-4 border-b border-outline-variant/20 flex items-center justify-between shrink-0 bg-surface-container-lowest">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                   <span className="material-symbols-outlined text-[20px]">key</span>
@@ -2417,7 +2497,7 @@ export default function AdminCustomersDashboard() {
               </button>
             </div>
 
-            <div className="p-5 space-y-4">
+            <div className="p-5 space-y-4 flex-1 min-h-0 overflow-y-auto">
 
               {/* ── EXISTING LOGIN: Status + Management Actions ── */}
               {loginModalCustomer.auth_user_id && !createdCredentials && (
@@ -2476,6 +2556,28 @@ export default function AdminCustomersDashboard() {
                       <p className="text-[10px] opacity-60 pt-0.5 border-t border-current/10">
                         Customer login status is independent of their public profile visibility.
                       </p>
+                      <div className="pt-2 border-t border-current/10 flex items-center justify-between gap-2">
+                        <span className="text-[11px] font-medium opacity-90 truncate">
+                          Portal: <span className="font-mono">/login</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const portalUrl = typeof window !== "undefined" ? `${window.location.origin}/login` : "https://nfcista.vercel.app/login";
+                            navigator.clipboard.writeText(portalUrl).then(() => {
+                              setCopiedActionLink(true);
+                              setTimeout(() => setCopiedActionLink(false), 2000);
+                            });
+                          }}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold underline hover:opacity-80 cursor-pointer shrink-0"
+                          title="Copy Customer Portal URL to clipboard"
+                        >
+                          <span className="material-symbols-outlined text-[13px]">
+                            {copiedActionLink ? "check" : "content_copy"}
+                          </span>
+                          <span>{copiedActionLink ? "Copied!" : "Copy Portal URL"}</span>
+                        </button>
+                      </div>
                     </div>
                   )}
 
