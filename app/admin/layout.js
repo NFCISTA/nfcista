@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
@@ -12,6 +12,63 @@ export default function AdminLayout({ children }) {
   const [loading, setLoading] = useState(true);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Horizontal scroll state & controls for top navigation
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [showControls, setShowControls] = useState(false);
+  const navRef = useRef(null);
+
+  const updateScrollState = useCallback(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const hasOverflow = el.scrollWidth > el.clientWidth + 2;
+    setShowControls(hasOverflow);
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    updateScrollState();
+    const el = navRef.current;
+    if (!el) return;
+
+    let resizeObserver;
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => {
+        updateScrollState();
+      });
+      resizeObserver.observe(el);
+    }
+    window.addEventListener("resize", updateScrollState);
+
+    return () => {
+      if (resizeObserver) resizeObserver.disconnect();
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [updateScrollState]);
+
+  useEffect(() => {
+    if (navRef.current) {
+      const activeLink = navRef.current.querySelector('a[data-active="true"]');
+      if (activeLink) {
+        activeLink.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "nearest",
+        });
+      }
+    }
+    updateScrollState();
+  }, [pathname, updateScrollState]);
+
+  const handleScroll = (direction) => {
+    const el = navRef.current;
+    if (!el) return;
+    const scrollAmount = direction === "left" ? -260 : 260;
+    el.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    setTimeout(updateScrollState, 350);
+  };
 
   // The login page manages its own unauthenticated state
   const isLoginPage = pathname === "/admin/login";
@@ -195,9 +252,29 @@ export default function AdminLayout({ children }) {
 
         {/* Tier 2: Dedicated Navigation Tab Strip (Never wraps or overlaps) */}
         <div className="border-t border-outline-variant/20 bg-surface-container-lowest/80 backdrop-blur">
-          <div className="max-w-6xl mx-auto px-2 sm:px-6">
+          <div className="max-w-6xl mx-auto px-2 sm:px-4 flex items-center gap-1 sm:gap-2">
+            {/* Left Scroll Control */}
+            {showControls && (
+              <button
+                type="button"
+                onClick={() => handleScroll("left")}
+                disabled={!canScrollLeft}
+                className={`w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center rounded-lg border border-outline-variant/30 text-on-surface bg-surface-container-lowest hover:bg-surface-container-low transition-all active:scale-95 ${
+                  !canScrollLeft
+                    ? "opacity-25 cursor-not-allowed text-on-surface-variant/40"
+                    : "shadow-xs hover:border-outline-variant/60 cursor-pointer"
+                }`}
+                aria-label="Scroll navigation left"
+                title="Scroll left"
+              >
+                <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+              </button>
+            )}
+
             <nav
-              className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-2"
+              ref={navRef}
+              onScroll={updateScrollState}
+              className="flex-1 min-w-0 flex items-center gap-1 sm:gap-1.5 overflow-x-auto scroll-smooth py-2 admin-nav-scrollbar"
               aria-label="Admin Navigation Tabs"
             >
               {navLinks.map((link) => {
@@ -206,6 +283,7 @@ export default function AdminLayout({ children }) {
                   <Link
                     key={link.href}
                     href={link.href}
+                    data-active={isActive ? "true" : "false"}
                     className={`whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all shrink-0 ${
                       isActive
                         ? "bg-primary text-white shadow-xs font-bold"
@@ -220,6 +298,24 @@ export default function AdminLayout({ children }) {
                 );
               })}
             </nav>
+
+            {/* Right Scroll Control */}
+            {showControls && (
+              <button
+                type="button"
+                onClick={() => handleScroll("right")}
+                disabled={!canScrollRight}
+                className={`w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center rounded-lg border border-outline-variant/30 text-on-surface bg-surface-container-lowest hover:bg-surface-container-low transition-all active:scale-95 ${
+                  !canScrollRight
+                    ? "opacity-25 cursor-not-allowed text-on-surface-variant/40"
+                    : "shadow-xs hover:border-outline-variant/60 cursor-pointer"
+                }`}
+                aria-label="Scroll navigation right"
+                title="Scroll right"
+              >
+                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+              </button>
+            )}
           </div>
         </div>
 
