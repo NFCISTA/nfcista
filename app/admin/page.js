@@ -2338,6 +2338,7 @@ export default function AdminCustomersDashboard() {
                 items={galleryItems}
                 setItems={setGalleryItems}
                 customerWhatsApp={formData.whatsapp}
+                profileSlug={formData.profile_slug}
               />
 
               {/* Section: Enquiry Form & Delivery Settings */}

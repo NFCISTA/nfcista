@@ -161,7 +161,15 @@ assert(
   adminGalleryCode.includes("External Link"),
   "Admin CustomerGallerySection must label external links clearly in item rows"
 );
-console.log("  ✅ PASS: Admin CustomerGallerySection allows administrators to manage external links.");
+assert(
+  adminGalleryCode.includes("External Portfolio Links"),
+  "Admin CustomerGallerySection must contain dedicated 'External Portfolio Links' section heading"
+);
+assert(
+  adminGalleryCode.includes("externalLinkItems") && adminGalleryCode.includes("mediaItems"),
+  "Admin CustomerGallerySection must partition items into mediaItems and externalLinkItems"
+);
+console.log("  ✅ PASS: Admin CustomerGallerySection allows administrators to manage external links with a dedicated visual section.");
 
 // 7. API Routes Security & Defensive Fallbacks
 console.log("\n7. Checking API Security & Backward-Compatibility Fallback...");

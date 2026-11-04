@@ -25,6 +25,7 @@ export default function CustomerGallerySection({
   items,
   setItems,
   customerWhatsApp,
+  profileSlug,
 }) {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null); // null = adding, number = editing index
@@ -428,6 +429,13 @@ export default function CustomerGallerySection({
   // Render
   // ---------------------------------------------------------------------------
 
+  const mediaItems = items.filter(
+    (i) => !i.is_external_link && i.category !== "external_link"
+  );
+  const externalLinkItems = items.filter(
+    (i) => i.is_external_link || i.category === "external_link"
+  );
+
   return (
     <div
       className="space-y-4 pt-3 border-t border-outline-variant/20"
@@ -449,10 +457,10 @@ export default function CustomerGallerySection({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
         <div className="flex items-center gap-2 text-label-sm font-bold uppercase tracking-wider text-primary">
           <span className="material-symbols-outlined text-[18px]">collections_bookmark</span>
-          <span>Portfolio &amp; Products</span>
-          {items.length > 0 && (
+          <span>Products &amp; Portfolio Showcase</span>
+          {mediaItems.length > 0 && (
             <span className="text-[11px] font-semibold text-tertiary lowercase bg-surface-container-low px-2 py-0.5 rounded-full">
-              {items.length} {items.length === 1 ? "item" : "items"}
+              {mediaItems.length} {mediaItems.length === 1 ? "item" : "items"}
             </span>
           )}
         </div>
@@ -474,15 +482,7 @@ export default function CustomerGallerySection({
               className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/40 hover:bg-surface-container-low text-on-surface text-label-sm font-semibold transition-colors active:scale-[0.98] flex-1 sm:flex-none"
             >
               <span className="material-symbols-outlined text-[16px]">add</span>
-              <span>Add Portfolio</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => openAddItem("external_link")}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/40 hover:bg-surface-container-low text-primary text-label-sm font-semibold transition-colors active:scale-[0.98] flex-1 sm:flex-none"
-            >
-              <span className="material-symbols-outlined text-[16px]">add_link</span>
-              <span>Add External Link</span>
+              <span>Add Portfolio Project</span>
             </button>
           </div>
         )}
@@ -870,23 +870,24 @@ export default function CustomerGallerySection({
       )}
 
       {/* ---------------------------------------------------------------------- */}
-      {/* GALLERY ITEMS LIST (Cards / Rows)                                      */}
+      {/* PRODUCTS & PORTFOLIO PROJECTS LIST                                     */}
       {/* ---------------------------------------------------------------------- */}
-      {items.length === 0 && !isEditorOpen ? (
-        <div className="p-5 rounded-xl border border-dashed border-outline-variant/40 bg-surface-container-low/20 text-center space-y-1.5">
-          <span className="material-symbols-outlined text-[28px] text-outline">
+      {mediaItems.length === 0 && !isEditorOpen ? (
+        <div className="p-4 sm:p-5 rounded-xl border border-dashed border-outline-variant/40 bg-surface-container-low/20 text-center space-y-1.5">
+          <span className="material-symbols-outlined text-[26px] text-outline">
             collections
           </span>
           <p className="text-body-sm font-medium text-on-surface">
-            No portfolio or product items yet
+            No products or portfolio projects yet
           </p>
-          <p className="text-[12px] text-tertiary max-w-sm mx-auto">
+          <p className="text-[11.5px] text-tertiary max-w-sm mx-auto">
             Add products, services, or portfolio projects to showcase work on this customer&apos;s digital business card.
           </p>
         </div>
       ) : (
         <div className="space-y-2.5">
-          {items.map((item, idx) => {
+          {mediaItems.map((item, mIdx) => {
+            const origIdx = items.indexOf(item);
             const hasImages = item.images && item.images.length > 0;
             const hasPendingPreviews = item.pendingPreviews && item.pendingPreviews.length > 0;
             const thumbUrl = hasImages
@@ -897,7 +898,7 @@ export default function CustomerGallerySection({
 
             return (
               <div
-                key={item.id || item.tempId || idx}
+                key={item.id || item.tempId || origIdx}
                 className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/30 hover:border-outline-variant/60 transition-all shadow-xs"
               >
                 {/* Details & Thumbnail */}
@@ -912,11 +913,7 @@ export default function CustomerGallerySection({
                       />
                     ) : (
                       <span className="material-symbols-outlined text-[22px] text-outline">
-                        {item.is_external_link || item.category === "external_link"
-                          ? "language"
-                          : item.type === "product"
-                          ? "inventory_2"
-                          : "collections"}
+                        {item.type === "product" ? "inventory_2" : "collections"}
                       </span>
                     )}
                     {/* Badge for multiple images */}
@@ -932,18 +929,12 @@ export default function CustomerGallerySection({
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span
                         className={`text-[9px] font-bold uppercase px-1.5 py-0.2 rounded ${
-                          item.is_external_link || item.category === "external_link"
-                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                            : item.type === "product"
+                          item.type === "product"
                             ? "bg-blue-100 text-blue-800"
                             : "bg-purple-100 text-purple-800"
                         }`}
                       >
-                        {item.is_external_link || item.category === "external_link"
-                          ? "External Link"
-                          : item.type === "product"
-                          ? "Product"
-                          : "Portfolio"}
+                        {item.type === "product" ? "Product" : "Portfolio"}
                       </span>
                       <h4 className="text-label-sm font-bold text-on-surface truncate">
                         {item.title}
@@ -954,12 +945,7 @@ export default function CustomerGallerySection({
                       {item.type === "product" && item.price && (
                         <span className="font-semibold text-primary">{item.price}</span>
                       )}
-                      {(item.is_external_link || item.category === "external_link") && (item.domain || item.external_url) && (
-                        <span className="font-mono text-primary text-[10.5px] truncate max-w-xs">
-                          {item.domain || item.external_url}
-                        </span>
-                      )}
-                      {item.category && item.category !== "external_link" && <span>{item.category}</span>}
+                      {item.category && <span>{item.category}</span>}
                       {item.whatsapp_enabled && (
                         <span className="inline-flex items-center gap-0.5 text-emerald-700 font-medium">
                           <span className="material-symbols-outlined text-[12px]">chat</span>
@@ -975,7 +961,7 @@ export default function CustomerGallerySection({
                   {/* Status Pill */}
                   <button
                     type="button"
-                    onClick={() => handleToggleActive(idx)}
+                    onClick={() => handleToggleActive(origIdx)}
                     className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors shrink-0 ${
                       item.is_active
                         ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
@@ -990,8 +976,8 @@ export default function CustomerGallerySection({
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       type="button"
-                      disabled={idx === 0}
-                      onClick={() => handleMove(idx, "up")}
+                      disabled={mIdx === 0}
+                      onClick={() => handleMove(origIdx, "up")}
                       className="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low disabled:opacity-30 disabled:pointer-events-none"
                       title="Move up"
                     >
@@ -999,8 +985,8 @@ export default function CustomerGallerySection({
                     </button>
                     <button
                       type="button"
-                      disabled={idx === items.length - 1}
-                      onClick={() => handleMove(idx, "down")}
+                      disabled={mIdx === mediaItems.length - 1}
+                      onClick={() => handleMove(origIdx, "down")}
                       className="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low disabled:opacity-30 disabled:pointer-events-none"
                       title="Move down"
                     >
@@ -1008,7 +994,7 @@ export default function CustomerGallerySection({
                     </button>
                     <button
                       type="button"
-                      onClick={() => openEditItem(idx)}
+                      onClick={() => openEditItem(origIdx)}
                       className="p-1.5 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
                       title="Edit item"
                     >
@@ -1016,7 +1002,7 @@ export default function CustomerGallerySection({
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDeleteItem(idx)}
+                      onClick={() => handleDeleteItem(origIdx)}
                       className="p-1.5 rounded-lg text-on-surface-variant hover:text-error hover:bg-error-container/30"
                       title="Delete item"
                     >
@@ -1029,6 +1015,173 @@ export default function CustomerGallerySection({
           })}
         </div>
       )}
+
+      {/* ---------------------------------------------------------------------- */}
+      {/* ── DEDICATED SECTION: EXTERNAL PORTFOLIO LINKS                         */}
+      {/* ---------------------------------------------------------------------- */}
+      <div className="pt-5 border-t border-outline-variant/30 space-y-3.5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[20px] text-primary">link</span>
+              <h3 className="text-label-sm font-bold uppercase tracking-wider text-primary">
+                External Portfolio Links
+              </h3>
+              <span className="text-[11px] font-semibold text-tertiary lowercase bg-surface-container-low px-2 py-0.5 rounded-full">
+                {externalLinkItems.length} {externalLinkItems.length === 1 ? "link" : "links"}
+              </span>
+            </div>
+            <p className="text-[11.5px] text-on-surface-variant mt-0.5">
+              Add external showcase links (Behance, Dribbble, GitHub, ArtStation, YouTube, or custom websites). Visitors can preview them via dedicated NFCISTA preview pages.
+            </p>
+          </div>
+
+          {!isEditorOpen && (
+            <button
+              type="button"
+              onClick={() => openAddItem("external_link")}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-label-sm font-semibold transition-colors active:scale-[0.98] self-start sm:self-auto shrink-0"
+            >
+              <span className="material-symbols-outlined text-[16px]">add_link</span>
+              <span>Add External Link</span>
+            </button>
+          )}
+        </div>
+
+        {/* Links list or Empty State */}
+        {externalLinkItems.length === 0 ? (
+          <div className="p-5 rounded-xl border border-dashed border-outline-variant/40 bg-surface-container-low/20 text-center space-y-1.5">
+            <span className="material-symbols-outlined text-[26px] text-outline">link_off</span>
+            <p className="text-body-sm font-medium text-on-surface">No external portfolio links yet</p>
+            <p className="text-[11px] text-tertiary max-w-sm mx-auto">
+              Add links to Behance, GitHub, Dribbble, YouTube, or your custom portfolio site.
+            </p>
+            {!isEditorOpen && (
+              <button
+                type="button"
+                onClick={() => openAddItem("external_link")}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-primary/40 text-primary text-label-sm font-semibold hover:bg-primary/5 transition-colors cursor-pointer mt-1"
+              >
+                <span className="material-symbols-outlined text-[14px]">add_link</span>
+                <span>Add First Link</span>
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {externalLinkItems.map((item, eIdx) => {
+              const origIdx = items.indexOf(item);
+              const domain = item.domain || (item.external_url ? getDomainFromUrl(item.external_url) : null);
+              const previewHref = profileSlug && item.id
+                ? `/p/${encodeURIComponent(profileSlug)}/portfolio/${item.id}`
+                : null;
+
+              return (
+                <div
+                  key={item.id || item.tempId || origIdx}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/30 hover:border-outline-variant/60 transition-all shadow-xs"
+                >
+                  {/* Details */}
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-12 h-12 rounded-lg bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[22px]">language</span>
+                    </div>
+
+                    <div className="flex-1 min-w-0 space-y-0.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[9px] font-bold uppercase px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          External Link
+                        </span>
+                        <h4 className="text-label-sm font-bold text-on-surface truncate">
+                          {item.title}
+                        </h4>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-[11px] text-on-surface-variant flex-wrap">
+                        {domain && (
+                          <span className="font-mono text-primary font-semibold text-[10.5px] truncate max-w-xs">
+                            {domain}
+                          </span>
+                        )}
+                        {item.external_url && (
+                          <span className="font-mono text-tertiary text-[10px] truncate max-w-xs select-all">
+                            {item.external_url}
+                          </span>
+                        )}
+                        {previewHref && (
+                          <a
+                            href={previewHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-0.5 text-primary text-[10.5px] font-medium hover:underline ml-1"
+                            title="Open preview page"
+                          >
+                            <span>Preview</span>
+                            <span className="material-symbols-outlined text-[12px]">open_in_new</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Controls */}
+                  <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-outline-variant/20 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleActive(origIdx)}
+                      className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors shrink-0 ${
+                        item.is_active
+                          ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }`}
+                      title="Click to toggle visibility"
+                    >
+                      {item.is_active ? "Active" : "Hidden"}
+                    </button>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        disabled={eIdx === 0}
+                        onClick={() => handleMove(origIdx, "up")}
+                        className="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low disabled:opacity-30 disabled:pointer-events-none"
+                        title="Move up"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">arrow_upward</span>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={eIdx === externalLinkItems.length - 1}
+                        onClick={() => handleMove(origIdx, "down")}
+                        className="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low disabled:opacity-30 disabled:pointer-events-none"
+                        title="Move down"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">arrow_downward</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openEditItem(origIdx)}
+                        className="p-1.5 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
+                        title="Edit link"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteItem(origIdx)}
+                        className="p-1.5 rounded-lg text-on-surface-variant hover:text-error hover:bg-error-container/30"
+                        title="Delete link"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
