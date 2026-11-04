@@ -1106,9 +1106,9 @@ export default function AdminCustomersDashboard() {
 
             {/* Desktop Table (hidden md:block) */}
             <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse min-w-[1000px]">
                 <thead>
-                  <tr className="border-b border-outline-variant/20 bg-surface-container-low/40 text-[11px] uppercase tracking-wider text-tertiary font-semibold">
+                  <tr className="border-b border-outline-variant/20 bg-surface-container-low/40 text-[11px] uppercase tracking-wider text-tertiary font-semibold whitespace-nowrap">
                     <th className="py-3.5 px-4 sm:px-6">Customer</th>
                     <th className="py-3.5 px-4">Company &amp; Title</th>
                     <th className="py-3.5 px-4">Slug &amp; URL</th>
@@ -1125,7 +1125,7 @@ export default function AdminCustomersDashboard() {
                       className="hover:bg-surface-container-low/30 transition-colors"
                     >
                       {/* Full Name & Avatar */}
-                      <td className="py-3.5 px-4 sm:px-6">
+                      <td className="py-3.5 px-4 sm:px-6 whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-surface-container-low border border-outline-variant/30 flex items-center justify-center overflow-hidden shrink-0">
                             {customer.photo_url ? (
@@ -1154,7 +1154,7 @@ export default function AdminCustomersDashboard() {
                       </td>
 
                       {/* Company & Job Title */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         {customer.company_name ? (
                           <>
                             <div className="font-medium text-on-surface truncate max-w-[160px]">
@@ -1176,14 +1176,14 @@ export default function AdminCustomersDashboard() {
                       </td>
 
                       {/* Profile Slug & Link */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <div className="inline-flex items-center gap-1 font-mono text-[12px] bg-surface-container-low px-2 py-0.5 rounded border border-outline-variant/20 text-on-surface">
                           <span>/p/{customer.profile_slug}</span>
                         </div>
                       </td>
 
                       {/* Active/Inactive Status Pill */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <span
                           className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${
                             customer.is_active
@@ -1201,7 +1201,7 @@ export default function AdminCustomersDashboard() {
                       </td>
 
                       {/* Portal Login Column */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         {customer.auth_user_id ? (
                           <div className="space-y-0.5">
                             <button
@@ -1241,14 +1241,14 @@ export default function AdminCustomersDashboard() {
                       </td>
 
                       {/* Created Date */}
-                      <td className="py-3.5 px-4 hidden md:table-cell text-[12px] text-on-surface-variant">
+                      <td className="py-3.5 px-4 hidden md:table-cell text-[12px] text-on-surface-variant whitespace-nowrap">
                         {customer.created_at
                           ? new Date(customer.created_at).toLocaleDateString()
                           : "—"}
                       </td>
 
                       {/* Actions Column */}
-                      <td className="py-3.5 px-4 sm:px-6 text-right">
+                      <td className="py-3.5 px-4 sm:px-6 text-right whitespace-nowrap">
                         <div className="inline-flex items-center gap-1 justify-end">
                           {/* View Public Profile (Active only) */}
                           {customer.is_active && (
