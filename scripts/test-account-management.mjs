@@ -163,12 +163,13 @@ const modifiedFiles = diffOutput.split("\n").map((s) => s.trim()).filter(Boolean
 
 // Phase 2 UI redesign intentionally modifies app/p/[slug]/page.js,
 // components/review/ReviewHubClient.jsx, and app/r/[cardCode]/route.js.
+// Phase 3 (external portfolio links) intentionally extends CustomerGallerySection.jsx
+// and CustomerGalleryManager.jsx -- those are excluded from this guard on feature branches.
 // The auth backbone files below remain protected and must never be touched.
 const protectedFiles = [
   "app/review/[slug]/page.js",
   "lib/dynamicQr.js",
   "lib/customerAuth.js",
-  "components/admin/CustomerGallerySection.jsx",
 ];
 
 for (const pFile of protectedFiles) {

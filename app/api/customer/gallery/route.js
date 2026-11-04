@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { authenticateCustomer } from "@/lib/customerAuth";
 import { isValidHttpUrl } from "@/lib/customers";
+import { getDomainFromUrl, isSafeHttpUrl } from "@/lib/gallery";
 import { revalidateCustomerProfile } from "@/lib/revalidateProfile";
 
 export const dynamic = "force-dynamic";
@@ -60,10 +61,18 @@ export async function GET(request) {
       }
     }
 
-    const itemsWithImages = (items || []).map((item) => ({
-      ...item,
-      images: imagesByItem[item.id] || [],
-    }));
+    const itemsWithImages = (items || []).map((item) => {
+      const isExt =
+        item.is_external_link !== undefined
+          ? Boolean(item.is_external_link)
+          : Boolean(item.category === "external_link");
+      return {
+        ...item,
+        is_external_link: isExt,
+        domain: item.external_url ? getDomainFromUrl(item.external_url) : null,
+        images: imagesByItem[item.id] || [],
+      };
+    });
 
     return NextResponse.json({ items: itemsWithImages });
   } catch (err) {
@@ -94,7 +103,10 @@ export async function POST(request) {
       is_active,
       display_order,
       image_urls,
+      is_external_link,
     } = body || {};
+
+    const isExternal = Boolean(is_external_link || category === "external_link");
 
     // 1. Validation
     if (!type || !["portfolio", "product"].includes(type)) {
@@ -125,7 +137,9 @@ export async function POST(request) {
       );
     }
 
-    const cleanCategory = category ? category.trim() : null;
+    const cleanCategory = isExternal
+      ? (category?.trim() || "external_link")
+      : (category ? category.trim() : null);
     if (cleanCategory && cleanCategory.length > 50) {
       return NextResponse.json(
         { error: "Category must be 50 characters or less." },
@@ -135,13 +149,20 @@ export async function POST(request) {
 
     let cleanUrl = null;
     if (external_url && external_url.trim()) {
-      if (!isValidHttpUrl(external_url.trim())) {
+      if (!isSafeHttpUrl(external_url.trim()) || !isValidHttpUrl(external_url.trim())) {
         return NextResponse.json(
           { error: "External URL must be a valid HTTP or HTTPS URL." },
           { status: 400 }
         );
       }
       cleanUrl = external_url.trim();
+    }
+
+    if (isExternal && !cleanUrl) {
+      return NextResponse.json(
+        { error: "A valid HTTP or HTTPS destination URL is required for external portfolio links." },
+        { status: 400 }
+      );
     }
 
     const cleanCta = cta_text ? cta_text.trim() : null;
@@ -168,27 +189,49 @@ export async function POST(request) {
     }
 
     // 2. Insert item into gallery_items
-    const { data: newItem, error: insertErr } = await authClient
+    const insertPayload = {
+      customer_id: customer.id,
+      type,
+      title: cleanTitle,
+      description: cleanDesc,
+      price: type === "product" ? cleanPrice : null,
+      category: cleanCategory,
+      external_url: cleanUrl,
+      cta_text: cleanCta,
+      whatsapp_enabled: Boolean(whatsapp_enabled),
+      is_active: is_active !== undefined ? Boolean(is_active) : true,
+      display_order: orderVal,
+      is_external_link: isExternal,
+    };
+
+    let newItem;
+    const { data: inserted, error: insertErr } = await authClient
       .from("gallery_items")
-      .insert({
-        customer_id: customer.id,
-        type,
-        title: cleanTitle,
-        description: cleanDesc,
-        price: type === "product" ? cleanPrice : null,
-        category: cleanCategory,
-        external_url: cleanUrl,
-        cta_text: cleanCta,
-        whatsapp_enabled: Boolean(whatsapp_enabled),
-        is_active: is_active !== undefined ? Boolean(is_active) : true,
-        display_order: orderVal,
-      })
+      .insert(insertPayload)
       .select()
       .single();
 
     if (insertErr) {
-      console.error("[customer/gallery] Error creating item:", insertErr.message);
-      return NextResponse.json({ error: "Failed to create gallery item. Please try again." }, { status: 500 });
+      // Defensive fallback if is_external_link column has not been migrated on remote DB
+      if (insertErr.message?.includes("is_external_link") || insertErr.code === "42703") {
+        delete insertPayload.is_external_link;
+        const retry = await authClient
+          .from("gallery_items")
+          .insert(insertPayload)
+          .select()
+          .single();
+
+        if (retry.error) {
+          console.error("[customer/gallery] Error creating item (retry):", retry.error.message);
+          return NextResponse.json({ error: "Failed to create gallery item. Please try again." }, { status: 500 });
+        }
+        newItem = { ...retry.data, is_external_link: isExternal };
+      } else {
+        console.error("[customer/gallery] Error creating item:", insertErr.message);
+        return NextResponse.json({ error: "Failed to create gallery item. Please try again." }, { status: 500 });
+      }
+    } else {
+      newItem = { ...inserted, is_external_link: isExternal };
     }
 
     // 3. Insert optional initial image URLs
@@ -256,6 +299,7 @@ export async function PUT(request) {
       whatsapp_enabled,
       is_active,
       display_order,
+      is_external_link,
     } = body || {};
 
     if (!isValidUuid(itemId)) {
@@ -265,7 +309,7 @@ export async function PUT(request) {
     // Verify item belongs to this customer
     const { data: existing, error: findErr } = await authClient
       .from("gallery_items")
-      .select("id, customer_id")
+      .select("id, customer_id, category, external_url, type")
       .eq("id", itemId)
       .eq("customer_id", customer.id)
       .maybeSingle();
@@ -317,7 +361,7 @@ export async function PUT(request) {
 
     if (external_url !== undefined) {
       if (external_url && external_url.trim()) {
-        if (!isValidHttpUrl(external_url.trim())) {
+        if (!isSafeHttpUrl(external_url.trim()) || !isValidHttpUrl(external_url.trim())) {
           return NextResponse.json({ error: "External URL must be a valid HTTP or HTTPS URL." }, { status: 400 });
         }
         updates.external_url = external_url.trim();
@@ -346,6 +390,33 @@ export async function PUT(request) {
       updates.display_order = display_order;
     }
 
+    if (is_external_link !== undefined) {
+      updates.is_external_link = Boolean(is_external_link);
+      if (updates.is_external_link && !updates.category && !existing.category) {
+        updates.category = "external_link";
+      }
+    }
+
+    const willBeExternal =
+      updates.is_external_link !== undefined
+        ? updates.is_external_link
+        : (updates.category === "external_link" || (existing.category === "external_link" && updates.category === undefined));
+
+    if (willBeExternal) {
+      const finalUrl = updates.external_url !== undefined ? updates.external_url : existing.external_url;
+      if (!finalUrl || !isSafeHttpUrl(finalUrl)) {
+        return NextResponse.json(
+          { error: "A valid HTTP or HTTPS destination URL is required for external portfolio links." },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "No fields provided to update." }, { status: 400 });
+    }
+
+    let updatedItem;
     const { data: updated, error: updateErr } = await authClient
       .from("gallery_items")
       .update(updates)
@@ -355,8 +426,27 @@ export async function PUT(request) {
       .single();
 
     if (updateErr) {
-      console.error("[customer/gallery] Error updating item:", updateErr.message);
-      return NextResponse.json({ error: "Failed to update gallery item. Please try again." }, { status: 500 });
+      if (updateErr.message?.includes("is_external_link") || updateErr.code === "42703") {
+        delete updates.is_external_link;
+        const retry = await authClient
+          .from("gallery_items")
+          .update(updates)
+          .eq("id", itemId)
+          .eq("customer_id", customer.id)
+          .select()
+          .single();
+
+        if (retry.error) {
+          console.error("[customer/gallery] Error updating item (retry):", retry.error.message);
+          return NextResponse.json({ error: "Failed to update item." }, { status: 500 });
+        }
+        updatedItem = { ...retry.data, is_external_link: willBeExternal };
+      } else {
+        console.error("[customer/gallery] Error updating item:", updateErr.message);
+        return NextResponse.json({ error: "Failed to update item." }, { status: 500 });
+      }
+    } else {
+      updatedItem = { ...updated, is_external_link: willBeExternal };
     }
 
     // Revalidate public profile cache
@@ -364,7 +454,7 @@ export async function PUT(request) {
       revalidateCustomerProfile(customer.profile_slug);
     }
 
-    return NextResponse.json({ item: updated });
+    return NextResponse.json({ item: updatedItem });
   } catch (err) {
     console.error("[customer/gallery] Unexpected error in PUT:", err);
     return NextResponse.json({ error: "An unexpected error occurred." }, { status: 500 });

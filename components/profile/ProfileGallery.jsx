@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
 import Image from "next/image";
 import Icon from "@/components/ui/Icon";
 
@@ -293,44 +294,105 @@ export default function ProfileGallery({ items, customer }) {
 
   if (!items || items.length === 0) return null;
 
-  const visibleItems = showAll ? items : items.slice(0, INITIAL_VISIBLE);
-  const hasMore = items.length > INITIAL_VISIBLE;
+  const externalLinks = items.filter(
+    (i) => i.is_external_link || i.category === "external_link"
+  );
+  const mediaItems = items.filter(
+    (i) => !i.is_external_link && i.category !== "external_link"
+  );
 
+  const visibleMedia = showAll ? mediaItems : mediaItems.slice(0, INITIAL_VISIBLE);
+  const hasMoreMedia = mediaItems.length > INITIAL_VISIBLE;
   const whatsappRaw = customer?.whatsapp?.trim() || null;
 
   return (
     <section
-      className="px-3.5 sm:px-5 py-4 sm:py-5"
+      className="px-3.5 sm:px-5 py-4 sm:py-5 space-y-6"
       aria-label="Portfolio and Products"
     >
-      {/* Section header */}
-      <div className="mb-3">
-        <h2 className="text-sm font-bold text-text-primary">
-          Portfolio &amp; Products
-        </h2>
-        <p className="text-[11px] text-text-muted mt-0.5">
-          {items.length} item{items.length !== 1 ? "s" : ""}
-        </p>
-      </div>
+      {/* ── External Portfolio Links Section ───────────────────────────── */}
+      {externalLinks.length > 0 && (
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-bold text-text-primary">
+                External Portfolio Links
+              </h2>
+              <p className="text-[11px] text-text-muted mt-0.5">
+                {externalLinks.length} verified external showcase{externalLinks.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+          </div>
 
-      {/* Responsive grid: 2-col mobile, 3-col md+ */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">
-        {visibleItems.map((item) => (
-          <GalleryCard key={item.id} item={item} whatsapp={whatsappRaw} />
-        ))}
-      </div>
+          <div className="space-y-2">
+            {externalLinks.map((link) => {
+              const previewHref = customer?.profile_slug
+                ? `/p/${encodeURIComponent(customer.profile_slug)}/portfolio/${link.id}`
+                : link.external_url;
 
-      {/* View All toggle */}
-      {hasMore && !showAll && (
-        <div className="mt-3 text-center">
-          <button
-            type="button"
-            onClick={() => setShowAll(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-border-hairline text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-subtle transition-colors active:scale-[0.98] cursor-pointer"
-          >
-            <span>View All ({items.length})</span>
-            <Icon name="expand_more" size={14} strokeWidth={2} />
-          </button>
+              return (
+                <Link
+                  key={link.id}
+                  href={previewHref}
+                  className="flex items-center justify-between p-3 sm:p-3.5 rounded-xl border border-border-hairline bg-surface-base hover:bg-surface-subtle transition-all group"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-surface-subtle border border-border-hairline flex items-center justify-center shrink-0 text-text-primary group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                      <Icon name="link" size={17} strokeWidth={2} />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-xs sm:text-sm font-bold text-text-primary truncate group-hover:text-primary transition-colors">
+                        {link.title}
+                      </h3>
+                      <p className="text-[10px] sm:text-[11px] font-mono text-text-muted truncate mt-0.5">
+                        {link.domain || "View external link"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="inline-flex items-center gap-1 text-[11px] font-semibold text-text-secondary group-hover:text-primary transition-colors shrink-0 ml-2">
+                    <span>Preview</span>
+                    <Icon name="chevron_right" size={14} strokeWidth={2} />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Products & Image Portfolio Showcase ────────────────────────── */}
+      {mediaItems.length > 0 && (
+        <div className="space-y-3">
+          <div>
+            <h2 className="text-sm font-bold text-text-primary">
+              Portfolio &amp; Products
+            </h2>
+            <p className="text-[11px] text-text-muted mt-0.5">
+              {mediaItems.length} item{mediaItems.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+
+          {/* Responsive grid: 2-col mobile, 3-col md+ */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">
+            {visibleMedia.map((item) => (
+              <GalleryCard key={item.id} item={item} whatsapp={whatsappRaw} />
+            ))}
+          </div>
+
+          {/* View All toggle */}
+          {hasMoreMedia && !showAll && (
+            <div className="mt-3 text-center">
+              <button
+                type="button"
+                onClick={() => setShowAll(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-border-hairline text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-subtle transition-colors active:scale-[0.98] cursor-pointer"
+              >
+                <span>View All ({mediaItems.length})</span>
+                <Icon name="expand_more" size={14} strokeWidth={2} />
+              </button>
+            </div>
+          )}
         </div>
       )}
     </section>

@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import { isValidHttpUrl } from "@/lib/customers";
-import { getAuthHeader, getAdminGalleryItems } from "@/lib/gallery";
+import { getAuthHeader, getAdminGalleryItems, getDomainFromUrl, isSafeHttpUrl } from "@/lib/gallery";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -76,8 +76,9 @@ export default function CustomerGallerySection({
     const item = items[index];
     if (!item) return;
 
+    const isExt = Boolean(item.is_external_link || item.category === "external_link");
     setEditingIndex(index);
-    setFormType(item.type || "product");
+    setFormType(isExt ? "external_link" : (item.type || "product"));
     setFormTitle(item.title || "");
     setFormDescription(item.description || "");
     setFormPrice(item.price || "");
@@ -166,7 +167,18 @@ export default function CustomerGallerySection({
       setEditorError("Description must be 2000 characters or less.");
       return;
     }
-    if (formExternalUrl && formExternalUrl.trim() && !isValidHttpUrl(formExternalUrl.trim())) {
+
+    const isExternal = formType === "external_link";
+    const itemType = isExternal ? "portfolio" : formType;
+    const itemCategory = isExternal ? (formCategory.trim() || "external_link") : (formCategory.trim() || null);
+
+    if (isExternal) {
+      const cleanUrl = formExternalUrl ? formExternalUrl.trim() : "";
+      if (!cleanUrl || !isSafeHttpUrl(cleanUrl) || !isValidHttpUrl(cleanUrl)) {
+        setEditorError("Destination URL is required and must be a valid HTTP or HTTPS address.");
+        return;
+      }
+    } else if (formExternalUrl && formExternalUrl.trim() && (!isSafeHttpUrl(formExternalUrl.trim()) || !isValidHttpUrl(formExternalUrl.trim()))) {
       setEditorError("External URL must be a valid HTTP or HTTPS address.");
       return;
     }
@@ -190,15 +202,16 @@ export default function CustomerGallerySection({
             body: JSON.stringify({
               id: currentItemId,
               customerId,
-              type: formType,
+              type: itemType,
               title: cleanTitle,
               description: formDescription.trim() || null,
               price: formType === "product" ? formPrice.trim() || null : null,
-              category: formCategory.trim() || null,
+              category: itemCategory,
               external_url: formExternalUrl.trim() || null,
               cta_text: formCtaText.trim() || null,
               whatsapp_enabled: formType === "product" ? formWhatsappEnabled : false,
               is_active: formIsActive,
+              is_external_link: isExternal,
             }),
           });
           if (!putRes.ok) {
@@ -212,15 +225,16 @@ export default function CustomerGallerySection({
             headers,
             body: JSON.stringify({
               customerId,
-              type: formType,
+              type: itemType,
               title: cleanTitle,
               description: formDescription.trim() || null,
               price: formType === "product" ? formPrice.trim() || null : null,
-              category: formCategory.trim() || null,
+              category: itemCategory,
               external_url: formExternalUrl.trim() || null,
               cta_text: formCtaText.trim() || null,
               whatsapp_enabled: formType === "product" ? formWhatsappEnabled : false,
               is_active: formIsActive,
+              is_external_link: isExternal,
               display_order: items.length,
             }),
           });
@@ -283,18 +297,19 @@ export default function CustomerGallerySection({
 
     // ── CASE B: New Customer (Add Mode) -> Keep in local state ─────────────────
     const stagedItem = {
-      type: formType,
+      type: itemType,
       title: cleanTitle,
       description: formDescription.trim() || "",
       price: formType === "product" ? formPrice.trim() : "",
-      category: formCategory.trim() || "",
+      category: itemCategory || "",
       external_url: formExternalUrl.trim() || "",
       cta_text: formCtaText.trim() || "",
       whatsapp_enabled: formType === "product" ? formWhatsappEnabled : false,
       is_active: formIsActive,
-      pendingFiles: [...pendingFiles],
-      pendingPreviews: [...pendingPreviews],
-      images: existingImages,
+      is_external_link: isExternal,
+      pendingFiles: isExternal ? [] : [...pendingFiles],
+      pendingPreviews: isExternal ? [] : [...pendingPreviews],
+      images: isExternal ? [] : existingImages,
       display_order: editingIndex !== null ? items[editingIndex].display_order : items.length,
     };
 
@@ -461,6 +476,14 @@ export default function CustomerGallerySection({
               <span className="material-symbols-outlined text-[16px]">add</span>
               <span>Add Portfolio</span>
             </button>
+            <button
+              type="button"
+              onClick={() => openAddItem("external_link")}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline-variant/40 hover:bg-surface-container-low text-primary text-label-sm font-semibold transition-colors active:scale-[0.98] flex-1 sm:flex-none"
+            >
+              <span className="material-symbols-outlined text-[16px]">add_link</span>
+              <span>Add External Link</span>
+            </button>
           </div>
         )}
       </div>
@@ -476,10 +499,16 @@ export default function CustomerGallerySection({
                 className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
                   formType === "product"
                     ? "bg-blue-100 text-blue-800"
+                    : formType === "external_link"
+                    ? "bg-emerald-100 text-emerald-800"
                     : "bg-purple-100 text-purple-800"
                 }`}
               >
-                {formType === "product" ? "Product / Service" : "Portfolio Project"}
+                {formType === "product"
+                  ? "Product / Service"
+                  : formType === "external_link"
+                  ? "External Portfolio Link"
+                  : "Portfolio Project"}
               </span>
               <span className="text-label-md font-bold text-on-surface">
                 {editingIndex !== null ? "Edit Item" : "Add New Item"}
@@ -531,109 +560,132 @@ export default function CustomerGallerySection({
               >
                 Portfolio Project
               </button>
+              <button
+                type="button"
+                onClick={() => setFormType("external_link")}
+                className={`flex-1 py-2 px-3 rounded-xl text-label-sm font-semibold transition-all border ${
+                  formType === "external_link"
+                    ? "bg-primary text-on-primary border-primary shadow-xs"
+                    : "bg-surface-container-lowest text-on-surface-variant border-outline-variant/40 hover:bg-surface-container-low"
+                }`}
+              >
+                External Link
+              </button>
             </div>
           </div>
 
           {/* Title */}
           <div>
             <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-              {formType === "product" ? "Product / Service Name *" : "Project Title *"}
+              {formType === "product"
+                ? "Product / Service Name *"
+                : formType === "external_link"
+                ? "Portfolio Link Title *"
+                : "Project Title *"}
             </label>
             <input
               type="text"
               required
               value={formTitle}
               onChange={(e) => setFormTitle(e.target.value)}
-              placeholder={formType === "product" ? "e.g. NFC Smart Business Card" : "e.g. Modern Restaurant Branding"}
+              placeholder={
+                formType === "product"
+                  ? "e.g. NFC Smart Business Card"
+                  : formType === "external_link"
+                  ? "e.g. Behance UX Case Studies"
+                  : "e.g. Modern Restaurant Branding"
+              }
               className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
 
           {/* Image Upload Area */}
-          <div>
-            <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-              Images {formType === "portfolio" && <span className="text-[11px] font-normal text-tertiary">(Multiple supported)</span>}
-            </label>
+          {formType !== "external_link" && (
+            <div>
+              <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                Images {formType === "portfolio" && <span className="text-[11px] font-normal text-tertiary">(Multiple supported)</span>}
+              </label>
 
-            {/* Existing & Pending Image Previews */}
-            {(existingImages.length > 0 || pendingPreviews.length > 0) && (
-              <div className="flex flex-wrap gap-2.5 mb-3">
-                {/* Existing uploaded images */}
-                {existingImages.map((img) => (
-                  <div
-                    key={img.id}
-                    className="relative w-20 h-20 rounded-xl overflow-hidden border border-outline-variant/40 bg-surface-container-lowest group"
-                  >
-                    <Image
-                      src={img.image_url}
-                      alt="Thumbnail"
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeExistingImage(img.id)}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-error text-white flex items-center justify-center transition-colors"
-                      title="Remove image"
+              {/* Existing & Pending Image Previews */}
+              {(existingImages.length > 0 || pendingPreviews.length > 0) && (
+                <div className="flex flex-wrap gap-2.5 mb-3">
+                  {/* Existing uploaded images */}
+                  {existingImages.map((img) => (
+                    <div
+                      key={img.id}
+                      className="relative w-20 h-20 rounded-xl overflow-hidden border border-outline-variant/40 bg-surface-container-lowest group"
                     >
-                      <span className="material-symbols-outlined text-[13px]">close</span>
-                    </button>
-                  </div>
-                ))}
+                      <Image
+                        src={img.image_url}
+                        alt="Thumbnail"
+                        fill
+                        className="object-cover"
+                        sizes="80px"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeExistingImage(img.id)}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-error text-white flex items-center justify-center transition-colors"
+                        title="Remove image"
+                      >
+                        <span className="material-symbols-outlined text-[13px]">close</span>
+                      </button>
+                    </div>
+                  ))}
 
-                {/* Newly selected pending image files */}
-                {pendingPreviews.map((url, pIdx) => (
-                  <div
-                    key={pIdx}
-                    className="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-primary/40 bg-surface-container-lowest group"
-                  >
-                    <img
-                      src={url}
-                      alt="Pending Preview"
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removePendingFile(pIdx)}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-error text-white flex items-center justify-center transition-colors"
-                      title="Remove image"
+                  {/* Newly selected pending image files */}
+                  {pendingPreviews.map((url, pIdx) => (
+                    <div
+                      key={pIdx}
+                      className="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-primary/40 bg-surface-container-lowest group"
                     >
-                      <span className="material-symbols-outlined text-[13px]">close</span>
-                    </button>
-                    <span className="absolute bottom-0 inset-x-0 bg-primary/80 text-[9px] text-white text-center font-bold py-0.5">
-                      New
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
+                      <img
+                        src={url}
+                        alt="Pending Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePendingFile(pIdx)}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-error text-white flex items-center justify-center transition-colors"
+                        title="Remove image"
+                      >
+                        <span className="material-symbols-outlined text-[13px]">close</span>
+                      </button>
+                      <span className="absolute bottom-0 inset-x-0 bg-primary/80 text-[9px] text-white text-center font-bold py-0.5">
+                        New
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple={formType === "portfolio"}
-              onChange={handleFileSelect}
-              className="hidden"
-              id="gallery-item-image-upload"
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-container-lowest border border-outline-variant/40 hover:bg-surface-container-low text-on-surface text-label-sm font-semibold transition-colors"
-            >
-              <span className="material-symbols-outlined text-[18px]">add_photo_alternate</span>
-              <span>
-                {existingImages.length === 0 && pendingPreviews.length === 0
-                  ? "Upload Image"
-                  : "Add More Images"}
-              </span>
-            </button>
-            <p className="text-[11px] text-tertiary mt-1.5">
-              Allowed: JPG, PNG, WebP. Maximum size: 5 MB per image.
-            </p>
-          </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple={formType === "portfolio"}
+                onChange={handleFileSelect}
+                className="hidden"
+                id="gallery-item-image-upload"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-container-lowest border border-outline-variant/40 hover:bg-surface-container-low text-on-surface text-label-sm font-semibold transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">add_photo_alternate</span>
+                <span>
+                  {existingImages.length === 0 && pendingPreviews.length === 0
+                    ? "Upload Image"
+                    : "Add More Images"}
+                </span>
+              </button>
+              <p className="text-[11px] text-tertiary mt-1.5">
+                Allowed: JPG, PNG, WebP. Maximum size: 5 MB per image.
+              </p>
+            </div>
+          )}
 
           {/* Description */}
           <div>
@@ -682,33 +734,55 @@ export default function CustomerGallerySection({
           </div>
 
           {/* External Link & CTA Text */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className={`grid grid-cols-1 ${formType === "external_link" ? "sm:grid-cols-1" : "sm:grid-cols-2"} gap-4`}>
             <div>
               <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-                {formType === "product" ? "Product Link" : "Project Link"}{" "}
-                <span className="text-[11px] font-normal text-tertiary">(Optional)</span>
+                {formType === "external_link" ? (
+                  <>
+                    Destination URL <span className="text-error">*</span>
+                  </>
+                ) : formType === "product" ? (
+                  "Product Link"
+                ) : (
+                  "Project Link"
+                )}{" "}
+                {formType !== "external_link" && (
+                  <span className="text-[11px] font-normal text-tertiary">(Optional)</span>
+                )}
               </label>
               <input
-                type="text"
+                type="url"
+                required={formType === "external_link"}
                 value={formExternalUrl}
                 onChange={(e) => setFormExternalUrl(e.target.value)}
-                placeholder="https://..."
+                placeholder={
+                  formType === "external_link"
+                    ? "https://behance.net/gallery/... or https://github.com/..."
+                    : "https://..."
+                }
                 className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
+              {formType === "external_link" && (
+                <p className="text-[11px] text-tertiary mt-1">
+                  Must be a valid HTTP or HTTPS link (e.g. Behance, Dribbble, GitHub, YouTube, portfolio site).
+                </p>
+              )}
             </div>
 
-            <div>
-              <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-                Button Text <span className="text-[11px] font-normal text-tertiary">(Optional)</span>
-              </label>
-              <input
-                type="text"
-                value={formCtaText}
-                onChange={(e) => setFormCtaText(e.target.value)}
-                placeholder={formType === "product" ? "View Product" : "View Details"}
-                className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
+            {formType !== "external_link" && (
+              <div>
+                <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                  Button Text <span className="text-[11px] font-normal text-tertiary">(Optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={formCtaText}
+                  onChange={(e) => setFormCtaText(e.target.value)}
+                  placeholder={formType === "product" ? "View Product" : "View Details"}
+                  className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+            )}
           </div>
 
           {/* WhatsApp CTA Toggle (Product Only) */}
@@ -838,7 +912,11 @@ export default function CustomerGallerySection({
                       />
                     ) : (
                       <span className="material-symbols-outlined text-[22px] text-outline">
-                        {item.type === "product" ? "inventory_2" : "collections"}
+                        {item.is_external_link || item.category === "external_link"
+                          ? "language"
+                          : item.type === "product"
+                          ? "inventory_2"
+                          : "collections"}
                       </span>
                     )}
                     {/* Badge for multiple images */}
@@ -854,12 +932,18 @@ export default function CustomerGallerySection({
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span
                         className={`text-[9px] font-bold uppercase px-1.5 py-0.2 rounded ${
-                          item.type === "product"
+                          item.is_external_link || item.category === "external_link"
+                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                            : item.type === "product"
                             ? "bg-blue-100 text-blue-800"
                             : "bg-purple-100 text-purple-800"
                         }`}
                       >
-                        {item.type === "product" ? "Product" : "Portfolio"}
+                        {item.is_external_link || item.category === "external_link"
+                          ? "External Link"
+                          : item.type === "product"
+                          ? "Product"
+                          : "Portfolio"}
                       </span>
                       <h4 className="text-label-sm font-bold text-on-surface truncate">
                         {item.title}
@@ -870,7 +954,12 @@ export default function CustomerGallerySection({
                       {item.type === "product" && item.price && (
                         <span className="font-semibold text-primary">{item.price}</span>
                       )}
-                      {item.category && <span>{item.category}</span>}
+                      {(item.is_external_link || item.category === "external_link") && (item.domain || item.external_url) && (
+                        <span className="font-mono text-primary text-[10.5px] truncate max-w-xs">
+                          {item.domain || item.external_url}
+                        </span>
+                      )}
+                      {item.category && item.category !== "external_link" && <span>{item.category}</span>}
                       {item.whatsapp_enabled && (
                         <span className="inline-flex items-center gap-0.5 text-emerald-700 font-medium">
                           <span className="material-symbols-outlined text-[12px]">chat</span>
