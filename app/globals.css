@@ -22,6 +22,25 @@
   display: none;
 }
 
+/* ── Admin Navigation Horizontal Scrollbar ────────────────────────────── */
+.admin-nav-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+.admin-nav-scrollbar::-webkit-scrollbar {
+  height: 4px;
+}
+.admin-nav-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.admin-nav-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+.admin-nav-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+}
+
 /* ── Material Symbols helper (Preserved for backward-compatible rendering) ─ */
 .material-symbols-outlined {
   /* Prevent icon text from participating in line-height/baseline shifts */
