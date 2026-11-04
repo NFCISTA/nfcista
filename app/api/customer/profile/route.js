@@ -47,6 +47,7 @@ function serializeCustomerProfile(customer) {
     enquiry_delivery_whatsapp: customer.enquiry_delivery_whatsapp,
     review_assistant_enabled: Boolean(customer.review_assistant_enabled),
     analytics_enabled: Boolean(customer.analytics_enabled),
+    smart_profile_enabled: customer.smart_profile_enabled !== undefined ? Boolean(customer.smart_profile_enabled) : Boolean(customer.profile_slug),
   };
 }
 

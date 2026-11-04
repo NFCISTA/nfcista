@@ -51,6 +51,7 @@ const initialFormData = {
   enquiry_delivery_dashboard: true,
   enquiry_delivery_email: false,
   enquiry_delivery_whatsapp: false,
+  smart_profile_enabled: true,
   review_assistant_enabled: false,
   analytics_enabled: false,
   profile_slug: "",
@@ -66,6 +67,7 @@ export default function AdminCustomersDashboard() {
   // Search and status filtering
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // 'all' | 'active' | 'inactive'
+  const [serviceSegment, setServiceSegment] = useState("all"); // 'all' | 'business_cards' | 'subscription_only'
 
   // Modal states
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -80,8 +82,8 @@ export default function AdminCustomersDashboard() {
   const [galleryItems, setGalleryItems] = useState([]);
   // Customer enquiries for modal
   const [customerEnquiries, setCustomerEnquiries] = useState([]);
-  // Active tab in Add/Edit customer modal: 'profile' | 'review_assistant'
-  const [activeFormTab, setActiveFormTab] = useState("profile");
+  // Active tab in Add/Edit customer modal: 'services' | 'profile' | 'review_assistant'
+  const [activeFormTab, setActiveFormTab] = useState("services");
 
   // Photo management state
   const [photoFile, setPhotoFile] = useState(null);
@@ -154,16 +156,24 @@ export default function AdminCustomersDashboard() {
         (statusFilter === "active" && c.is_active) ||
         (statusFilter === "inactive" && !c.is_active);
 
-      return matchesSearch && matchesStatus;
+      const isSmartProfileCustomer = Boolean(c.smart_profile_enabled && c.is_active);
+      const matchesSegment =
+        serviceSegment === "all" ||
+        (serviceSegment === "business_cards" && isSmartProfileCustomer) ||
+        (serviceSegment === "subscription_only" && !c.smart_profile_enabled);
+
+      return matchesSearch && matchesStatus && matchesSegment;
     });
-  }, [customers, searchTerm, statusFilter]);
+  }, [customers, searchTerm, statusFilter, serviceSegment]);
 
   // Status counts
   const stats = useMemo(() => {
     const total = customers.length;
     const active = customers.filter((c) => c.is_active).length;
+    const smartProfiles = customers.filter((c) => c.smart_profile_enabled && c.is_active).length;
+    const subscriptionOnly = customers.filter((c) => !c.smart_profile_enabled).length;
     const inactive = total - active;
-    return { total, active, inactive };
+    return { total, active, smartProfiles, subscriptionOnly, inactive };
   }, [customers]);
 
   // Open Create Modal
@@ -183,7 +193,7 @@ export default function AdminCustomersDashboard() {
     setConsentConfirmed(false); // DPDP: always start unchecked
     setGalleryItems([]);
     setCustomerEnquiries([]);
-    setActiveFormTab("profile");
+    setActiveFormTab("services");
     setIsFormModalOpen(true);
   }
 
@@ -203,7 +213,7 @@ export default function AdminCustomersDashboard() {
     setConsentConfirmed(false); // DPDP: not required on edit, but always start unchecked
     setGalleryItems([]);
     setCustomerEnquiries([]);
-    setActiveFormTab("profile");
+    setActiveFormTab("services");
     setIsSubmitting(true);
     setIsFormModalOpen(true);
 
@@ -245,6 +255,7 @@ export default function AdminCustomersDashboard() {
         enquiry_delivery_dashboard: fullRecord.enquiry_delivery_dashboard !== undefined ? Boolean(fullRecord.enquiry_delivery_dashboard) : true,
         enquiry_delivery_email: Boolean(fullRecord.enquiry_delivery_email),
         enquiry_delivery_whatsapp: Boolean(fullRecord.enquiry_delivery_whatsapp),
+        smart_profile_enabled: fullRecord.smart_profile_enabled !== undefined ? Boolean(fullRecord.smart_profile_enabled) : Boolean(fullRecord.profile_slug),
         review_assistant_enabled: Boolean(fullRecord.review_assistant_enabled),
         analytics_enabled: Boolean(fullRecord.analytics_enabled),
         profile_slug: fullRecord.profile_slug || "",
@@ -642,15 +653,15 @@ export default function AdminCustomersDashboard() {
       errors.full_name = "Full Name is required.";
     }
 
-    // 2. Slug validation
-    const slugValidation = await validateProfileSlug(formData.profile_slug, editingId);
+    // 2. Slug validation (required only when Smart Profile service is enabled)
+    const slugValidation = await validateProfileSlug(formData.profile_slug, editingId, formData.smart_profile_enabled);
     if (!slugValidation.valid) {
       errors.profile_slug = slugValidation.message;
     }
 
-    // 3. Customer Approval required when creating a NEW ACTIVE customer
-    //    Not required when editing an existing customer or when creating an inactive customer.
-    if (!editingId && formData.is_active && !consentConfirmed) {
+    // 3. Customer Approval required when creating a NEW ACTIVE customer with Smart Profile
+    //    Not required when editing an existing customer, creating an inactive customer, or subscription-only.
+    if (!editingId && formData.is_active && formData.smart_profile_enabled && !consentConfirmed) {
       errors.consent =
         "Please confirm that the customer has approved displaying their information on their NFC profile.";
     }
@@ -732,16 +743,20 @@ export default function AdminCustomersDashboard() {
         finalBannerUrl = bannerUploadResult.publicUrl;
       }
 
+      const cleanSlug = formData.profile_slug?.trim() ? formData.profile_slug.trim().toLowerCase() : null;
       const payload = {
         ...formData,
-        profile_slug: editingId ? (originalSlug || formData.profile_slug) : formData.profile_slug,
+        smart_profile_enabled: Boolean(formData.smart_profile_enabled),
+        profile_slug: editingId ? (formData.smart_profile_enabled ? (originalSlug || cleanSlug) : cleanSlug) : cleanSlug,
         photo_url: finalPhotoUrl,
         banner_url: finalBannerUrl,
       };
 
       if (editingId) {
         const updated = await updateCustomer(editingId, payload);
-        await triggerProfileRevalidation(payload.profile_slug, originalSlug);
+        if (payload.profile_slug) {
+          await triggerProfileRevalidation(payload.profile_slug, originalSlug);
+        }
         setCustomers((prev) =>
           prev.map((c) => (c.id === editingId ? { ...c, ...updated } : c))
         );
@@ -823,7 +838,7 @@ export default function AdminCustomersDashboard() {
       </div>
 
       {/* Stats Counter Cards */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
         <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-card">
           <span className="text-[10px] sm:text-label-sm text-tertiary uppercase tracking-wider font-semibold block truncate">
             Total Customers
@@ -833,11 +848,19 @@ export default function AdminCustomersDashboard() {
           </p>
         </div>
         <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-card">
-          <span className="text-[10px] sm:text-label-sm text-emerald-700 uppercase tracking-wider font-semibold block truncate">
-            Active Cards
+          <span className="text-[10px] sm:text-label-sm text-blue-700 uppercase tracking-wider font-semibold block truncate">
+            Business Cards (Live)
           </span>
-          <p className="text-xl sm:text-3xl font-bold text-emerald-600 mt-0.5 sm:mt-1">
-            {stats.active}
+          <p className="text-xl sm:text-3xl font-bold text-blue-600 mt-0.5 sm:mt-1">
+            {stats.smartProfiles}
+          </p>
+        </div>
+        <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-card">
+          <span className="text-[10px] sm:text-label-sm text-slate-700 uppercase tracking-wider font-semibold block truncate">
+            Subscriptions Only
+          </span>
+          <p className="text-xl sm:text-3xl font-bold text-slate-700 mt-0.5 sm:mt-1">
+            {stats.subscriptionOnly}
           </p>
         </div>
         <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-card">
@@ -848,6 +871,57 @@ export default function AdminCustomersDashboard() {
             {stats.inactive}
           </p>
         </div>
+      </div>
+
+      {/* Service Offering Segment Tabs */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+        <button
+          type="button"
+          onClick={() => setServiceSegment("all")}
+          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
+            serviceSegment === "all"
+              ? "bg-primary text-white shadow-xs font-bold"
+              : "bg-surface-container-lowest border border-outline-variant/30 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">group</span>
+          <span>All Customers</span>
+          <span className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] ${serviceSegment === "all" ? "bg-white/20 text-white" : "bg-surface-container-low text-on-surface-variant"}`}>
+            {stats.total}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setServiceSegment("business_cards")}
+          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
+            serviceSegment === "business_cards"
+              ? "bg-blue-600 text-white shadow-xs font-bold"
+              : "bg-surface-container-lowest border border-outline-variant/30 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">badge</span>
+          <span>Business Cards (Smart Profiles)</span>
+          <span className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] ${serviceSegment === "business_cards" ? "bg-white/20 text-white" : "bg-surface-container-low text-on-surface-variant"}`}>
+            {stats.smartProfiles}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setServiceSegment("subscription_only")}
+          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
+            serviceSegment === "subscription_only"
+              ? "bg-slate-700 text-white shadow-xs font-bold"
+              : "bg-surface-container-lowest border border-outline-variant/30 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">subscriptions</span>
+          <span>Subscriptions Only</span>
+          <span className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] ${serviceSegment === "subscription_only" ? "bg-white/20 text-white" : "bg-surface-container-low text-on-surface-variant"}`}>
+            {stats.subscriptionOnly}
+          </span>
+        </button>
       </div>
 
       {/* Search & Filter Toolbar */}
@@ -999,15 +1073,39 @@ export default function AdminCustomersDashboard() {
                     </span>
                   </div>
 
-                  {/* Row 2: Profile Slug & Date */}
-                  <div className="flex items-center justify-between gap-2 text-xs">
-                    <div className="inline-flex items-center gap-1 font-mono text-[11px] bg-surface-container-low px-2 py-0.5 rounded border border-outline-variant/20 text-on-surface truncate max-w-[200px]">
-                      <span>/p/{customer.profile_slug}</span>
+                  {/* Row 2: Services & Subscriptions Badges */}
+                  <div className="flex items-center justify-between gap-2 text-xs flex-wrap">
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {customer.smart_profile_enabled ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                          <span className="material-symbols-outlined text-[12px]">badge</span>
+                          <span>Smart Profile</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                          <span>Sub Only</span>
+                        </span>
+                      )}
+
+                      {customer.review_assistant_enabled && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                          <span className="material-symbols-outlined text-[12px]">reviews</span>
+                          <span>Review Asst</span>
+                        </span>
+                      )}
+
+                      {customer.analytics_enabled && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          <span className="material-symbols-outlined text-[12px]">insights</span>
+                          <span>Analytics</span>
+                        </span>
+                      )}
                     </div>
-                    {customer.created_at && (
-                      <span className="text-[11px] text-on-surface-variant">
-                        {new Date(customer.created_at).toLocaleDateString()}
-                      </span>
+
+                    {customer.smart_profile_enabled && customer.profile_slug && (
+                      <div className="inline-flex items-center gap-1 font-mono text-[11px] bg-surface-container-low px-2 py-0.5 rounded border border-outline-variant/20 text-on-surface truncate max-w-[150px]">
+                        <span>/p/{customer.profile_slug}</span>
+                      </div>
                     )}
                   </div>
 
@@ -1037,7 +1135,7 @@ export default function AdminCustomersDashboard() {
 
                   {/* Row 3: Touch-friendly Action Buttons */}
                   <div className="flex items-center justify-end gap-1.5 pt-1 border-t border-outline-variant/10">
-                    {customer.is_active && (
+                    {customer.is_active && customer.smart_profile_enabled && customer.profile_slug && (
                       <Link
                         href={`/p/${customer.profile_slug}`}
                         target="_blank"
@@ -1111,7 +1209,7 @@ export default function AdminCustomersDashboard() {
                   <tr className="border-b border-outline-variant/20 bg-surface-container-low/40 text-[11px] uppercase tracking-wider text-tertiary font-semibold">
                     <th className="py-3.5 px-4 sm:px-6">Customer</th>
                     <th className="py-3.5 px-4">Company &amp; Title</th>
-                    <th className="py-3.5 px-4">Slug &amp; URL</th>
+                    <th className="py-3.5 px-4">Services &amp; Subscriptions</th>
                     <th className="py-3.5 px-4">Status</th>
                     <th className="py-3.5 px-4">Portal Login</th>
                     <th className="py-3.5 px-4 hidden md:table-cell">Created</th>
@@ -1175,10 +1273,41 @@ export default function AdminCustomersDashboard() {
                         )}
                       </td>
 
-                      {/* Profile Slug & Link */}
+                      {/* Services & Subscriptions Column */}
                       <td className="py-3.5 px-4">
-                        <div className="inline-flex items-center gap-1 font-mono text-[12px] bg-surface-container-low px-2 py-0.5 rounded border border-outline-variant/20 text-on-surface">
-                          <span>/p/{customer.profile_slug}</span>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {customer.smart_profile_enabled ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                <span className="material-symbols-outlined text-[13px]">badge</span>
+                                <span>Smart Profile</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                                <span>Sub Only</span>
+                              </span>
+                            )}
+
+                            {customer.review_assistant_enabled && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                                <span className="material-symbols-outlined text-[13px]">reviews</span>
+                                <span>Review Asst</span>
+                              </span>
+                            )}
+
+                            {customer.analytics_enabled && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                <span className="material-symbols-outlined text-[13px]">insights</span>
+                                <span>Analytics</span>
+                              </span>
+                            )}
+                          </div>
+
+                          {customer.smart_profile_enabled && customer.profile_slug && (
+                            <div className="inline-flex items-center gap-1 font-mono text-[11px] bg-surface-container-low px-2 py-0.5 rounded border border-outline-variant/20 text-on-surface truncate max-w-[180px]">
+                              <span>/p/{customer.profile_slug}</span>
+                            </div>
+                          )}
                         </div>
                       </td>
 
@@ -1250,8 +1379,8 @@ export default function AdminCustomersDashboard() {
                       {/* Actions Column */}
                       <td className="py-3.5 px-4 sm:px-6 text-right">
                         <div className="inline-flex items-center gap-1 justify-end">
-                          {/* View Public Profile (Active only) */}
-                          {customer.is_active && (
+                          {/* View Public Profile (Active & Smart Profile only) */}
+                          {customer.is_active && customer.smart_profile_enabled && customer.profile_slug && (
                             <Link
                               href={`/p/${customer.profile_slug}`}
                               target="_blank"
@@ -1359,11 +1488,24 @@ export default function AdminCustomersDashboard() {
             </div>
 
             {/* Modal Navigation Tabs */}
-            <div className="px-4 sm:px-6 pt-2.5 border-b border-outline-variant/20 bg-surface-container-low/20 flex items-center gap-1 sm:gap-2 shrink-0">
+            <div className="px-4 sm:px-6 pt-2.5 border-b border-outline-variant/20 bg-surface-container-low/20 flex items-center gap-1 sm:gap-2 shrink-0 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setActiveFormTab("services")}
+                className={`pb-2.5 px-3 text-label-md font-bold transition-all flex items-center gap-1.5 cursor-pointer border-b-2 whitespace-nowrap ${
+                  activeFormTab === "services"
+                    ? "text-primary border-primary"
+                    : "text-on-surface-variant hover:text-on-surface border-transparent"
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">room_service</span>
+                <span>Services &amp; Subscriptions</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setActiveFormTab("profile")}
-                className={`pb-2.5 px-3 text-label-md font-bold transition-all flex items-center gap-1.5 cursor-pointer border-b-2 ${
+                className={`pb-2.5 px-3 text-label-md font-bold transition-all flex items-center gap-1.5 cursor-pointer border-b-2 whitespace-nowrap ${
                   activeFormTab === "profile"
                     ? "text-primary border-primary"
                     : "text-on-surface-variant hover:text-on-surface border-transparent"
@@ -1371,21 +1513,26 @@ export default function AdminCustomersDashboard() {
               >
                 <span className="material-symbols-outlined text-[18px]">badge</span>
                 <span>Business Profile</span>
+                {!formData.smart_profile_enabled && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-semibold bg-slate-200 text-slate-600">
+                    Disabled
+                  </span>
+                )}
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveFormTab("review_assistant")}
-                className={`pb-2.5 px-3 text-label-md font-bold transition-all flex items-center gap-1.5 cursor-pointer border-b-2 ${
+                className={`pb-2.5 px-3 text-label-md font-bold transition-all flex items-center gap-1.5 cursor-pointer border-b-2 whitespace-nowrap ${
                   activeFormTab === "review_assistant"
                     ? "text-primary border-primary"
                     : "text-on-surface-variant hover:text-on-surface border-transparent"
                 }`}
               >
                 <span className="material-symbols-outlined text-[18px]">reviews</span>
-                <span>Review Assistant</span>
+                <span>Review Destination</span>
                 {formData.review_assistant_enabled && (
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" title="Active" />
+                  <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" title="Subscribed" />
                 )}
               </button>
             </div>
@@ -1398,6 +1545,153 @@ export default function AdminCustomersDashboard() {
                     error
                   </span>
                   <span>{formErrors.general}</span>
+                </div>
+              )}
+
+              {/* TAB 0: SERVICES & SUBSCRIPTIONS */}
+              {activeFormTab === "services" && (
+                <div className="space-y-4 sm:space-y-5">
+                  <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-1">
+                    <h3 className="text-label-md font-bold text-primary flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[20px]">room_service</span>
+                      <span>Modular Customer Services Management</span>
+                    </h3>
+                    <p className="text-xs text-on-surface-variant leading-relaxed">
+                      NFCISTA offers three independent services. Configure which services this customer has purchased. Each service is activated or deactivated independently without deleting customer data.
+                    </p>
+                  </div>
+
+                  {/* 1. SMART PROFILE (DIGITAL BUSINESS CARD) */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30 space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[22px] text-blue-600">badge</span>
+                          <h4 className="text-label-md font-bold text-on-surface">
+                            1. Smart Profile (Digital Business Card)
+                          </h4>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                              formData.smart_profile_enabled
+                                ? "bg-blue-100 text-blue-800 border border-blue-200"
+                                : "bg-slate-100 text-slate-600 border border-slate-200"
+                            }`}
+                          >
+                            {formData.smart_profile_enabled ? "Active" : "Disabled (Subscription-Only)"}
+                          </span>
+                        </div>
+                        <p className="text-body-sm text-on-surface-variant leading-relaxed">
+                          Controls whether the customer has an active Digital Business Card hosted at <span className="font-mono text-primary font-semibold">/p/[slug]</span>. When disabled, this customer does not have a public digital card, and profile details are not required.
+                        </p>
+                      </div>
+
+                      {/* Smart Profile Toggle */}
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(formData.smart_profile_enabled)}
+                          onChange={(e) =>
+                            setFormData({ ...formData, smart_profile_enabled: e.target.checked })
+                          }
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+                      </label>
+                    </div>
+
+                    {formData.smart_profile_enabled && formData.profile_slug && (
+                      <div className="pt-2 border-t border-outline-variant/20 flex items-center justify-between text-xs text-on-surface-variant">
+                        <span>Live Profile Link: <span className="font-mono text-primary font-semibold">/p/{formData.profile_slug}</span></span>
+                        <a
+                          href={`/p/${formData.profile_slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline font-semibold inline-flex items-center gap-1"
+                        >
+                          <span>Preview Card</span>
+                          <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 2. REVIEW ASSISTANT SUBSCRIPTION */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30 space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[22px] text-amber-500">reviews</span>
+                          <h4 className="text-label-md font-bold text-on-surface">
+                            2. Review Assistant Subscription
+                          </h4>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                              formData.review_assistant_enabled
+                                ? "bg-amber-100 text-amber-800 border border-amber-200"
+                                : "bg-slate-100 text-slate-600 border border-slate-200"
+                            }`}
+                          >
+                            {formData.review_assistant_enabled ? "Subscribed (Active)" : "Not Subscribed"}
+                          </span>
+                        </div>
+                        <p className="text-body-sm text-on-surface-variant leading-relaxed">
+                          Paid subscription service. Enables NFCISTA&apos;s AI-assisted Google Review collection flow for this merchant&apos;s physical review cards and review touchpoints.
+                        </p>
+                      </div>
+
+                      {/* Review Assistant Toggle */}
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(formData.review_assistant_enabled)}
+                          onChange={(e) =>
+                            setFormData({ ...formData, review_assistant_enabled: e.target.checked })
+                          }
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500" />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* 3. ANALYTICS SUBSCRIPTION */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30 space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[22px] text-emerald-600">insights</span>
+                          <h4 className="text-label-md font-bold text-on-surface">
+                            3. Review Card Analytics Subscription
+                          </h4>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                              formData.analytics_enabled
+                                ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                : "bg-slate-100 text-slate-600 border border-slate-200"
+                            }`}
+                          >
+                            {formData.analytics_enabled ? "Subscribed (Active)" : "Not Subscribed"}
+                          </span>
+                        </div>
+                        <p className="text-body-sm text-on-surface-variant leading-relaxed">
+                          Paid subscription service. Grants customer access to real-time card tap and review conversion funnel metrics in their customer dashboard.
+                        </p>
+                      </div>
+
+                      {/* Analytics Toggle */}
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(formData.analytics_enabled)}
+                          onChange={(e) =>
+                            setFormData({ ...formData, analytics_enabled: e.target.checked })
+                          }
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600" />
+                      </label>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -1923,11 +2217,22 @@ export default function AdminCustomersDashboard() {
 
               {/* 4. Profile Settings */}
               <div className="space-y-4 pt-3 border-t border-outline-variant/20">
+                {!formData.smart_profile_enabled && (
+                  <div className="p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 flex items-start gap-2.5">
+                    <span className="material-symbols-outlined text-[18px] text-tertiary shrink-0 mt-0.5">
+                      info
+                    </span>
+                    <p className="text-[12px] text-on-surface-variant leading-relaxed">
+                      <strong>Smart Profile service is currently disabled.</strong> A digital business card profile will not be published publicly, and profile slug is optional. You can activate Smart Profile anytime under the <em>Services &amp; Subscriptions</em> tab.
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between">
                   <span className="text-label-sm font-bold uppercase tracking-wider text-primary">
                     Profile Settings
                   </span>
-                  {!editingId && (
+                  {!editingId && formData.smart_profile_enabled && (
                     <button
                       type="button"
                       onClick={handleGenerateSlug}
@@ -1943,7 +2248,7 @@ export default function AdminCustomersDashboard() {
 
                 <div>
                   <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-                    Profile Slug *
+                    Profile Slug {formData.smart_profile_enabled ? "*" : "(Optional — Smart Profile Disabled)"}
                   </label>
                   <div className="flex items-center rounded-xl border border-outline-variant/40 bg-surface-container-lowest overflow-hidden focus-within:ring-2 focus-within:ring-primary">
                     <span className="px-3.5 py-2.5 bg-surface-container-low text-tertiary text-body-sm font-mono border-r border-outline-variant/30 select-none">
@@ -1951,7 +2256,7 @@ export default function AdminCustomersDashboard() {
                     </span>
                     <input
                       type="text"
-                      required
+                      required={Boolean(formData.smart_profile_enabled)}
                       value={formData.profile_slug}
                       readOnly={Boolean(editingId)}
                       onChange={(e) => {
@@ -1961,7 +2266,7 @@ export default function AdminCustomersDashboard() {
                           profile_slug: e.target.value.toLowerCase(),
                         });
                       }}
-                      placeholder="sarah-mitchell"
+                      placeholder={formData.smart_profile_enabled ? "sarah-mitchell" : "Optional (Smart Profile disabled)"}
                       className={`w-full h-11 px-3.5 bg-transparent text-on-surface text-body-md font-mono focus:outline-none ${
                         editingId ? "opacity-75 cursor-not-allowed select-all" : ""
                       }`}
@@ -1978,7 +2283,9 @@ export default function AdminCustomersDashboard() {
                     </p>
                   ) : (
                     <p className="text-[11px] text-tertiary mt-1">
-                      Lowercase letters, numbers, hyphens, and underscores only. Forms the unique link for their NFC card.
+                      {formData.smart_profile_enabled
+                        ? "Lowercase letters, numbers, hyphens, and underscores only. Forms the unique link for their NFC card."
+                        : "Optional when Smart Profile is disabled. If provided, lowercase letters, numbers, hyphens, and underscores only."}
                     </p>
                   )}
                   {formErrors.profile_slug && (
@@ -2498,6 +2805,61 @@ export default function AdminCustomersDashboard() {
             </div>
 
             <div className="p-5 space-y-4 flex-1 min-h-0 overflow-y-auto">
+
+              {/* ── CUSTOMER SERVICES SCOPE ── */}
+              <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
+                    Active Services Scope
+                  </span>
+                  <span className="text-[10px] font-medium text-tertiary">
+                    Edit via Customer Details
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className={`p-2 rounded-lg border text-center ${
+                    loginModalCustomer.smart_profile_enabled
+                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700"
+                      : "bg-surface-container-lowest border-outline-variant/20 text-tertiary"
+                  }`}>
+                    <span className="material-symbols-outlined text-[18px] block mx-auto mb-0.5">
+                      contact_page
+                    </span>
+                    <p className="text-[11px] font-bold leading-tight">Smart Profile</p>
+                    <p className="text-[10px] opacity-80 mt-0.5">
+                      {loginModalCustomer.smart_profile_enabled ? "Active" : "Inactive"}
+                    </p>
+                  </div>
+
+                  <div className={`p-2 rounded-lg border text-center ${
+                    loginModalCustomer.review_assistant_enabled
+                      ? "bg-violet-500/10 border-violet-500/30 text-violet-700"
+                      : "bg-surface-container-lowest border-outline-variant/20 text-tertiary"
+                  }`}>
+                    <span className="material-symbols-outlined text-[18px] block mx-auto mb-0.5">
+                      rate_review
+                    </span>
+                    <p className="text-[11px] font-bold leading-tight">Review Assistant</p>
+                    <p className="text-[10px] opacity-80 mt-0.5">
+                      {loginModalCustomer.review_assistant_enabled ? "Subscribed" : "Inactive"}
+                    </p>
+                  </div>
+
+                  <div className={`p-2 rounded-lg border text-center ${
+                    loginModalCustomer.analytics_enabled
+                      ? "bg-blue-500/10 border-blue-500/30 text-blue-700"
+                      : "bg-surface-container-lowest border-outline-variant/20 text-tertiary"
+                  }`}>
+                    <span className="material-symbols-outlined text-[18px] block mx-auto mb-0.5">
+                      monitoring
+                    </span>
+                    <p className="text-[11px] font-bold leading-tight">Analytics</p>
+                    <p className="text-[10px] opacity-80 mt-0.5">
+                      {loginModalCustomer.analytics_enabled ? "Subscribed" : "Inactive"}
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               {/* ── EXISTING LOGIN: Status + Management Actions ── */}
               {loginModalCustomer.auth_user_id && !createdCredentials && (
