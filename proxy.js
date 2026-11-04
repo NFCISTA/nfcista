@@ -83,8 +83,8 @@ export async function proxy(request) {
     }
   }
 
-  // 2. Server-side session gating for customer /dashboard/*
-  if (pathname.startsWith("/dashboard")) {
+  // 2. Server-side session gating for customer /dashboard/* and /portal/*
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/portal")) {
     const token = request.cookies.get("sb-customer-token")?.value;
     if (!token) {
       const loginUrl = new URL("/login", request.url);
@@ -274,6 +274,8 @@ export const config = {
     "/admin/:path*",
     "/dashboard",
     "/dashboard/:path*",
+    "/portal",
+    "/portal/:path*",
     "/login",
     "/forgot-password",
     "/reset-password",
