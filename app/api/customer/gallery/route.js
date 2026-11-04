@@ -149,6 +149,12 @@ export async function POST(request) {
 
     let cleanUrl = null;
     if (external_url && external_url.trim()) {
+      if (external_url.trim().length > 2000) {
+        return NextResponse.json(
+          { error: "External URL must be 2000 characters or less." },
+          { status: 400 }
+        );
+      }
       if (!isSafeHttpUrl(external_url.trim()) || !isValidHttpUrl(external_url.trim())) {
         return NextResponse.json(
           { error: "External URL must be a valid HTTP or HTTPS URL." },
@@ -361,6 +367,12 @@ export async function PUT(request) {
 
     if (external_url !== undefined) {
       if (external_url && external_url.trim()) {
+        if (external_url.trim().length > 2000) {
+          return NextResponse.json(
+            { error: "External URL must be 2000 characters or less." },
+            { status: 400 }
+          );
+        }
         if (!isSafeHttpUrl(external_url.trim()) || !isValidHttpUrl(external_url.trim())) {
           return NextResponse.json({ error: "External URL must be a valid HTTP or HTTPS URL." }, { status: 400 });
         }

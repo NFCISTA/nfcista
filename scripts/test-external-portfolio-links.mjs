@@ -55,7 +55,20 @@ assert.strictEqual(getDomainFromUrl("not a url"), null);
 assert.strictEqual(getDomainFromUrl(""), null);
 assert.strictEqual(getDomainFromUrl(null), null);
 
-console.log("  ✅ PASS: URL validator strictly accepts http/https and domain extractor functions accurately.");
+// URL length boundary tests (2000 character limit enforcement)
+const validWithinLimitUrl = "https://example.com/portfolio?" + "param=".repeat(100);
+assert(validWithinLimitUrl.length <= 2000, "Url must be <= 2000 chars");
+assert.strictEqual(isSafeHttpUrl(validWithinLimitUrl), true);
+
+const exactly2000Url = "https://example.com/" + "a".repeat(2000 - "https://example.com/".length);
+assert.strictEqual(exactly2000Url.length, 2000);
+assert.strictEqual(isSafeHttpUrl(exactly2000Url), true);
+
+const exceedingLimitUrl = "https://example.com/" + "a".repeat(2001 - "https://example.com/".length);
+assert.strictEqual(exceedingLimitUrl.length, 2001);
+assert(exceedingLimitUrl.length > 2000, "Exceeding URL must be > 2000 chars");
+
+console.log("  ✅ PASS: URL validator strictly accepts http/https, domain extractor functions accurately, and URL length boundaries tested.");
 
 // 3. Dedicated Preview Page Component
 console.log("\n3. Checking Dedicated Preview Page (app/p/[slug]/portfolio/[id]/page.js)...");
@@ -169,6 +182,18 @@ assert(
   "Customer API must include defensive fallback for code 42703 (undefined column) before migration"
 );
 
+// URL length checks (POST creation & PUT update)
+const customerUrlLengthMatches = customerApiCode.match(/external_url\.trim\(\)\.length > 2000/g) || [];
+assert.strictEqual(
+  customerUrlLengthMatches.length,
+  2,
+  "Customer API must enforce external_url length <= 2000 in both POST and PUT"
+);
+assert(
+  customerApiCode.includes("External URL must be 2000 characters or less."),
+  "Customer API must return 'External URL must be 2000 characters or less.' on excess length"
+);
+
 // Admin API checks
 assert(
   adminApiCode.includes("isSafeHttpUrl"),
@@ -178,6 +203,18 @@ assert(
   adminApiCode.includes("42703"),
   "Admin API must include defensive fallback for code 42703 (undefined column) before migration"
 );
-console.log("  ✅ PASS: API routes enforce authentication, validate URLs, and provide defensive column fallbacks.");
+
+const adminUrlLengthMatches = adminApiCode.match(/external_url\.trim\(\)\.length > 2000/g) || [];
+assert.strictEqual(
+  adminUrlLengthMatches.length,
+  2,
+  "Admin API must enforce external_url length <= 2000 in both POST and PUT"
+);
+assert(
+  adminApiCode.includes("External URL must be 2000 characters or less."),
+  "Admin API must return 'External URL must be 2000 characters or less.' on excess length"
+);
+
+console.log("  ✅ PASS: API routes enforce authentication, 2000-char URL length limits (POST & PUT), validate URLs, and provide defensive column fallbacks.");
 
 console.log("\n🎉 ALL EXTERNAL PORTFOLIO LINKS VERIFICATION CHECKS PASSED SUCCESSFULLY!\n");
