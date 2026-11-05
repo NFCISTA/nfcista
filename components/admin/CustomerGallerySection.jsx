@@ -194,7 +194,7 @@ export default function CustomerGallerySection({
         headers["Content-Type"] = "application/json";
 
         let currentItemId = null;
-        const currentItem = editingIndex !== null ? items[editingIndex] : null;
+        const currentItem = editingIndex !== null ? safeItems[editingIndex] : null;
 
         if (currentItem?.id) {
           // Update existing DB item
@@ -238,7 +238,7 @@ export default function CustomerGallerySection({
               whatsapp_enabled: formType === "product" ? formWhatsappEnabled : false,
               is_active: formIsActive,
               is_external_link: isExternal,
-              display_order: items.length,
+              display_order: safeItems.length,
             }),
           });
           if (!postRes.ok) {
@@ -521,7 +521,13 @@ export default function CustomerGallerySection({
                   : "Portfolio Project"}
               </span>
               <span className="text-label-md font-bold text-on-surface">
-                {editingIndex !== null ? "Edit Item" : "Add New Item"}
+                {editingIndex !== null
+                  ? formType === "external_link"
+                    ? "Edit External Link"
+                    : "Edit Item"
+                  : formType === "external_link"
+                  ? "Add External Link"
+                  : "Add New Item"}
               </span>
             </div>
             <button
@@ -575,7 +581,7 @@ export default function CustomerGallerySection({
                 onClick={() => setFormType("external_link")}
                 className={`flex-1 py-2 px-3 rounded-xl text-label-sm font-semibold transition-all border ${
                   formType === "external_link"
-                    ? "bg-primary text-on-primary border-primary shadow-xs"
+                    ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
                     : "bg-surface-container-lowest text-on-surface-variant border-outline-variant/40 hover:bg-surface-container-low"
                 }`}
               >
@@ -590,7 +596,7 @@ export default function CustomerGallerySection({
               {formType === "product"
                 ? "Product / Service Name *"
                 : formType === "external_link"
-                ? "Portfolio Link Title *"
+                ? "Link Title *"
                 : "Project Title *"}
             </label>
             <input
@@ -602,14 +608,34 @@ export default function CustomerGallerySection({
                 formType === "product"
                   ? "e.g. NFC Smart Business Card"
                   : formType === "external_link"
-                  ? "e.g. Behance UX Case Studies"
+                  ? "e.g. Behance UX Case Studies or GitHub Profile"
                   : "e.g. Modern Restaurant Branding"
               }
               className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
 
-          {/* Image Upload Area */}
+          {/* Destination URL (External Link Mode Only) */}
+          {formType === "external_link" && (
+            <div>
+              <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                Destination URL <span className="text-error">*</span>
+              </label>
+              <input
+                type="url"
+                required
+                value={formExternalUrl}
+                onChange={(e) => setFormExternalUrl(e.target.value)}
+                placeholder="https://behance.net/gallery/... or https://github.com/..."
+                className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <p className="text-[11px] text-tertiary mt-1">
+                Must be a valid HTTP or HTTPS link (e.g. Behance, Dribbble, GitHub, YouTube, portfolio site).
+              </p>
+            </div>
+          )}
+
+          {/* Image Upload Area (Product & Portfolio only; hidden in External Link mode) */}
           {formType !== "external_link" && (
             <div>
               <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
@@ -706,80 +732,82 @@ export default function CustomerGallerySection({
               rows={2}
               value={formDescription}
               onChange={(e) => setFormDescription(e.target.value)}
-              placeholder="Brief description of this item or project..."
+              placeholder={
+                formType === "external_link"
+                  ? "Brief summary or context for this portfolio showcase..."
+                  : "Brief description of this item or project..."
+              }
               className="w-full p-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
 
-          {/* Price (Product only) & Category */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Price: only shown for products, hidden for portfolio */}
-            {formType === "product" && (
+          {/* Price (Product only) & Category (Product/Portfolio only; hidden in External Link mode) */}
+          {formType !== "external_link" && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Price: only shown for products, hidden for portfolio */}
+              {formType === "product" && (
+                <div>
+                  <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                    Price <span className="text-[11px] font-normal text-tertiary">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formPrice}
+                    onChange={(e) => setFormPrice(e.target.value)}
+                    placeholder="e.g. ₹499"
+                    className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              )}
+
               <div>
                 <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-                  Price <span className="text-[11px] font-normal text-tertiary">(Optional)</span>
+                  Category <span className="text-[11px] font-normal text-tertiary">(Optional)</span>
                 </label>
                 <input
                   type="text"
-                  value={formPrice}
-                  onChange={(e) => setFormPrice(e.target.value)}
-                  placeholder="e.g. ₹499"
+                  value={formCategory}
+                  onChange={(e) => setFormCategory(e.target.value)}
+                  placeholder="e.g. NFC Cards or Web Design"
                   className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
-            )}
+            </div>
+          )}
 
+          {/* Button Text (External Link mode) */}
+          {formType === "external_link" && (
             <div>
               <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-                Category <span className="text-[11px] font-normal text-tertiary">(Optional)</span>
+                Button Text <span className="text-[11px] font-normal text-tertiary">(Optional)</span>
               </label>
               <input
                 type="text"
-                value={formCategory}
-                onChange={(e) => setFormCategory(e.target.value)}
-                placeholder="e.g. NFC Cards or Web Design"
+                value={formCtaText}
+                onChange={(e) => setFormCtaText(e.target.value)}
+                placeholder="e.g. View Portfolio or View Case Study"
                 className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
-          </div>
+          )}
 
-          {/* External Link & CTA Text */}
-          <div className={`grid grid-cols-1 ${formType === "external_link" ? "sm:grid-cols-1" : "sm:grid-cols-2"} gap-4`}>
-            <div>
-              <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
-                {formType === "external_link" ? (
-                  <>
-                    Destination URL <span className="text-error">*</span>
-                  </>
-                ) : formType === "product" ? (
-                  "Product Link"
-                ) : (
-                  "Project Link"
-                )}{" "}
-                {formType !== "external_link" && (
+          {/* Project Link & Button Text (Product/Portfolio mode only; hidden in External Link mode) */}
+          {formType !== "external_link" && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                  {formType === "product" ? "Product Link" : "Project Link"}{" "}
                   <span className="text-[11px] font-normal text-tertiary">(Optional)</span>
-                )}
-              </label>
-              <input
-                type="url"
-                required={formType === "external_link"}
-                value={formExternalUrl}
-                onChange={(e) => setFormExternalUrl(e.target.value)}
-                placeholder={
-                  formType === "external_link"
-                    ? "https://behance.net/gallery/... or https://github.com/..."
-                    : "https://..."
-                }
-                className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              {formType === "external_link" && (
-                <p className="text-[11px] text-tertiary mt-1">
-                  Must be a valid HTTP or HTTPS link (e.g. Behance, Dribbble, GitHub, YouTube, portfolio site).
-                </p>
-              )}
-            </div>
+                </label>
+                <input
+                  type="url"
+                  value={formExternalUrl}
+                  onChange={(e) => setFormExternalUrl(e.target.value)}
+                  placeholder="https://..."
+                  className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
 
-            {formType !== "external_link" && (
               <div>
                 <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
                   Button Text <span className="text-[11px] font-normal text-tertiary">(Optional)</span>
@@ -792,8 +820,8 @@ export default function CustomerGallerySection({
                   className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* WhatsApp CTA Toggle (Product Only) */}
           {formType === "product" && (
@@ -872,7 +900,15 @@ export default function CustomerGallerySection({
                   <span>Saving...</span>
                 </>
               ) : (
-                <span>{editingIndex !== null ? "Update Item" : "Save Item"}</span>
+                <span>
+                  {editingIndex !== null
+                    ? formType === "external_link"
+                      ? "Update External Link"
+                      : "Update Item"
+                    : formType === "external_link"
+                    ? "Save External Link"
+                    : "Save Item"}
+                </span>
               )}
             </button>
           </div>

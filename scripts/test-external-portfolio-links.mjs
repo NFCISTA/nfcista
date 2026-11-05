@@ -178,7 +178,27 @@ assert(
   adminGalleryCode.includes("Add External Link"),
   "Admin CustomerGallerySection header must include Add External Link action"
 );
-console.log("  ✅ PASS: Admin CustomerGallerySection allows administrators to manage external links with a dedicated visual section and header action.");
+assert(
+  adminGalleryCode.includes("Link Title *") && adminGalleryCode.includes("Destination URL"),
+  "Admin CustomerGallerySection editor must show Link Title and Destination URL for external links"
+);
+assert(
+  adminGalleryCode.includes('formType !== "external_link"') && adminGalleryCode.includes("Category"),
+  "Admin CustomerGallerySection editor must hide Category for external links"
+);
+assert(
+  adminGalleryCode.includes('formType === "external_link"') && adminGalleryCode.includes("Button Text"),
+  "Admin CustomerGallerySection editor must show optional Button Text for external links"
+);
+assert(
+  adminGalleryCode.includes("Individual Item Visibility"),
+  "Admin CustomerGallerySection editor must show Individual Item Visibility toggle"
+);
+assert(
+  adminGalleryCode.includes('isExt ? "external_link" : (item.type || "product")'),
+  "Admin CustomerGallerySection openEditItem must reopen existing external link in external_link form mode"
+);
+console.log("  ✅ PASS: Admin CustomerGallerySection allows administrators to manage external links with a dedicated form, header action, and exact field specifications.");
 
 // 7. API Routes Security & Defensive Fallbacks
 console.log("\n7. Checking API Security & Backward-Compatibility Fallback...");
