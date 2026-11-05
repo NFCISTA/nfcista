@@ -14,6 +14,7 @@ import ProfileLinksArea from "@/components/profile/ProfileLinksArea";
 import ProfileGallery from "@/components/profile/ProfileGallery";
 import ProfileEnquiryButton from "@/components/profile/ProfileEnquiryButton";
 import ProfileIntro from "@/components/profile/ProfileIntro";
+import IconTile from "@/components/profile/IconTile";
 import Icon from "@/components/ui/Icon";
 import NfcistaLogo from "@/components/ui/NfcistaLogo";
 
@@ -296,6 +297,72 @@ export default async function CustomerPublicProfilePage({ params }) {
     });
   }
 
+  // ── Quick Social Icons Row (displayed under Save Contact & Enquiry) ──
+  const quickSocialLinks = [];
+  if (hasInstagram) {
+    quickSocialLinks.push({
+      id: "quick-instagram",
+      label: "Instagram",
+      href: `https://instagram.com/${cleanInstagram}`,
+      iconName: "instagram",
+      brandColor: "#E1306C",
+    });
+  }
+  if (hasFacebook) {
+    quickSocialLinks.push({
+      id: "quick-facebook",
+      label: "Facebook",
+      href: safeFacebook,
+      iconName: "facebook",
+      brandColor: "#1877F2",
+    });
+  }
+  if (hasLinkedin) {
+    quickSocialLinks.push({
+      id: "quick-linkedin",
+      label: "LinkedIn",
+      href: safeLinkedin,
+      iconName: "linkedin",
+      brandColor: "#0A66C2",
+    });
+  }
+  if (hasTwitter) {
+    quickSocialLinks.push({
+      id: "quick-x",
+      label: "X (Twitter)",
+      href: safeTwitter,
+      iconName: "x",
+      brandColor: "#000000",
+    });
+  }
+  if (hasWhatsApp) {
+    quickSocialLinks.push({
+      id: "quick-whatsapp",
+      label: "WhatsApp",
+      href: `https://wa.me/${customer.whatsapp.trim().replace(/\D/g, "")}`,
+      iconName: "whatsapp",
+      brandColor: "#25D366",
+    });
+  }
+  if (hasWebsite) {
+    quickSocialLinks.push({
+      id: "quick-website",
+      label: "Website",
+      href: safeWebsite,
+      iconName: "website",
+      brandColor: "#2563EB",
+    });
+  }
+  if (hasPortfolio) {
+    quickSocialLinks.push({
+      id: "quick-portfolio",
+      label: "Portfolio",
+      href: safePortfolio,
+      iconName: "portfolio",
+      brandColor: "#6366F1",
+    });
+  }
+
   // ── Business Links (Website, Google Review, Catalog & Utilities) ──────
   const businessLinks = [];
   if (hasWebsite) {
@@ -498,6 +565,32 @@ export default async function CustomerPublicProfilePage({ params }) {
                 name={customer.full_name}
                 slug={customer.profile_slug}
               />
+            )}
+
+            {/* ── Direct Social Media Icons Row ──────────────────────────── */}
+            {quickSocialLinks.length > 0 && (
+              <div
+                className="mt-3.5 flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 pt-0.5"
+                aria-label="Social media profiles"
+              >
+                {quickSocialLinks.map((item) => (
+                  <a
+                    key={item.id}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={item.label}
+                    title={item.label}
+                    className="w-10 h-10 sm:w-10.5 sm:h-10.5 rounded-xl bg-surface-base hover:bg-surface-subtle border border-border-hairline hover:border-border-strong flex items-center justify-center shadow-2xs hover:shadow-xs transition-all duration-150 active:scale-95 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 select-none"
+                  >
+                    <IconTile
+                      iconName={item.iconName}
+                      brandColor={item.brandColor}
+                      className="!w-auto !h-auto !min-w-0 !min-h-0 scale-90 sm:scale-95"
+                    />
+                  </a>
+                ))}
+              </div>
             )}
           </div>
 
