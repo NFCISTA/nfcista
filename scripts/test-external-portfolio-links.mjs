@@ -169,7 +169,16 @@ assert(
   adminGalleryCode.includes("externalLinkItems") && adminGalleryCode.includes("mediaItems"),
   "Admin CustomerGallerySection must partition items into mediaItems and externalLinkItems"
 );
-console.log("  ✅ PASS: Admin CustomerGallerySection allows administrators to manage external links with a dedicated visual section.");
+assert(
+  adminGalleryCode.includes("safeItems = Array.isArray(items)"),
+  "Admin CustomerGallerySection must safely guard items array against undefined or null"
+);
+assert(
+  adminGalleryCode.includes('onClick={() => openAddItem("external_link")}') &&
+  adminGalleryCode.includes("Add External Link"),
+  "Admin CustomerGallerySection header must include Add External Link action"
+);
+console.log("  ✅ PASS: Admin CustomerGallerySection allows administrators to manage external links with a dedicated visual section and header action.");
 
 // 7. API Routes Security & Defensive Fallbacks
 console.log("\n7. Checking API Security & Backward-Compatibility Fallback...");

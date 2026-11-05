@@ -54,6 +54,8 @@ export default function CustomerGallerySection({
   // Editor Open / Close
   // ---------------------------------------------------------------------------
 
+  const safeItems = Array.isArray(items) ? items : [];
+
   function openAddItem(type = "product") {
     setEditingIndex(null);
     setFormType(type);
@@ -74,7 +76,7 @@ export default function CustomerGallerySection({
   }
 
   function openEditItem(index) {
-    const item = items[index];
+    const item = safeItems[index];
     if (!item) return;
 
     const isExt = Boolean(item.is_external_link || item.category === "external_link");
@@ -311,7 +313,7 @@ export default function CustomerGallerySection({
       pendingFiles: isExternal ? [] : [...pendingFiles],
       pendingPreviews: isExternal ? [] : [...pendingPreviews],
       images: isExternal ? [] : existingImages,
-      display_order: editingIndex !== null ? items[editingIndex].display_order : items.length,
+      display_order: editingIndex !== null ? (safeItems[editingIndex]?.display_order ?? safeItems.length) : safeItems.length,
     };
 
     if (editingIndex !== null) {
@@ -332,7 +334,7 @@ export default function CustomerGallerySection({
   // ---------------------------------------------------------------------------
 
   async function handleDeleteItem(index) {
-    const item = items[index];
+    const item = safeItems[index];
     if (!item) return;
 
     if (customerId && item.id) {
@@ -361,7 +363,7 @@ export default function CustomerGallerySection({
   }
 
   async function handleToggleActive(index) {
-    const item = items[index];
+    const item = safeItems[index];
     if (!item) return;
     const newStatus = !item.is_active;
 
@@ -396,9 +398,9 @@ export default function CustomerGallerySection({
 
   async function handleMove(index, direction) {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= items.length) return;
+    if (targetIndex < 0 || targetIndex >= safeItems.length) return;
 
-    const newItems = [...items];
+    const newItems = [...safeItems];
     const temp = newItems[index];
     newItems[index] = newItems[targetIndex];
     newItems[targetIndex] = temp;
@@ -429,10 +431,10 @@ export default function CustomerGallerySection({
   // Render
   // ---------------------------------------------------------------------------
 
-  const mediaItems = items.filter(
+  const mediaItems = safeItems.filter(
     (i) => !i.is_external_link && i.category !== "external_link"
   );
-  const externalLinkItems = items.filter(
+  const externalLinkItems = safeItems.filter(
     (i) => i.is_external_link || i.category === "external_link"
   );
 
@@ -483,6 +485,14 @@ export default function CustomerGallerySection({
             >
               <span className="material-symbols-outlined text-[16px]">add</span>
               <span>Add Portfolio Project</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => openAddItem("external_link")}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 text-emerald-800 text-label-sm font-semibold transition-colors active:scale-[0.98] flex-1 sm:flex-none"
+            >
+              <span className="material-symbols-outlined text-[16px]">add_link</span>
+              <span>Add External Link</span>
             </button>
           </div>
         )}
@@ -887,7 +897,7 @@ export default function CustomerGallerySection({
       ) : (
         <div className="space-y-2.5">
           {mediaItems.map((item, mIdx) => {
-            const origIdx = items.indexOf(item);
+            const origIdx = safeItems.indexOf(item);
             const hasImages = item.images && item.images.length > 0;
             const hasPendingPreviews = item.pendingPreviews && item.pendingPreviews.length > 0;
             const thumbUrl = hasImages
@@ -1070,7 +1080,7 @@ export default function CustomerGallerySection({
         ) : (
           <div className="space-y-2.5">
             {externalLinkItems.map((item, eIdx) => {
-              const origIdx = items.indexOf(item);
+              const origIdx = safeItems.indexOf(item);
               const domain = item.domain || (item.external_url ? getDomainFromUrl(item.external_url) : null);
               const previewHref = profileSlug && item.id
                 ? `/p/${encodeURIComponent(profileSlug)}/portfolio/${item.id}`
