@@ -45,6 +45,7 @@ const initialFormData = {
   linkedin_url: "",
   twitter_url: "",
   drive_url: "",
+  portfolio_url: "",
   photo_url: "",
   banner_url: "",
   enquiry_enabled: false,
@@ -239,6 +240,7 @@ export default function AdminCustomersDashboard() {
         linkedin_url: fullRecord.linkedin_url || fullRecord.linkedin || "",
         twitter_url: fullRecord.twitter_url || fullRecord.x_url || "",
         drive_url: fullRecord.drive_url || fullRecord.google_drive_url || "",
+        portfolio_url: fullRecord.portfolio_url || "",
         photo_url: fullRecord.photo_url || "",
         banner_url: fullRecord.banner_url || "",
         enquiry_enabled: Boolean(fullRecord.enquiry_enabled),
@@ -677,6 +679,10 @@ export default function AdminCustomersDashboard() {
     const drVal = formData.drive_url || formData.google_drive_url;
     if (drVal?.trim() && !getSafeGoogleDriveUrl(drVal)) {
       errors.drive_url = "Google Drive URL must be a shareable link starting with https://drive.google.com/ or https://docs.google.com/";
+    }
+    const pfVal = formData.portfolio_url;
+    if (pfVal?.trim() && !isValidHttpUrl(pfVal)) {
+      errors.portfolio_url = "Portfolio URL must be a valid HTTP or HTTPS link (e.g. https://yourportfolio.com)";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -1900,6 +1906,38 @@ export default function AdminCustomersDashboard() {
                     {formErrors.drive_url && (
                       <p className="mt-1 text-[12px] text-error font-medium">
                         {formErrors.drive_url}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-label-sm font-semibold text-on-surface-variant mb-1">
+                      Portfolio URL
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.portfolio_url || ""}
+                      onChange={(e) => {
+                        setFormData({
+                          ...formData,
+                          portfolio_url: e.target.value,
+                        });
+                        if (formErrors.portfolio_url) {
+                          setFormErrors((prev) => {
+                            const copy = { ...prev };
+                            delete copy.portfolio_url;
+                            return copy;
+                          });
+                        }
+                      }}
+                      placeholder="https://yourportfolio.com or behance.net/..."
+                      className={`w-full h-11 px-3.5 rounded-xl border bg-surface-container-lowest text-on-surface text-body-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                        formErrors.portfolio_url ? "border-error" : "border-outline-variant/40"
+                      }`}
+                    />
+                    {formErrors.portfolio_url && (
+                      <p className="mt-1 text-[12px] text-error font-medium">
+                        {formErrors.portfolio_url}
                       </p>
                     )}
                   </div>

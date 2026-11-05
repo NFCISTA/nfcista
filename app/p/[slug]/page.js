@@ -175,8 +175,10 @@ export default async function CustomerPublicProfilePage({ params }) {
   // Social & Document Links: X / Twitter & Google Drive
   const safeTwitter      = getSafeTwitterUrl(customer.twitter_url || customer.x_url);
   const safeDrive        = getSafeGoogleDriveUrl(customer.drive_url || customer.google_drive_url);
+  const safePortfolio    = getSafeExternalUrl(customer.portfolio_url);
   const hasTwitter       = Boolean(safeTwitter);
   const hasDrive         = Boolean(safeDrive);
+  const hasPortfolio     = Boolean(safePortfolio);
 
   // Normalize Instagram handle — strip leading @ characters
   const rawInstagram   = customer.instagram?.trim() || "";
@@ -279,6 +281,18 @@ export default async function CustomerPublicProfilePage({ params }) {
       iconName: "facebook",
       brandColor: "#1877F2",
       href: safeFacebook,
+    });
+  }
+  if (hasPortfolio) {
+    const cleanPortfolio = safePortfolio.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+    socialLinks.push({
+      id: "portfolio",
+      label: "Portfolio",
+      value: cleanPortfolio,
+      iconName: "portfolio",
+      brandColor: "#6366F1",
+      href: safePortfolio,
+      isExternal: true,
     });
   }
 

@@ -13,12 +13,15 @@ import {
   Star,
   FileText,
   MessageCircle,
+  Briefcase,
 } from "lucide-react";
 
 /**
  * Generic Lucide icon map matching generic profile actions.
  */
 const LUCIDE_GENERIC_MAP = {
+  briefcase: Briefcase,
+  portfolio: Briefcase,
   phone: Phone,
   call: Phone,
   tel: Phone,
