@@ -62,8 +62,8 @@ export default function CustomerLoginPage() {
         }
       }
 
-      // Redirect to customer dashboard
-      router.replace("/dashboard");
+      // Redirect to client portal
+      window.location.assign("/portal");
     } catch {
       setErrorMessage("An unexpected error occurred. Please try again.");
       setIsLoading(false);
