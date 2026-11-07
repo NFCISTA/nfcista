@@ -46,19 +46,46 @@ export default function ClientPortalLayout({ children }) {
 
         setUser(session.user);
 
-        // Fetch customer profile linked to this user
-        const res = await fetch("/api/customer/profile", {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
+        // Fetch customer profile and assigned review cards in parallel
+        const [profileRes, cardsRes] = await Promise.all([
+          fetch("/api/customer/profile", {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          }),
+          fetch("/api/customer/cards", {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          }).catch(() => null),
+        ]);
 
-        if (res.ok) {
-          const data = await res.json();
-          setCustomer(data.customer);
+        const profileData = profileRes.ok ? await profileRes.json().catch(() => null) : null;
+        const cardsData = cardsRes?.ok ? await cardsRes.json().catch(() => null) : null;
+        const cust = profileData?.customer;
+
+        if (cust) {
+          setCustomer(cust);
+
+          const hasActiveCard = Boolean(
+            cardsData?.review_cards?.some(
+              (card) => card.is_active === true && card.review_assistant_enabled === true
+            )
+          );
+          const reviewAssistantEntitled = Boolean(
+            cust.review_assistant_enabled ||
+            cust.analytics_enabled ||
+            hasActiveCard
+          );
+
+          // Portal access guard: If customer has no Review Assistant entitlement,
+          // redirect to /dashboard (covers DBC-only and neither-product onboarding fallback)
+          if (!reviewAssistantEntitled) {
+            router.replace("/dashboard");
+            return;
+          }
         } else {
-          const data = await res.json().catch(() => ({}));
-          setProfileError(data.error || "Unable to load your client profile.");
+          setProfileError(profileData?.error || "Unable to load your client profile.");
         }
       } catch (err) {
         console.error("[portal] Client auth error:", err);
@@ -112,13 +139,15 @@ export default function ClientPortalLayout({ children }) {
     return null;
   }
 
+  const hasDigitalCard = customer?.digital_card_enabled !== false;
+
   const navLinks = [
     { href: "/portal", label: "Overview", icon: "dashboard" },
     { href: "/portal/cards", label: "My NFC Cards", icon: "contactless" },
     ...(customer?.analytics_enabled
       ? [{ href: "/portal/analytics", label: "Analytics", icon: "insights" }]
       : []),
-    ...(customer?.profile_slug
+    ...(hasDigitalCard
       ? [{ href: "/dashboard", label: "Business Card", icon: "badge" }]
       : []),
   ];
@@ -156,7 +185,7 @@ export default function ClientPortalLayout({ children }) {
 
             {/* Right Action Area */}
             <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-              {customer?.profile_slug && (
+              {hasDigitalCard && customer?.profile_slug && (
                 <Link
                   href={`/p/${customer.profile_slug}`}
                   target="_blank"
@@ -175,7 +204,7 @@ export default function ClientPortalLayout({ children }) {
                   {customer?.full_name ? customer.full_name.charAt(0).toUpperCase() : "C"}
                 </div>
                 <span className="text-xs font-semibold text-on-surface truncate max-w-[150px]">
-                  {customer?.full_name || user.email}
+                  {customer?.company_name || customer?.full_name || user.email}
                 </span>
               </div>
 
@@ -261,7 +290,7 @@ export default function ClientPortalLayout({ children }) {
                 })}
               </div>
 
-              {customer?.profile_slug && (
+              {hasDigitalCard && customer?.profile_slug && (
                 <div className="pt-1 border-t border-outline-variant/20">
                   <Link
                     href={`/p/${customer.profile_slug}`}
@@ -277,7 +306,7 @@ export default function ClientPortalLayout({ children }) {
 
               <div className="pt-2 border-t border-outline-variant/20 flex items-center justify-between">
                 <span className="text-xs text-on-surface-variant truncate max-w-[200px]">
-                  {customer?.full_name || user.email}
+                  {customer?.company_name || customer?.full_name || user.email}
                 </span>
                 <button
                   type="button"

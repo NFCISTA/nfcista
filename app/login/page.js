@@ -91,31 +91,35 @@ export default function CustomerLoginPage() {
         const cardsData = cardsRes.ok ? await cardsRes.json().catch(() => null) : null;
         const customer = profileData?.customer;
 
+        // Review Assistant entitlement:
+        // Must be explicitly enabled on customer OR active assigned review cards (both is_active AND review_assistant_enabled)
+        const hasActiveReviewCard = Boolean(
+          cardsData?.review_cards?.some(
+            (card) => card.is_active === true && card.review_assistant_enabled === true
+          )
+        );
+
         const hasReviewAssistant = Boolean(
           customer?.review_assistant_enabled ||
           customer?.analytics_enabled ||
-          cardsData?.review_cards?.length > 0
+          hasActiveReviewCard
         );
 
+        // Digital Business Card entitlement:
+        // Explicit boolean on customer record (defaults to true for existing customers)
         const hasDigitalCard = Boolean(
-          customer?.job_title ||
-          customer?.company_name ||
-          customer?.description ||
-          customer?.phone ||
-          customer?.photo_url ||
-          customer?.banner_url ||
-          customer?.portfolio_url ||
-          customer?.enquiry_enabled ||
-          customer?.instagram ||
-          customer?.website ||
-          customer?.address
+          customer?.digital_card_enabled !== false
         );
 
-        // If the customer has Review Assistant entitlement and has NO Digital Business Card profile setup,
-        // route them to the Review Assistant Client Portal.
-        // Otherwise (Digital Business Card customers or customers with both products), default to /dashboard.
+        // Routing Rules:
+        // 1. Review Assistant only -> /portal
+        // 2. Digital Business Card only -> /dashboard
+        // 3. Both products -> /dashboard (with full access to /portal)
+        // 4. Neither product -> /dashboard (safe onboarding)
         if (hasReviewAssistant && !hasDigitalCard) {
           destination = "/portal";
+        } else {
+          destination = "/dashboard";
         }
       } catch {
         // Fall back safely to default /dashboard
