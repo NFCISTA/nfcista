@@ -141,9 +141,20 @@ export default function MyNfcCardsPage() {
               </p>
             </div>
           </div>
-          <span className="text-xs font-bold text-on-surface-variant">
-            {reviewCards.length} {reviewCards.length === 1 ? "Card" : "Cards"}
-          </span>
+          <div className="flex items-center gap-3">
+            {customer?.analytics_enabled && (
+              <Link
+                href="/portal/analytics"
+                className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+              >
+                <span>View Analytics</span>
+                <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+              </Link>
+            )}
+            <span className="text-xs font-bold text-on-surface-variant">
+              {reviewCards.length} {reviewCards.length === 1 ? "Card" : "Cards"}
+            </span>
+          </div>
         </div>
 
         {reviewCards.length === 0 ? (
