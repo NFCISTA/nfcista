@@ -115,6 +115,9 @@ export default function ClientPortalLayout({ children }) {
   const navLinks = [
     { href: "/portal", label: "Overview", icon: "dashboard" },
     { href: "/portal/cards", label: "My NFC Cards", icon: "contactless" },
+    ...(customer?.analytics_enabled
+      ? [{ href: "/portal/analytics", label: "Analytics", icon: "insights" }]
+      : []),
   ];
 
   return (
