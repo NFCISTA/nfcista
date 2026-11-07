@@ -71,11 +71,11 @@ export default function CustomerDashboardLayout({ children }) {
     checkAuthAndProfile();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session?.user) {
+      if (event === "SIGNED_OUT") {
         setUser(null);
         setCustomer(null);
         router.replace("/login");
-      } else {
+      } else if (session?.user) {
         setUser(session.user);
       }
     });
@@ -118,6 +118,9 @@ export default function CustomerDashboardLayout({ children }) {
     { href: "/dashboard/enquiries", label: "Enquiries", icon: "mail" },
     ...(customer?.analytics_enabled
       ? [{ href: "/dashboard/analytics", label: "Analytics", icon: "insights" }]
+      : []),
+    ...(customer?.review_assistant_enabled || customer?.analytics_enabled
+      ? [{ href: "/portal", label: "Client Portal", icon: "contactless" }]
       : []),
   ];
 

@@ -71,11 +71,11 @@ export default function ClientPortalLayout({ children }) {
     checkAuthAndProfile();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session?.user) {
+      if (event === "SIGNED_OUT") {
         setUser(null);
         setCustomer(null);
         router.replace("/login");
-      } else {
+      } else if (session?.user) {
         setUser(session.user);
       }
     });
@@ -117,6 +117,9 @@ export default function ClientPortalLayout({ children }) {
     { href: "/portal/cards", label: "My NFC Cards", icon: "contactless" },
     ...(customer?.analytics_enabled
       ? [{ href: "/portal/analytics", label: "Analytics", icon: "insights" }]
+      : []),
+    ...(customer?.profile_slug
+      ? [{ href: "/dashboard", label: "Business Card", icon: "badge" }]
       : []),
   ];
 
