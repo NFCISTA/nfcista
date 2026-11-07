@@ -54,6 +54,7 @@ const initialFormData = {
   enquiry_delivery_whatsapp: false,
   review_assistant_enabled: false,
   analytics_enabled: false,
+  digital_card_enabled: true,
   profile_slug: "",
   is_active: true,
 };
@@ -249,6 +250,7 @@ export default function AdminCustomersDashboard() {
         enquiry_delivery_whatsapp: Boolean(fullRecord.enquiry_delivery_whatsapp),
         review_assistant_enabled: Boolean(fullRecord.review_assistant_enabled),
         analytics_enabled: Boolean(fullRecord.analytics_enabled),
+        digital_card_enabled: fullRecord.digital_card_enabled !== undefined ? Boolean(fullRecord.digital_card_enabled) : true,
         profile_slug: fullRecord.profile_slug || "",
         is_active: fullRecord.is_active !== undefined ? fullRecord.is_active : true,
       });
@@ -2054,6 +2056,42 @@ export default function AdminCustomersDashboard() {
                         checked={formData.is_active}
                         onChange={(e) =>
                           setFormData({ ...formData, is_active: e.target.checked })
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Digital Business Card Service Toggle */}
+                <div className="p-4 rounded-xl bg-surface-container-low/60 border border-outline-variant/30 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-label-md font-bold text-on-surface">
+                          Digital Business Card Service
+                        </span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            formData.digital_card_enabled !== false
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-slate-100 text-slate-600 border border-slate-300"
+                          }`}
+                        >
+                          {formData.digital_card_enabled !== false ? "ENABLED" : "DISABLED"}
+                        </span>
+                      </div>
+                      <p className="text-body-sm text-on-surface-variant">
+                        Grants access to the Customer Profile Dashboard (/dashboard), profile editing, and lead enquiries. Uncheck for Review Assistant-only clients.
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
+                      <input
+                        type="checkbox"
+                        checked={formData.digital_card_enabled !== false}
+                        onChange={(e) =>
+                          setFormData({ ...formData, digital_card_enabled: e.target.checked })
                         }
                         className="sr-only peer"
                       />

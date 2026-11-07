@@ -47,6 +47,7 @@ function serializeCustomerProfile(customer) {
     enquiry_delivery_whatsapp: customer.enquiry_delivery_whatsapp,
     review_assistant_enabled: Boolean(customer.review_assistant_enabled),
     analytics_enabled: Boolean(customer.analytics_enabled),
+    digital_card_enabled: Boolean(customer.digital_card_enabled !== undefined ? customer.digital_card_enabled : true),
   };
 }
 

@@ -93,6 +93,8 @@ export default function MyNfcCardsPage() {
 
   const reviewCards = cardsData?.review_cards || [];
   const profileSlug = cardsData?.profile_slug || customer?.profile_slug;
+  const hasDigitalCard = customer?.digital_card_enabled !== false;
+  const totalCards = reviewCards.length + (hasDigitalCard && profileSlug ? 1 : 0);
   const publicProfileUrl = typeof window !== "undefined" && profileSlug
     ? `${window.location.origin}/p/${profileSlug}`
     : `/p/${profileSlug || ""}`;
@@ -107,7 +109,7 @@ export default function MyNfcCardsPage() {
               My NFC Cards
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
-              {reviewCards.length + (profileSlug ? 1 : 0)} Connected
+              {totalCards} Connected
             </span>
           </div>
           <p className="text-body-sm text-on-surface-variant mt-1">
@@ -276,77 +278,79 @@ export default function MyNfcCardsPage() {
         )}
       </div>
 
-      {/* ── SECTION 2: Digital Business Profile Card ──────── */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-700 flex items-center justify-center border border-blue-500/20">
-              <span className="material-symbols-outlined text-[18px]">badge</span>
-            </span>
-            <div>
-              <h2 className="text-base font-bold text-on-surface">
-                Digital Business Profile Card
-              </h2>
-              <p className="text-xs text-on-surface-variant">
-                Your primary digital business profile card accessible via NFC and direct link.
-              </p>
-            </div>
-          </div>
-          <span className="text-xs font-bold text-on-surface-variant">
-            {profileSlug ? "1 Profile Linked" : "0 Profiles"}
-          </span>
-        </div>
-
-        {profileSlug ? (
-          <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-5 sm:p-6 shadow-card space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs font-bold text-blue-800 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg">
-                    /p/{profileSlug}
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Digital Profile Active</span>
-                  </span>
-                </div>
-                <h3 className="text-base font-bold text-on-surface pt-1">
-                  {customer?.full_name || "Digital Card"}
-                </h3>
+      {/* ── SECTION 2: Digital Business Profile Card (Entitled DBC customers only) ──────── */}
+      {hasDigitalCard && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-700 flex items-center justify-center border border-blue-500/20">
+                <span className="material-symbols-outlined text-[18px]">badge</span>
+              </span>
+              <div>
+                <h2 className="text-base font-bold text-on-surface">
+                  Digital Business Profile Card
+                </h2>
                 <p className="text-xs text-on-surface-variant">
-                  {[customer?.job_title, customer?.company_name].filter(Boolean).join(" • ") || "NFC Digital Profile"}
+                  Your primary digital business profile card accessible via NFC and direct link.
                 </p>
               </div>
+            </div>
+            <span className="text-xs font-bold text-on-surface-variant">
+              {profileSlug ? "1 Profile Linked" : "0 Profiles"}
+            </span>
+          </div>
 
-              <div className="flex items-center gap-2.5 shrink-0">
-                <a
-                  href={publicProfileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-xs hover:bg-primary/90 transition-all"
-                >
-                  <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-                  <span>Open Public Card</span>
-                </a>
+          {profileSlug ? (
+            <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-5 sm:p-6 shadow-card space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-bold text-blue-800 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg">
+                      /p/{profileSlug}
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>Digital Profile Active</span>
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold text-on-surface pt-1">
+                    {customer?.full_name || "Digital Card"}
+                  </h3>
+                  <p className="text-xs text-on-surface-variant">
+                    {[customer?.job_title, customer?.company_name].filter(Boolean).join(" • ") || "NFC Digital Profile"}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2.5 shrink-0">
+                  <a
+                    href={publicProfileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-xs hover:bg-primary/90 transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                    <span>Open Public Card</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Concierge Programming Note */}
+              <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-start gap-2.5 text-xs text-slate-600">
+                <span className="material-symbols-outlined text-[18px] text-slate-400 shrink-0 mt-0.5">info</span>
+                <p className="leading-relaxed text-[11px]">
+                  <strong>Hardware Pairing Notice:</strong> Physical dynamic NFC business cards are paired by the NFCISTA concierge during hardware encoding. Your public card link above is always active and live.
+                </p>
               </div>
             </div>
-
-            {/* Concierge Programming Note */}
-            <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-start gap-2.5 text-xs text-slate-600">
-              <span className="material-symbols-outlined text-[18px] text-slate-400 shrink-0 mt-0.5">info</span>
-              <p className="leading-relaxed text-[11px]">
-                <strong>Hardware Pairing Notice:</strong> Physical dynamic NFC business cards are paired by the NFCISTA concierge during hardware encoding. Your public card link above is always active and live.
+          ) : (
+            <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-8 text-center space-y-3 shadow-card">
+              <p className="text-body-sm text-on-surface-variant">
+                No digital business profile slug found for your account. Please contact NFCISTA support.
               </p>
             </div>
-          </div>
-        ) : (
-          <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-3xl p-8 text-center space-y-3 shadow-card">
-            <p className="text-body-sm text-on-surface-variant">
-              No digital business profile slug found for your account. Please contact NFCISTA support.
-            </p>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
