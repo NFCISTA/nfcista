@@ -526,6 +526,12 @@ export default function AdminCustomersDashboard() {
         setLoginModalSuccess(
           `This customer already has a portal login linked (${result.email || "active"}).`
         );
+      } else if (result.status === "linked_existing") {
+        // Existing credentials are preserved — do NOT show temporary credentials block
+        setCreatedCredentials(null);
+        setLoginModalSuccess(
+          result.message || `Existing portal login for ${trimmedEmail} was successfully linked. Existing credentials were preserved.`
+        );
       } else {
         setCreatedCredentials({
           email: trimmedEmail,
@@ -2893,6 +2899,7 @@ export default function AdminCustomersDashboard() {
                     </p>
                     <p>The customer logs in at <strong>/login</strong> — never /admin.</p>
                     <p>Password is encrypted via Supabase Auth and never stored in the customer table.</p>
+                    <p>If an account already exists for this email, it will be securely linked to this profile.</p>
                   </div>
 
                   <div className="flex items-center justify-end gap-2.5 pt-1">
