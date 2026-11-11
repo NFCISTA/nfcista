@@ -22,6 +22,7 @@ export default function CustomerDashboardLayout({ children }) {
   const pathname = usePathname();
   const [user, setUser] = useState(null);
   const [customer, setCustomer] = useState(null);
+  const [hasReviewAssistant, setHasReviewAssistant] = useState(false);
   const [loading, setLoading] = useState(true);
   const [profileError, setProfileError] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -46,19 +47,46 @@ export default function CustomerDashboardLayout({ children }) {
 
         setUser(session.user);
 
-        // Fetch customer profile linked to this user
-        const res = await fetch("/api/customer/profile", {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
+        // Fetch customer profile and assigned review cards in parallel
+        const [profileRes, cardsRes] = await Promise.all([
+          fetch("/api/customer/profile", {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          }),
+          fetch("/api/customer/cards", {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          }).catch(() => null),
+        ]);
 
-        if (res.ok) {
-          const data = await res.json();
-          setCustomer(data.customer);
+        const profileData = profileRes.ok ? await profileRes.json().catch(() => null) : null;
+        const cardsData = cardsRes?.ok ? await cardsRes.json().catch(() => null) : null;
+        const cust = profileData?.customer;
+
+        if (cust) {
+          setCustomer(cust);
+
+          const hasActiveCard = Boolean(
+            cardsData?.review_cards?.some(
+              (card) => card.is_active === true && card.review_assistant_enabled === true
+            )
+          );
+          const reviewAssistantEntitled = Boolean(
+            cust.review_assistant_enabled ||
+            cust.analytics_enabled ||
+            hasActiveCard
+          );
+          setHasReviewAssistant(reviewAssistantEntitled);
+
+          // If customer is Review Assistant-only, redirect them directly to /portal
+          if (cust.digital_card_enabled === false && reviewAssistantEntitled) {
+            router.replace("/portal");
+            return;
+          }
         } else {
-          const data = await res.json().catch(() => ({}));
-          setProfileError(data.error || "Unable to load customer profile.");
+          setProfileError(profileData?.error || "Unable to load customer profile.");
         }
       } catch (err) {
         console.error("Dashboard auth check error:", err);
@@ -71,11 +99,11 @@ export default function CustomerDashboardLayout({ children }) {
     checkAuthAndProfile();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session?.user) {
+      if (event === "SIGNED_OUT") {
         setUser(null);
         setCustomer(null);
         router.replace("/login");
-      } else {
+      } else if (session?.user) {
         setUser(session.user);
       }
     });
@@ -118,6 +146,9 @@ export default function CustomerDashboardLayout({ children }) {
     { href: "/dashboard/enquiries", label: "Enquiries", icon: "mail" },
     ...(customer?.analytics_enabled
       ? [{ href: "/dashboard/analytics", label: "Analytics", icon: "insights" }]
+      : []),
+    ...(hasReviewAssistant
+      ? [{ href: "/portal", label: "Client Portal", icon: "contactless" }]
       : []),
   ];
 

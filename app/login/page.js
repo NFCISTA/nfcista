@@ -47,23 +47,86 @@ export default function CustomerLoginPage() {
       }
 
       // Establish HttpOnly server session for proxy gating
-      if (data?.session?.access_token) {
-        try {
-          await fetch("/api/session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              access_token: data.session.access_token,
-              expires_in: data.session.expires_in,
-            }),
-          });
-        } catch {
-          // Non-blocking fallback
-        }
+      if (!data?.session?.access_token) {
+        setErrorMessage("Authentication succeeded but no session token was received. Please try again.");
+        setIsLoading(false);
+        return;
       }
 
-      // Redirect to client portal
-      window.location.assign("/portal");
+      try {
+        const sessionRes = await fetch("/api/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            access_token: data.session.access_token,
+            expires_in: data.session.expires_in,
+          }),
+        });
+
+        if (!sessionRes.ok) {
+          setErrorMessage("Failed to establish secure session. Please try again.");
+          setIsLoading(false);
+          return;
+        }
+      } catch {
+        setErrorMessage("Network error while establishing session. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Default destination for existing Digital Business Card customers
+      let destination = "/dashboard";
+
+      try {
+        const [profileRes, cardsRes] = await Promise.all([
+          fetch("/api/customer/profile", {
+            headers: { Authorization: `Bearer ${data.session.access_token}` },
+          }),
+          fetch("/api/customer/cards", {
+            headers: { Authorization: `Bearer ${data.session.access_token}` },
+          }),
+        ]);
+
+        const profileData = profileRes.ok ? await profileRes.json().catch(() => null) : null;
+        const cardsData = cardsRes.ok ? await cardsRes.json().catch(() => null) : null;
+        const customer = profileData?.customer;
+
+        // Review Assistant entitlement:
+        // Must be explicitly enabled on customer OR active assigned review cards (both is_active AND review_assistant_enabled)
+        const hasActiveReviewCard = Boolean(
+          cardsData?.review_cards?.some(
+            (card) => card.is_active === true && card.review_assistant_enabled === true
+          )
+        );
+
+        const hasReviewAssistant = Boolean(
+          customer?.review_assistant_enabled ||
+          customer?.analytics_enabled ||
+          hasActiveReviewCard
+        );
+
+        // Digital Business Card entitlement:
+        // Explicit boolean on customer record (defaults to true for existing customers)
+        const hasDigitalCard = Boolean(
+          customer?.digital_card_enabled !== false
+        );
+
+        // Routing Rules:
+        // 1. Review Assistant only -> /portal
+        // 2. Digital Business Card only -> /dashboard
+        // 3. Both products -> /dashboard (with full access to /portal)
+        // 4. Neither product -> /dashboard (safe onboarding)
+        if (hasReviewAssistant && !hasDigitalCard) {
+          destination = "/portal";
+        } else {
+          destination = "/dashboard";
+        }
+      } catch {
+        // Fall back safely to default /dashboard
+        destination = "/dashboard";
+      }
+
+      window.location.assign(destination);
     } catch {
       setErrorMessage("An unexpected error occurred. Please try again.");
       setIsLoading(false);
